@@ -1,59 +1,109 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar" dir="rtl" data-theme="light">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="The 99 beautiful names of Allah (Asmaa-ul-Husna) — Arabic, transliteration, audio recitation, calligraphy, and meanings in 16 languages.">
-  <meta name="theme-color" content="#0d0d10">
+  <meta name="theme-color" content="#faf6ee" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0e0c08" media="(prefers-color-scheme: dark)">
   <meta property="og:title" content="أسماء الله الحسنى — He Is Allah">
   <meta property="og:description" content="The 99 beautiful names of Allah with audio, calligraphy and translations in 16 languages.">
   <meta property="og:type" content="website">
-  <title>أسماء الله الحسنى — He Is Allah</title>
+  <title>أسماء الله الحسنى — Asmaa-ul-Husna</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Inter:wght@400;500;600&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400;1,700&family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400;1,500&family=Inter:wght@400;500;600&display=swap">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <header>
-    <div class="header-inner">
-      <div class="ornament" aria-hidden="true">
-        <span></span><span class="diamond"></span><span></span>
-      </div>
-      <h1>أسماء الله الحسنى</h1>
-      <p class="tagline">The 99 Beautiful Names of Allah</p>
-      <div class="controls">
-        <input type="search" id="search" placeholder="Search...">
-        <select id="lang"></select>
-      </div>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <nav class="topbar">
+    <div class="brand" aria-hidden="true">
+      <span class="brand-mark">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M12 2 L14 8 L20 8 L15 12 L17 18 L12 14 L7 18 L9 12 L4 8 L10 8 Z"/>
+        </svg>
+      </span>
+      <span class="brand-text">Asmaa-ul-Husna</span>
     </div>
+    <div class="topbar-actions">
+      <label class="search-wrap" aria-label="Search">
+        <svg class="ico" viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="9" cy="9" r="6"/><path d="M14 14l4 4" stroke-linecap="round"/></svg>
+        <input type="search" id="search" placeholder="Search a name…" autocomplete="off">
+      </label>
+      <select id="lang" aria-label="Language"></select>
+      <button id="theme" class="icon-btn" aria-label="Toggle theme" type="button">
+        <svg class="ico ico-sun" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke-linecap="round"/></svg>
+        <svg class="ico ico-moon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+  </nav>
+
+  <header class="hero">
+    <div class="ornament" aria-hidden="true"><span></span><i class="diamond"></i><span></span></div>
+    <h1 class="hero-title">أسماء الله الحسنى</h1>
+    <p class="hero-sub">The Ninety-Nine Most Beautiful Names</p>
+    <div class="ornament" aria-hidden="true"><span></span><i class="diamond"></i><span></span></div>
   </header>
 
-  <main>
-    <div id="grid" class="grid" aria-busy="true">
-      <div class="skeleton"></div><div class="skeleton"></div>
-      <div class="skeleton"></div><div class="skeleton"></div>
-      <div class="skeleton"></div><div class="skeleton"></div>
-      <div class="skeleton"></div><div class="skeleton"></div>
-    </div>
+  <main id="main">
+    <ol id="list" class="name-list" aria-busy="true">
+      <li class="row skeleton"></li>
+      <li class="row skeleton"></li>
+      <li class="row skeleton"></li>
+      <li class="row skeleton"></li>
+      <li class="row skeleton"></li>
+      <li class="row skeleton"></li>
+    </ol>
   </main>
 
-  <div id="detail" class="detail hidden" aria-hidden="true">
-    <button class="close" aria-label="Close">&times;</button>
-    <div class="detail-inner">
-      <div class="detail-bg"></div>
-      <div class="detail-content">
-        <div class="detail-svg"></div>
-        <h2 class="detail-arabic"></h2>
-        <p class="detail-translit"></p>
-        <audio controls class="detail-audio"></audio>
-        <h3 class="detail-short-key"></h3>
-        <div class="detail-short-val"></div>
-        <h3 class="detail-meaning-key"></h3>
-        <div class="detail-meaning-val"></div>
+  <footer class="site-footer">
+    <span id="count"></span>
+  </footer>
+
+  <div id="overlay" class="overlay" hidden></div>
+
+  <aside id="panel" class="panel" aria-hidden="true" aria-label="Name detail">
+    <button class="panel-close" type="button" aria-label="Close">
+      <svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M5 5l10 10M15 5L5 15"/></svg>
+    </button>
+
+    <article class="panel-inner">
+      <div class="panel-hero">
+        <div class="panel-bg" aria-hidden="true"></div>
+        <div class="panel-svg" aria-hidden="true"></div>
       </div>
-    </div>
-  </div>
+      <div class="panel-body">
+        <div class="panel-num" aria-label="Number"></div>
+        <h2 class="panel-arabic"></h2>
+        <p class="panel-translit"></p>
+
+        <div class="panel-audio-wrap">
+          <audio controls preload="none" class="panel-audio"></audio>
+        </div>
+
+        <section class="panel-section">
+          <h3 class="section-key panel-short-key"></h3>
+          <div class="section-val panel-short-val"></div>
+        </section>
+        <section class="panel-section">
+          <h3 class="section-key panel-meaning-key"></h3>
+          <div class="section-val panel-meaning-val"></div>
+        </section>
+      </div>
+      <nav class="panel-nav" aria-label="Names navigation">
+        <button class="nav-btn nav-prev" type="button">
+          <svg viewBox="0 0 20 20" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4l-6 6 6 6"/></svg>
+          <span class="nav-meta"><small>Previous</small><span class="nav-name"></span></span>
+        </button>
+        <button class="nav-btn nav-next" type="button">
+          <span class="nav-meta"><small>Next</small><span class="nav-name"></span></span>
+          <svg viewBox="0 0 20 20" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4l6 6-6 6"/></svg>
+        </button>
+      </nav>
+    </article>
+  </aside>
 
   <script src="app.js"></script>
 </body>
