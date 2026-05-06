@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>أسماء الله الحسنى — He Is Allah</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>أسماء الله الحسنى</h1>
+    <div class="controls">
+      <input type="search" id="search" placeholder="Search...">
+      <select id="lang"></select>
+    </div>
+  </header>
+
+  <main>
+    <div id="grid" class="grid"></div>
+  </main>
+
+  <div id="detail" class="detail hidden" aria-hidden="true">
+    <button class="close" aria-label="Close">&times;</button>
+    <div class="detail-inner">
+      <div class="detail-bg"></div>
+      <div class="detail-content">
+        <div class="detail-svg"></div>
+        <h2 class="detail-arabic"></h2>
+        <p class="detail-translit"></p>
+        <audio controls class="detail-audio"></audio>
+        <h3 class="detail-short-key"></h3>
+        <div class="detail-short-val"></div>
+        <h3 class="detail-meaning-key"></h3>
+        <div class="detail-meaning-val"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
