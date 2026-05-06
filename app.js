@@ -1,5 +1,9 @@
 const RTL_LANGS = new Set(['ar', 'fa', 'ur']);
 const DEFAULT_LANG = 'ar';
+const ALLOWED_HTML_TAGS = new Set([
+  'P', 'BR', 'SPAN', 'STRONG', 'EM', 'B', 'I', 'U',
+  'UL', 'OL', 'LI', 'BLOCKQUOTE', 'H3', 'H4', 'H5', 'HR',
+]);
 
 const state = {
   names: [],
@@ -22,10 +26,9 @@ async function init() {
   ]);
 
   state.names = names.sort((a, b) => a.display_order - b.display_order);
-  state.languages = langs;
 
   const transLangs = new Set(trans.map((t) => t.lang));
-  state.languages = state.languages.filter((l) => transLangs.has(l.code));
+  state.languages = langs.filter((l) => transLangs.has(l.code));
 
   for (const t of trans) {
     if (!state.translations.has(t.gods_name_id)) state.translations.set(t.gods_name_id, {});
@@ -88,8 +91,11 @@ function bindEvents() {
     renderGrid(document.getElementById('search').value);
   });
 
+  let searchTimer;
   document.getElementById('search').addEventListener('input', (e) => {
-    renderGrid(e.target.value);
+    clearTimeout(searchTimer);
+    const value = e.target.value;
+    searchTimer = setTimeout(() => renderGrid(value), 120);
   });
 
   document.getElementById('grid').addEventListener('click', (e) => {
@@ -122,26 +128,32 @@ async function openDetail(id) {
   detail.querySelector('.detail-translit').textContent = t.name || '';
 
   const audio = detail.querySelector('.detail-audio');
+  audio.hidden = true;
+  audio.removeAttribute('src');
   if (name.voice) {
+    const onError = () => { audio.hidden = true; };
+    const onLoaded = () => { audio.hidden = false; };
+    audio.addEventListener('error', onError, { once: true });
+    audio.addEventListener('loadedmetadata', onLoaded, { once: true });
     audio.src = name.voice;
-    audio.hidden = false;
-    audio.onerror = () => { audio.hidden = true; };
-  } else {
-    audio.removeAttribute('src');
-    audio.hidden = true;
+    audio.load();
   }
 
   const svgBox = detail.querySelector('.detail-svg');
-  svgBox.innerHTML = '';
+  svgBox.replaceChildren();
   if (name.image) {
     try {
       const r = await fetch(name.image);
       if (r.ok) {
         const txt = await r.text();
-        if (txt.trim().startsWith('<svg')) {
-          svgBox.innerHTML = txt;
+        if (txt.trim().startsWith('<svg') || txt.trim().startsWith('<?xml')) {
+          const safe = sanitizeSVG(txt);
+          if (safe) svgBox.replaceChildren(safe);
         } else {
-          svgBox.innerHTML = `<img src="${name.image}" alt="">`;
+          const img = document.createElement('img');
+          img.src = name.image;
+          img.alt = '';
+          svgBox.replaceChildren(img);
         }
       }
     } catch {
@@ -150,9 +162,9 @@ async function openDetail(id) {
   }
 
   detail.querySelector('.detail-short-key').textContent = t.short_meaning_key || '';
-  detail.querySelector('.detail-short-val').innerHTML = t.short_meaning_val || '';
+  setSanitizedHTML(detail.querySelector('.detail-short-val'), t.short_meaning_val);
   detail.querySelector('.detail-meaning-key').textContent = t.meanings_key || '';
-  detail.querySelector('.detail-meaning-val').innerHTML = t.meanings_val || '';
+  setSanitizedHTML(detail.querySelector('.detail-meaning-val'), t.meanings_val);
 
   detail.classList.remove('hidden');
   detail.setAttribute('aria-hidden', 'false');
@@ -166,6 +178,57 @@ function closeDetail() {
   detail.classList.add('hidden');
   detail.setAttribute('aria-hidden', 'true');
   document.body.style.overflow = '';
+}
+
+function setSanitizedHTML(el, html) {
+  el.replaceChildren();
+  if (!html) return;
+  const tmpl = document.createElement('template');
+  tmpl.innerHTML = String(html);
+  cleanNode(tmpl.content);
+  el.appendChild(tmpl.content);
+}
+
+function cleanNode(node) {
+  for (const child of [...node.childNodes]) {
+    if (child.nodeType === Node.ELEMENT_NODE) {
+      if (!ALLOWED_HTML_TAGS.has(child.tagName)) {
+        child.replaceWith(document.createTextNode(child.textContent || ''));
+        continue;
+      }
+      for (const attr of [...child.attributes]) child.removeAttribute(attr.name);
+      cleanNode(child);
+    } else if (child.nodeType !== Node.TEXT_NODE) {
+      child.remove();
+    }
+  }
+}
+
+function sanitizeSVG(text) {
+  const doc = new DOMParser().parseFromString(text, 'image/svg+xml');
+  if (doc.querySelector('parsererror')) return null;
+  const svg = doc.documentElement;
+  if (!svg || svg.tagName.toLowerCase() !== 'svg') return null;
+  cleanSVGNode(svg);
+  return svg;
+}
+
+function cleanSVGNode(node) {
+  if (node.nodeType !== Node.ELEMENT_NODE) return;
+  const tag = node.tagName.toLowerCase();
+  if (tag === 'script' || tag === 'foreignobject') {
+    node.remove();
+    return;
+  }
+  for (const attr of [...node.attributes]) {
+    const n = attr.name.toLowerCase();
+    const v = attr.value || '';
+    if (n.startsWith('on')) node.removeAttribute(attr.name);
+    else if ((n === 'href' || n === 'xlink:href') && /^\s*javascript:/i.test(v)) {
+      node.removeAttribute(attr.name);
+    }
+  }
+  for (const child of [...node.childNodes]) cleanSVGNode(child);
 }
 
 function escapeHtml(s) {

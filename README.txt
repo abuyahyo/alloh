@@ -11,9 +11,9 @@ Tuzilish:
     + names_all_languages.csv      — 100 ism 16 tilda matrix
 - excel/he_is_allah_arabic.xlsx    — arab-yo'naltirilgan (4 varaq)
 - excel/he_is_allah_all_languages.xlsx — har til alohida varaq
-- assets/voices/*.mp3     — 100 audio tilovat
-- assets/images/*.jpg     — 100 fon rasm
-- assets/images/*.svg     — 100 kalligrafiya
+- voices/*.mp3            — 100 audio tilovat
+- images/*.jpg            — 100 fon rasm
+- images/*.svg            — 100 kalligrafiya
 
 Statistika:
 - 100 ta ism (Allāh + 99 go'zal ism)
