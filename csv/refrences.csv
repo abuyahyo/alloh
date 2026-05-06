@@ -1,0 +1,13 @@
+﻿id,refrence_id,lang,title,default_title,content,display_order,status,created_at,updated_at
+1,1,ar,موسوعة المصطلحات الإسلامية,موسوعة المصطلحات الإسلامية,"<p><a href=""https://terminologyenc.com/"" rel=""noopener noreferrer"" target=""_blank"">https://terminologyenc.com/</a></p>",1,1,2025-02-12T02:37:36.000000Z,2026-01-12T14:31:14.000000Z
+2,2,ar,موقع الدرر السنية,موقع الدرر السنية,"<p><a href=""https://dorar.net/"" rel=""noopener noreferrer"" target=""_blank"" style=""background-color: rgb(255, 255, 255); color: rgb(0, 0, 0);"">https://dorar.net/</a></p><p><span style=""background-color: rgb(255, 255, 255); color: rgb(0, 0, 0);"">المشرف العام / علوي بن عبدالقادر السقاف</span></p>",2,1,2025-02-12T02:46:44.000000Z,2026-01-12T14:31:15.000000Z
+3,3,ar,كتاب أسرار الأسماء,كتاب أسرار الأسماء,"<p><span style=""color: rgb(0, 0, 0); background-color: rgb(255, 255, 255);"">مؤلفة كتاب (لولا دعاؤكم)</span></p>",3,1,2025-02-12T02:47:59.000000Z,2026-01-12T14:31:17.000000Z
+4,4,ar,كتاب هذا ربي,كتاب هذا ربي,"<p><span style=""background-color: rgb(255, 255, 255); color: rgb(0, 0, 0);"">إعداد خالد الخليوي</span></p>",4,1,2025-02-12T02:48:34.000000Z,2026-01-12T14:31:17.000000Z
+1,1,en,Encyclopedia of Translated Islamic Terms,موسوعة المصطلحات الإسلامية,"<p><a href=""https://terminologyenc.com/"" rel=""noopener noreferrer"" target=""_blank"">https://terminologyenc.com/ar/browse/category/758</a></p>",1,1,2025-02-12T02:37:36.000000Z,2026-01-12T14:31:14.000000Z
+4,4,en,This is My Lord,كتاب هذا ربي,"<p><strong style=""color: rgb(0, 0, 0);"">Prepared by: Khalid Al-Khelaiwi</strong></p>",4,1,2025-02-12T02:48:34.000000Z,2026-01-12T14:31:17.000000Z
+1,1,tr,İslami Terimler Ansiklopedisi,موسوعة المصطلحات الإسلامية,<p>https://terminologyenc.com/tr/home</p>,1,1,2025-02-12T02:37:36.000000Z,2026-01-12T14:31:14.000000Z
+1,1,pt,La enciclopedia de los términos islámicos traducidos,موسوعة المصطلحات الإسلامية,<p>https://terminologyenc.com/es/home</p>,1,1,2025-02-12T02:37:36.000000Z,2026-01-12T14:31:14.000000Z
+1,1,ur,انسائیکلوپیڈیا ترجمہ شدہ اسلامی مصطلحات,موسوعة المصطلحات الإسلامية,<p>https://terminologyenc.com/ur/home</p>,1,1,2025-02-12T02:37:36.000000Z,2026-01-12T14:31:14.000000Z
+1,1,ru,Энциклопедия исламской терминологии с переводом,موسوعة المصطلحات الإسلامية,<p>https://terminologyenc.com/ru/home</p>,1,1,2025-02-12T02:37:36.000000Z,2026-01-12T14:31:14.000000Z
+1,1,id,Ensiklopedi Istilah-Istilah Islami Yang Diterjemahkan,موسوعة المصطلحات الإسلامية,<p>https://terminologyenc.com/id/home</p>,1,1,2025-02-12T02:37:36.000000Z,2026-01-12T14:31:14.000000Z
+1,1,zh,伊斯兰教术语辞典翻译,موسوعة المصطلحات الإسلامية,<p>https://terminologyenc.com/zh/home</p>,1,1,2025-02-12T02:37:36.000000Z,2026-01-12T14:31:14.000000Z
