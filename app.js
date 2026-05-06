@@ -57,9 +57,18 @@ function applyDir() {
   document.documentElement.setAttribute('lang', state.lang);
 }
 
+const ARABIC_DIGITS = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+function formatNum(n) {
+  const s = String(n);
+  return RTL_LANGS.has(state.lang)
+    ? s.replace(/\d/g, (d) => ARABIC_DIGITS[+d])
+    : s;
+}
+
 function renderGrid(filter = '') {
   const grid = document.getElementById('grid');
   const q = filter.trim().toLowerCase();
+  let visibleIndex = 0;
 
   const cards = state.names
     .map((n) => {
@@ -70,9 +79,11 @@ function renderGrid(filter = '') {
         const hay = `${n.default_name} ${translit}`.toLowerCase();
         if (!hay.includes(q)) return '';
       }
+      const delay = Math.min(visibleIndex++ * 18, 500);
+      const color = safeColor(n.color);
       return `
-        <article class="card" data-id="${n.id}" style="--card-color: ${n.color}">
-          <div class="num">${n.display_order}</div>
+        <article class="card" data-id="${n.id}" tabindex="0" style="--card-color: ${color}; animation-delay: ${delay}ms">
+          <div class="num">${escapeHtml(formatNum(n.display_order))}</div>
           <div class="arabic">${escapeHtml(n.default_name)}</div>
           <div class="translit">${escapeHtml(translit)}</div>
         </article>
@@ -80,7 +91,13 @@ function renderGrid(filter = '') {
     })
     .join('');
 
-  grid.innerHTML = cards || '<p style="text-align:center; color:var(--muted); grid-column: 1/-1; padding: 2rem;">No results</p>';
+  grid.removeAttribute('aria-busy');
+  grid.innerHTML = cards || '<p class="empty">No results</p>';
+}
+
+function safeColor(c) {
+  if (typeof c !== 'string') return 'var(--accent)';
+  return /^#[0-9a-f]{3,8}$/i.test(c.trim()) ? c.trim() : 'var(--accent)';
 }
 
 function bindEvents() {
@@ -98,9 +115,17 @@ function bindEvents() {
     searchTimer = setTimeout(() => renderGrid(value), 120);
   });
 
-  document.getElementById('grid').addEventListener('click', (e) => {
+  const grid = document.getElementById('grid');
+  grid.addEventListener('click', (e) => {
     const card = e.target.closest('.card');
     if (card) openDetail(Number(card.dataset.id));
+  });
+  grid.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    const card = e.target.closest('.card');
+    if (!card) return;
+    e.preventDefault();
+    openDetail(Number(card.dataset.id));
   });
 
   const detail = document.getElementById('detail');
@@ -120,10 +145,13 @@ async function openDetail(id) {
   const t = tr[state.lang] || tr[DEFAULT_LANG] || {};
 
   const detail = document.getElementById('detail');
-  detail.style.setProperty('--accent', name.color || '#c9a86a');
-  detail.querySelector('.detail-bg').style.backgroundImage = name.background_image
-    ? `url("${name.background_image}")`
-    : '';
+  detail.style.setProperty('--accent', safeColor(name.color));
+  const bg = detail.querySelector('.detail-bg');
+  if (name.background_image && /^[\w./-]+$/.test(name.background_image)) {
+    bg.style.backgroundImage = `url("${name.background_image}")`;
+  } else {
+    bg.style.backgroundImage = '';
+  }
   detail.querySelector('.detail-arabic').textContent = name.default_name;
   detail.querySelector('.detail-translit').textContent = t.name || '';
 
