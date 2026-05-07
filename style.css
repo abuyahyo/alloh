@@ -502,6 +502,139 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
 .detail-meaning:empty { display: none; }
 
 /* =========================================================================
+   Visual library (cards + videos tabs)
+   ========================================================================= */
+
+.library {
+  margin: 2rem 0 1rem;
+}
+.library[hidden] { display: none; }
+
+.library-title {
+  text-align: center;
+  font-family: var(--font-arabic);
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--ink-soft);
+  margin: 0 auto 1rem;
+  display: flex;
+  justify-content: center;
+}
+.library-title span {
+  background: var(--surface);
+  border-radius: 999px;
+  box-shadow: var(--shadow-sm);
+  padding: 0.4rem 1.25rem;
+  display: inline-block;
+}
+
+.library-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  padding: 0.35rem;
+  background: var(--surface);
+  border-radius: 999px;
+  box-shadow: var(--shadow-sm);
+}
+.lib-tab {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 0.55rem 0.85rem;
+  border-radius: 999px;
+  color: var(--muted);
+  font-family: var(--font-arabic);
+  font-size: 0.92rem;
+  font-weight: 600;
+  background: transparent;
+  transition: background 0.15s var(--ease), color 0.15s var(--ease);
+}
+.lib-tab:hover { color: var(--ink-soft); }
+.lib-tab.is-active {
+  background: var(--surface-2);
+  color: var(--ink);
+}
+.lib-tab[hidden] { display: none; }
+.lib-tab:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+.library-pane {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.library-pane[hidden] { display: none; }
+
+.lib-card {
+  width: 100%;
+  border-radius: var(--r-md);
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+  background: var(--surface-2);
+  margin: 0;
+}
+.lib-card img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.lib-video {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--r-md);
+  overflow: hidden;
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+  text-decoration: none;
+  color: var(--ink);
+  transition: transform 0.15s var(--ease), box-shadow 0.15s var(--ease);
+}
+.lib-video:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+.lib-video:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+.lib-video-thumb {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  background: var(--surface-2);
+}
+.lib-video-play {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9);
+  color: #c4302b;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+  pointer-events: none;
+}
+.lib-video-title {
+  display: block;
+  padding: 0.85rem 1rem 1rem;
+  font-family: var(--font-arabic);
+  font-weight: 600;
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+
+/* =========================================================================
    Floating navigation pill (prev / home / next)
    ========================================================================= */
 

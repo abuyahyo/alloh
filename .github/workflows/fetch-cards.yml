@@ -1,0 +1,47 @@
+name: Fetch missing card images
+
+# Backfills cards/*.jpg (occasionally images/*.jpg) from app.isokoon.com
+# whenever cards.json or the script changes; cron is the safety net.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/fetch-cards.yml'
+      - 'scripts/fetch-missing-cards.mjs'
+      - 'json/cards.json'
+  schedule:
+    - cron: '23 4 * * *'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: fetch-cards
+  cancel-in-progress: false
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Download missing card images
+        run: node scripts/fetch-missing-cards.mjs
+
+      - name: Commit and push if new cards were downloaded
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add cards/ images/ 2>/dev/null || true
+          if git diff --staged --quiet; then
+            echo "No new cards to commit."
+          else
+            git commit -m "Backfill missing card images"
+            git push
+          fi

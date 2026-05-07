@@ -34,6 +34,9 @@ const UI_STRINGS = {
     ar_only: 'هذا القسم متوفر بالعربية فقط',
     copied: 'تم النسخ',
     share_failed: 'تعذر المشاركة',
+    library: 'مكتبة المرئيات',
+    cards: 'البطاقات',
+    videos: 'مقاطع فيديو',
   },
   ru: {
     short_meaning: 'Краткое значение',
@@ -47,6 +50,9 @@ const UI_STRINGS = {
     ar_only: 'Этот раздел доступен только на арабском',
     copied: 'Скопировано',
     share_failed: 'Не удалось поделиться',
+    library: 'Медиатека',
+    cards: 'Карточки',
+    videos: 'Видео',
   },
 };
 function ui(key) {
@@ -61,6 +67,8 @@ const state = {
   lang: localStorage.getItem('lang') || DEFAULT_LANG,
   favorites: new Set(JSON.parse(localStorage.getItem('favorites') || '[]')),
   currentId: null,
+  cards: new Map(),   // gods_name_id -> [{ image, lang }, …]
+  videos: new Map(),  // gods_name_id -> [{ title, video_url, thumbnail_url, lang }, …]
 };
 
 const audio = $('#audio');
@@ -84,10 +92,12 @@ async function init() {
 
   bindEvents();
 
-  const [names, trans, langs] = await Promise.all([
+  const [names, trans, langs, cards, videos] = await Promise.all([
     loadJSON('json/names.json'),
     loadJSON('json/name_translations.json'),
     loadJSON('json/languages.json'),
+    loadJSON('json/cards.json').catch(() => []),
+    loadJSON('json/videos.json').catch(() => []),
   ]);
 
   state.names = names.sort((a, b) => a.display_order - b.display_order);
@@ -98,6 +108,15 @@ async function init() {
   for (const t of trans) {
     if (!state.translations.has(t.gods_name_id)) state.translations.set(t.gods_name_id, {});
     state.translations.get(t.gods_name_id)[t.lang] = t;
+  }
+
+  for (const c of cards) {
+    if (!state.cards.has(c.gods_name_id)) state.cards.set(c.gods_name_id, []);
+    state.cards.get(c.gods_name_id).push(c);
+  }
+  for (const v of videos) {
+    if (!state.videos.has(v.gods_name_id)) state.videos.set(v.gods_name_id, []);
+    state.videos.get(v.gods_name_id).push(v);
   }
 
   if (!state.languages.find((l) => l.code === state.lang)) state.lang = DEFAULT_LANG;
@@ -149,6 +168,7 @@ function render() {
   setSanitizedHTML($('#meaning'), t.short_meaning_val);
   renderUiStrings();
   renderSectionsAndTOC(name);
+  renderLibrary(name);
   renderFab(name);
 }
 
@@ -271,6 +291,121 @@ function hasContent(html) {
   return shortText(html).length > 5;
 }
 
+/* ================ visual library (cards + videos) ================ */
+
+function renderLibrary(name) {
+  const lib = $('#library');
+  const cardsPane = $('#lib-cards');
+  const videosPane = $('#lib-videos');
+  const cardsTab = $('.lib-tab[data-tab="cards"]');
+  const videosTab = $('.lib-tab[data-tab="videos"]');
+
+  const cards = pickByLang(state.cards.get(name.id) || []);
+  const videos = pickByLang(state.videos.get(name.id) || []);
+
+  cardsPane.replaceChildren();
+  for (const c of cards) {
+    const safe = safeCardPath(c.image);
+    if (!safe) continue;
+    const fig = document.createElement('figure');
+    fig.className = 'lib-card';
+    const img = document.createElement('img');
+    img.src = safe;
+    img.alt = '';
+    img.loading = 'lazy';
+    img.decoding = 'async';
+    // Hide the whole card if the image isn't on disk yet (e.g. backfill
+    // workflow hasn't run for a freshly added entry).
+    img.addEventListener('error', () => fig.remove(), { once: true });
+    fig.appendChild(img);
+    cardsPane.appendChild(fig);
+  }
+
+  videosPane.replaceChildren();
+  for (const v of videos) {
+    const id = extractYouTubeId(v.video_url);
+    if (!id) continue;
+    videosPane.appendChild(buildVideoCard(v, id));
+  }
+
+  cardsTab.hidden = cardsPane.children.length === 0;
+  videosTab.hidden = videosPane.children.length === 0;
+
+  if (cardsTab.hidden && videosTab.hidden) {
+    lib.hidden = true;
+    return;
+  }
+  lib.hidden = false;
+
+  // If the active tab disappeared (e.g. switched to a name with only videos),
+  // fall back to whichever tab still has content.
+  const active = $('.lib-tab.is-active');
+  if (!active || active.hidden) {
+    selectLibraryTab(cardsTab.hidden ? 'videos' : 'cards');
+  }
+}
+
+function pickByLang(items) {
+  if (!items.length) return [];
+  const native = items.filter((i) => i.lang === state.lang);
+  if (native.length) return native;
+  const ar = items.filter((i) => i.lang === DEFAULT_LANG);
+  return ar.length ? ar : items;
+}
+
+function safeCardPath(p) {
+  if (typeof p !== 'string' || !p) return '';
+  return /^(cards|images)\/[\w-]+\.(jpe?g|png|webp)$/i.test(p) ? p : '';
+}
+
+function extractYouTubeId(url) {
+  if (typeof url !== 'string') return '';
+  const m = url.match(/(?:v=|youtu\.be\/|embed\/|shorts\/)([\w-]{11})/);
+  return m ? m[1] : '';
+}
+
+function buildVideoCard(v, id) {
+  const a = document.createElement('a');
+  a.className = 'lib-video';
+  a.href = v.video_url;
+  a.target = '_blank';
+  a.rel = 'noopener noreferrer';
+  a.setAttribute('aria-label', v.title || 'YouTube video');
+
+  const thumb = document.createElement('img');
+  thumb.className = 'lib-video-thumb';
+  thumb.src = v.thumbnail_url || `https://img.youtube.com/vi/${id}/hqdefault.jpg`;
+  thumb.alt = '';
+  thumb.loading = 'lazy';
+  thumb.decoding = 'async';
+  thumb.addEventListener('error', () => {
+    thumb.src = `https://img.youtube.com/vi/${id}/0.jpg`;
+  }, { once: true });
+
+  const overlay = document.createElement('span');
+  overlay.className = 'lib-video-play';
+  overlay.innerHTML = '<svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>';
+
+  const title = document.createElement('span');
+  title.className = 'lib-video-title';
+  title.textContent = v.title || '';
+
+  a.appendChild(thumb);
+  a.appendChild(overlay);
+  a.appendChild(title);
+  return a;
+}
+
+function selectLibraryTab(tab) {
+  $$('.lib-tab').forEach((b) => {
+    const active = b.dataset.tab === tab;
+    b.classList.toggle('is-active', active);
+    b.setAttribute('aria-selected', active ? 'true' : 'false');
+  });
+  $('#lib-cards').hidden = tab !== 'cards';
+  $('#lib-videos').hidden = tab !== 'videos';
+}
+
 /**
  * The floating bar at the bottom shows three actions: prev, home, next. The
  * left/right slots map to display_order ∓ 1 in LTR, but flip in RTL so the
@@ -353,6 +488,10 @@ function bindEvents() {
   });
 
   $('.bar-btn.share').addEventListener('click', shareCurrent);
+
+  $$('.lib-tab').forEach((btn) => {
+    btn.addEventListener('click', () => selectLibraryTab(btn.dataset.tab));
+  });
 
   document.addEventListener('keydown', (e) => {
     if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;

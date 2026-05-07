@@ -20,7 +20,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri+Quran&family=Amiri:wght@400;700&family=Cairo:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap">
-  <link rel="stylesheet" href="style.css?v=2026050846">
+  <link rel="stylesheet" href="style.css?v=2026050847">
 </head>
 <body class="detail-body">
   <a class="skip-link" href="#main">Skip to content</a>
@@ -50,6 +50,22 @@
     </nav>
 
     <div class="sections" id="sections"></div>
+
+    <section class="library" id="library" hidden>
+      <h3 class="library-title" data-key="library"><span>مكتبة المرئيات</span></h3>
+      <div class="library-tabs" role="tablist" id="lib-tabs">
+        <button class="lib-tab is-active" role="tab" data-tab="cards" aria-selected="true" type="button">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 17l5-5 4 4 3-3 6 6"/></svg>
+          <span data-key="cards">البطاقات</span>
+        </button>
+        <button class="lib-tab" role="tab" data-tab="videos" aria-selected="false" type="button">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6" width="13" height="12" rx="2"/><path d="M16 10l5-3v10l-5-3z"/></svg>
+          <span data-key="videos">مقاطع فيديو</span>
+        </button>
+      </div>
+      <div class="library-pane" id="lib-cards" role="tabpanel"></div>
+      <div class="library-pane" id="lib-videos" role="tabpanel" hidden></div>
+    </section>
   </main>
 
   <nav class="name-fab" id="fab" aria-label="Name navigation" dir="ltr">
@@ -76,6 +92,6 @@
 
   <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
 
-  <script type="module" src="name.js?v=2026050843"></script>
+  <script type="module" src="name.js?v=2026050847"></script>
 </body>
 </html>
