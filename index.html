@@ -1,110 +1,141 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl" data-theme="light">
+<html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="description" content="The 99 beautiful names of Allah (Asmaa-ul-Husna) — Arabic, transliteration, audio recitation, calligraphy, and meanings in 16 languages.">
-  <meta name="theme-color" content="#faf6ee" media="(prefers-color-scheme: light)">
-  <meta name="theme-color" content="#0e0c08" media="(prefers-color-scheme: dark)">
-  <meta property="og:title" content="أسماء الله الحسنى — He Is Allah">
+  <meta name="theme-color" content="#ebebed">
+  <meta property="og:title" content="هو الله — Asmaa-ul-Husna">
   <meta property="og:description" content="The 99 beautiful names of Allah with audio, calligraphy and translations in 16 languages.">
   <meta property="og:type" content="website">
-  <title>أسماء الله الحسنى — Asmaa-ul-Husna</title>
+  <title>هو الله — Asmaa-ul-Husna</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400;1,700&family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400;1,500&family=Inter:wght@400;500;600&display=swap">
-  <link rel="stylesheet" href="style.css?v=2026050601">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri+Quran&family=Amiri:wght@400;700&family=Cairo:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="style.css?v=2026050603">
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to content</a>
 
-  <nav class="topbar">
-    <div class="brand" aria-hidden="true">
-      <span class="brand-mark">
-        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5">
-          <path d="M12 2 L14 8 L20 8 L15 12 L17 18 L12 14 L7 18 L9 12 L4 8 L10 8 Z"/>
-        </svg>
-      </span>
-      <span class="brand-text">Asmaa-ul-Husna</span>
-    </div>
-    <div class="topbar-actions">
-      <label class="search-wrap" aria-label="Search">
-        <svg class="ico" viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="9" cy="9" r="6"/><path d="M14 14l4 4" stroke-linecap="round"/></svg>
-        <input type="search" id="search" placeholder="Search a name…" autocomplete="off">
-      </label>
+  <header class="brand-header">
+    <div class="lang-floater">
       <select id="lang" aria-label="Language"></select>
-      <button id="theme" class="icon-btn" aria-label="Toggle theme" type="button">
-        <svg class="ico ico-sun" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke-linecap="round"/></svg>
-        <svg class="ico ico-moon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" stroke-linejoin="round"/></svg>
-      </button>
     </div>
-  </nav>
-
-  <header class="hero">
-    <div class="ornament" aria-hidden="true"><span></span><i class="diamond"></i><span></span></div>
-    <h1 class="hero-title">أسماء الله الحسنى</h1>
-    <p class="hero-sub">The Ninety-Nine Most Beautiful Names</p>
-    <div class="ornament" aria-hidden="true"><span></span><i class="diamond"></i><span></span></div>
+    <div class="logo-art" aria-hidden="true">
+      <span class="logo-w1">هو</span>
+      <span class="logo-w2">الله</span>
+    </div>
+    <p class="logo-tag">HE IS ALLAH</p>
   </header>
 
+  <div class="search-shell">
+    <label class="search">
+      <input type="search" id="search" placeholder="البحث" autocomplete="off">
+      <svg class="search-icon" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+        <circle cx="11" cy="11" r="6.5"/>
+        <path d="M16 16l4 4" stroke-linecap="round"/>
+      </svg>
+    </label>
+  </div>
+
+  <div class="filter-bar">
+    <div class="filter-label">
+      <button id="grid-toggle" class="grid-toggle" aria-label="Toggle grid view" type="button">
+        <svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="3" y="3" width="6" height="6" rx="1.2"/><rect x="11" y="3" width="6" height="6" rx="1.2"/><rect x="3" y="11" width="6" height="6" rx="1.2"/><rect x="11" y="11" width="6" height="6" rx="1.2"/></svg>
+      </button>
+      <span class="filter-text">ترتيب</span>
+    </div>
+    <div class="chip-row" role="tablist" aria-label="Sort">
+      <button class="chip is-active" role="tab" data-sort="default" aria-selected="true" type="button">
+        <svg class="chip-icon" viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M3 4h10M3 8h10M3 12h10" stroke-linecap="round"/></svg>
+        <span>إفتراضي</span>
+      </button>
+      <button class="chip" role="tab" data-sort="alpha" aria-selected="false" type="button">
+        <svg class="chip-icon" viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M3 4h10M3 8h7M3 12h4" stroke-linecap="round"/></svg>
+        <span>أبجدي</span>
+      </button>
+      <button class="chip" role="tab" data-sort="meaning" aria-selected="false" type="button">
+        <span>المعاني</span>
+      </button>
+    </div>
+  </div>
+
   <main id="main">
-    <ol id="list" class="name-list" aria-busy="true">
-      <li class="row skeleton"></li>
-      <li class="row skeleton"></li>
-      <li class="row skeleton"></li>
-      <li class="row skeleton"></li>
-      <li class="row skeleton"></li>
-      <li class="row skeleton"></li>
-    </ol>
+    <div id="list" class="cards" aria-busy="true" data-view="rows">
+      <article class="name-card skeleton" aria-hidden="true"></article>
+      <article class="name-card skeleton" aria-hidden="true"></article>
+      <article class="name-card skeleton" aria-hidden="true"></article>
+    </div>
   </main>
 
-  <footer class="site-footer">
-    <span id="count"></span>
-  </footer>
-
-  <div id="overlay" class="overlay" hidden></div>
+  <audio id="audio" preload="none"></audio>
 
   <aside id="panel" class="panel" aria-hidden="true" aria-label="Name detail">
-    <button class="panel-close" type="button" aria-label="Close">
-      <svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M5 5l10 10M15 5L5 15"/></svg>
-    </button>
+    <header class="panel-bar">
+      <button class="bar-btn share" type="button" aria-label="Share">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+          <circle cx="6.5" cy="12" r="2.6"/>
+          <circle cx="17.5" cy="6" r="2.6"/>
+          <circle cx="17.5" cy="18" r="2.6"/>
+          <path d="M8.8 11l6.7-3.7M8.8 13l6.7 3.7"/>
+        </svg>
+      </button>
+      <button class="bar-btn back" type="button" aria-label="Back">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M5 12h14M14 5l7 7-7 7"/>
+        </svg>
+      </button>
+    </header>
 
-    <article class="panel-inner">
-      <div class="panel-hero">
-        <div class="panel-bg" aria-hidden="true"></div>
-        <div class="panel-svg" aria-hidden="true"></div>
-      </div>
-      <div class="panel-body">
-        <div class="panel-num" aria-label="Number"></div>
-        <h2 class="panel-arabic"></h2>
-        <p class="panel-translit"></p>
+    <div class="panel-carousel" id="carousel" role="region" aria-label="Names"></div>
 
-        <div class="panel-audio-wrap">
-          <audio controls preload="none" class="panel-audio"></audio>
-        </div>
+    <div class="panel-meaning" id="meaning"></div>
 
-        <section class="panel-section">
-          <h3 class="section-key panel-short-key"></h3>
-          <div class="section-val panel-short-val"></div>
-        </section>
-        <section class="panel-section">
-          <h3 class="section-key panel-meaning-key"></h3>
-          <div class="section-val panel-meaning-val"></div>
-        </section>
-      </div>
-      <nav class="panel-nav" aria-label="Names navigation">
-        <button class="nav-btn nav-prev" type="button">
-          <svg viewBox="0 0 20 20" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4l-6 6 6 6"/></svg>
-          <span class="nav-meta"><small>Previous</small><span class="nav-name"></span></span>
+    <section class="more-section">
+      <h3 class="more-title"><span>المزيد عن هذا الاسم</span></h3>
+      <div class="more-grid">
+        <button class="more-btn" data-act="dua" type="button">
+          <span class="more-icon" style="--c: #2a9b8b">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4 7 7 0 1 0 20 14.5z"/><path d="M16.5 5l.7 1.6L19 7l-1.5.9-.4 1.6-1-1.4-1.6.1.9-1.3-.4-1.6 1.5.7z" stroke-linejoin="round"/></svg>
+          </span>
+          <span class="more-label">الدعاء بالاسم</span>
         </button>
-        <button class="nav-btn nav-next" type="button">
-          <span class="nav-meta"><small>Next</small><span class="nav-name"></span></span>
-          <svg viewBox="0 0 20 20" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4l6 6-6 6"/></svg>
+        <button class="more-btn" data-act="evidence" type="button">
+          <span class="more-icon" style="--c: #98a05c">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M5 5h6a3 3 0 0 1 3 3v11a2 2 0 0 0-2-2H5z"/><path d="M19 5h-6a3 3 0 0 0-3 3v11a2 2 0 0 1 2-2h7z"/></svg>
+          </span>
+          <span class="more-label">الأدلة</span>
         </button>
-      </nav>
-    </article>
+        <button class="more-btn" data-act="scholars" type="button">
+          <span class="more-icon" style="--c: #e08940">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><path d="M5 5h11a3 3 0 0 1 3 3v5a3 3 0 0 1-3 3h-3l-3 3v-3H5a3 3 0 0 1-3-3V8a3 3 0 0 1 3-3z"/></svg>
+          </span>
+          <span class="more-label">أقوال العلماء</span>
+        </button>
+        <button class="more-btn" data-act="pauses" type="button">
+          <span class="more-icon" style="--c: #8a78b0">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.9 5.6 5.9.2-4.7 3.5 1.7 5.7L12 14.7 7.2 18l1.7-5.7L4.2 8.8l5.9-.2z"/></svg>
+          </span>
+          <span class="more-label">وقفات</span>
+        </button>
+        <button class="more-btn" data-act="rulings" type="button">
+          <span class="more-icon" style="--c: #5b8bc8">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><path d="M7 4h10v16l-5-3-5 3z"/><path d="M9 10h6"/></svg>
+          </span>
+          <span class="more-label">فوائد وأحكام</span>
+        </button>
+      </div>
+      <button class="more-btn wide" data-act="images" type="button">
+        <span class="more-icon" style="--c: #c46963">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="5" width="16" height="14" rx="2"/><circle cx="9" cy="11" r="1.6"/><path d="M5 18l4-4 3 3 3.5-3.5L20 18"/></svg>
+        </span>
+        <span class="more-label">مكتبة المرئيات</span>
+      </button>
+    </section>
   </aside>
 
-  <script src="app.js?v=2026050601"></script>
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+  <script src="app.js?v=2026050603"></script>
 </body>
 </html>
