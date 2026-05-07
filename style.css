@@ -31,7 +31,6 @@
   --ease: cubic-bezier(0.32, 0.72, 0.24, 1);
 }
 
-html, body { overflow-x: hidden; }
 html { scroll-behavior: smooth; }
 
 body {
