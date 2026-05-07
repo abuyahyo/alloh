@@ -83,8 +83,9 @@ let tocObserver = null;
 
 async function init() {
   const params = new URLSearchParams(location.search);
-  const id = Number(params.get('id'));
-  if (!Number.isFinite(id)) {
+  const idParam = params.get('id');
+  const id = idParam ? Number(idParam) : NaN;
+  if (!Number.isFinite(id) || id <= 0) {
     location.replace('index.html');
     return;
   }

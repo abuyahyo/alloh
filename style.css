@@ -658,10 +658,9 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
 .name-fab {
   position: fixed;
   left: 50%;
-  /* Generous default bottom offset so the bar stays above iOS Safari's
-     bottom URL bar on a fresh page load even if the @supports rule
-     below isn't honored. */
-  bottom: max(5rem, calc(env(safe-area-inset-bottom) + 4.5rem));
+  /* Fallback for browsers without dvh: stay well above iOS Safari's
+     URL bar / bottom toolbar even if the @supports rule below is dropped. */
+  bottom: max(5.5rem, calc(env(safe-area-inset-bottom) + 5rem));
   transform: translateX(-50%);
   display: flex;
   align-items: stretch;
@@ -675,12 +674,14 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
   visibility: visible;
 }
 
-/* When dynamic viewport units are available, anchor against the actual
-   visible bottom (URL bar height = 100lvh − 100dvh) so the offset is
-   exactly enough to clear the URL bar — and tracks its expand/collapse. */
+/* Anchor the bar's TOP a fixed distance above the *visible* viewport
+   bottom (`100dvh`). dvh shrinks while iOS Safari's URL bar / toolbar
+   is up, so the FAB always sits inside the visible area no matter how
+   the bar is configured — no fragile lvh − dvh subtraction needed. */
 @supports (height: 100dvh) {
   .name-fab {
-    bottom: max(1.25rem, calc(100lvh - 100dvh + env(safe-area-inset-bottom) + 1.25rem));
+    top: calc(100dvh - 56px - max(1.25rem, env(safe-area-inset-bottom) + 0.5rem));
+    bottom: auto;
   }
 }
 
