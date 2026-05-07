@@ -8,6 +8,10 @@ on:
       - '.github/workflows/fetch-voices.yml'
       - 'scripts/fetch-missing-voices.mjs'
       - 'json/names.json'
+  # Tries to backfill once a day so that any missing recordings eventually
+  # appear without a manual nudge.
+  schedule:
+    - cron: '17 4 * * *'
 
 permissions:
   contents: write

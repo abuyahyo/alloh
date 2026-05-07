@@ -189,29 +189,18 @@ function markAudioMissing(id) {
 
 async function togglePlay(id) {
   const name = state.names.find((n) => n.id === id);
-  if (!name) return;
-
-  if (state.playingId === id) {
-    if (!audio.paused) audio.pause();
-    speechSynthesis.cancel();
+  if (!name || !name.voice || state.missingAudio.has(id)) {
+    showToast(audioMissingMsg());
+    refreshPlayingUI();
+    return;
+  }
+  if (state.playingId === id && !audio.paused) {
+    audio.pause();
     state.playingId = null;
     refreshPlayingUI();
     return;
   }
-
   audio.pause();
-  speechSynthesis.cancel();
-
-  if (!name.voice || state.missingAudio.has(id)) {
-    if (speakName(name)) {
-      state.playingId = id;
-      refreshPlayingUI();
-    } else {
-      showToast(audioMissingMsg());
-    }
-    return;
-  }
-
   audio.src = name.voice;
   state.playingId = id;
   refreshPlayingUI();
@@ -219,36 +208,9 @@ async function togglePlay(id) {
     await audio.play();
   } catch {
     markAudioMissing(id);
-    if (speakName(name)) return;
     if (state.playingId === id) state.playingId = null;
     refreshPlayingUI();
     showToast(audioMissingMsg());
-  }
-}
-
-function speakName(name) {
-  if (typeof speechSynthesis === 'undefined') return false;
-  try {
-    const u = new SpeechSynthesisUtterance(name.default_name);
-    u.lang = 'ar';
-    u.rate = 0.85;
-    u.pitch = 1;
-    u.onend = () => {
-      if (state.playingId === name.id) {
-        state.playingId = null;
-        refreshPlayingUI();
-      }
-    };
-    u.onerror = () => {
-      if (state.playingId === name.id) {
-        state.playingId = null;
-        refreshPlayingUI();
-      }
-    };
-    speechSynthesis.speak(u);
-    return true;
-  } catch {
-    return false;
   }
 }
 
@@ -329,7 +291,6 @@ function closePanel() {
   panel.setAttribute('aria-hidden', 'true');
   document.body.style.overflow = '';
   state.currentId = null;
-  if (typeof speechSynthesis !== 'undefined') speechSynthesis.cancel();
 }
 
 function buildCarousel() {
