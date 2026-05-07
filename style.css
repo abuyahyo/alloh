@@ -667,7 +667,6 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
   inset: 0;
   z-index: 200;
   display: flex;
-  align-items: flex-end;
   justify-content: center;
   pointer-events: none;
 }
@@ -682,10 +681,9 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
 .long-sheet.open .long-backdrop { opacity: 1; }
 .long-card {
   position: relative;
+  z-index: 1;
   width: 100%;
   max-width: 720px;
-  height: 100vh;
-  height: 100dvh;
   background: var(--surface);
   border-radius: 0;
   padding: 1.25rem 1.5rem 2rem;
