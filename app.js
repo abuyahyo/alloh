@@ -1,9 +1,5 @@
 const RTL_LANGS = new Set(['ar', 'fa', 'ur']);
 const DEFAULT_LANG = 'ar';
-const ALLOWED_HTML_TAGS = new Set([
-  'P', 'BR', 'SPAN', 'STRONG', 'EM', 'B', 'I', 'U',
-  'UL', 'OL', 'LI', 'BLOCKQUOTE', 'H3', 'H4', 'H5', 'HR',
-]);
 
 const state = {
   names: [],
@@ -14,11 +10,8 @@ const state = {
   sort: localStorage.getItem('sort') || 'default',
   favorites: new Set(JSON.parse(localStorage.getItem('favorites') || '[]')),
   view: localStorage.getItem('view') || 'rows',
-  currentId: null,
   playingId: null,
   missingAudio: new Set(),
-  scrollTimer: null,
-  carouselKey: '',
 };
 
 const $ = (s, r = document) => r.querySelector(s);
@@ -57,7 +50,6 @@ async function init() {
   applyView();
   applySort();
   renderList();
-  openFromHash();
 }
 
 function buildLangSelect() {
@@ -135,8 +127,6 @@ function renderList() {
 
   list.innerHTML = state.visible.map((n, i) => cardMarkup(n, i)).join('');
 
-  // onload may fire before the inline handler is wired up for cached images;
-  // reconcile so those images don't stay hidden under the .is-loading class.
   for (const img of list.querySelectorAll('img.card-bg.is-loading')) {
     if (img.complete && img.naturalWidth > 0) img.classList.remove('is-loading');
   }
@@ -156,7 +146,7 @@ function cardMarkup(n, i) {
 
   return `
     <article class="name-card" data-id="${n.id}" style="${cardStyle}">
-      <a class="card-link" href="#name-${n.id}" aria-label="${escapeHtml(ariaLabel)}">
+      <a class="card-link" href="name.html?id=${n.id}" aria-label="${escapeHtml(ariaLabel)}">
         ${bg ? `<img class="card-bg is-loading" src="${escapeHtml(bg)}" alt="" loading="${eager ? 'eager' : 'lazy'}" decoding="async" fetchpriority="${eager ? 'high' : 'low'}" onload="this.classList.remove('is-loading')" onerror="this.remove()">` : ''}
         <span class="card-arabic">${escapeHtml(n.default_name)}</span>
       </a>
@@ -187,18 +177,10 @@ function iconHeart() {
 
 const NO_AUDIO_MSG = {
   ar: 'لا يوجد تسجيل صوتي لهذا الاسم',
-  fa: 'صوتی برای این نام موجود نیست',
-  ur: 'اس نام کے لیے آڈیو دستیاب نہیں',
   ru: 'Аудио недоступно',
-  uz: 'Audio mavjud emas',
   en: 'No audio for this name',
 };
 function audioMissingMsg() { return NO_AUDIO_MSG[state.lang] || NO_AUDIO_MSG.en; }
-
-function markAudioMissing(id) {
-  if (id == null) return;
-  state.missingAudio.add(id);
-}
 
 async function togglePlay(id) {
   const name = state.names.find((n) => n.id === id);
@@ -221,7 +203,7 @@ async function togglePlay(id) {
   try {
     await audio.play();
   } catch {
-    markAudioMissing(id);
+    state.missingAudio.add(id);
     if (state.playingId === id) state.playingId = null;
     refreshPlayingUI();
     showToast(audioMissingMsg());
@@ -233,9 +215,8 @@ audio.addEventListener('ended', () => {
   refreshPlayingUI();
 });
 audio.addEventListener('error', () => {
-  const id = state.playingId;
-  if (id != null) {
-    markAudioMissing(id);
+  if (state.playingId != null) {
+    state.missingAudio.add(state.playingId);
     state.playingId = null;
     refreshPlayingUI();
     showToast(audioMissingMsg());
@@ -243,7 +224,7 @@ audio.addEventListener('error', () => {
 });
 
 function refreshPlayingUI() {
-  $$('.name-card, .carousel-card').forEach((card) => {
+  $$('.name-card').forEach((card) => {
     const id = Number(card.dataset.id);
     const btn = $('.card-play', card);
     if (!btn) return;
@@ -259,135 +240,10 @@ function toggleFav(id) {
   if (state.favorites.has(id)) state.favorites.delete(id);
   else state.favorites.add(id);
   localStorage.setItem('favorites', JSON.stringify([...state.favorites]));
-
   const isFav = state.favorites.has(id);
-  $$(`.name-card[data-id="${id}"] .card-fav, .carousel-card[data-id="${id}"] .card-fav`).forEach((b) => {
+  $$(`.name-card[data-id="${id}"] .card-fav`).forEach((b) => {
     b.classList.toggle('is-fav', isFav);
   });
-}
-
-/* ================ detail panel ================ */
-
-function openPanel(id) {
-  const idx = state.visible.findIndex((n) => n.id === id);
-  if (idx === -1) return;
-  state.currentId = id;
-
-  buildCarousel();
-  updatePanelMeaning(id);
-
-  const panel = $('#panel');
-  panel.classList.add('open');
-  panel.setAttribute('aria-hidden', 'false');
-  document.body.style.overflow = 'hidden';
-
-  if (location.hash !== `#name-${id}`) {
-    history.replaceState(null, '', `#name-${id}`);
-  }
-
-  const carousel = $('#carousel');
-  requestAnimationFrame(() => {
-    const card = carousel.querySelector(`.carousel-card[data-id="${id}"]`);
-    if (card) {
-      const targetLeft = card.offsetLeft - (carousel.clientWidth - card.clientWidth) / 2;
-      carousel.scrollTo({ left: targetLeft, behavior: 'instant' });
-    }
-  });
-}
-
-function closePanel() {
-  const panel = $('#panel');
-  panel.classList.remove('open');
-  panel.setAttribute('aria-hidden', 'true');
-  document.body.style.overflow = '';
-  state.currentId = null;
-  if (location.hash) history.replaceState(null, '', location.pathname + location.search);
-}
-
-function buildCarousel() {
-  const key = `${state.lang}|${state.sort}|${state.visible.map((n) => n.id).join(',')}`;
-  if (key === state.carouselKey) return;
-  state.carouselKey = key;
-  const carousel = $('#carousel');
-  carousel.innerHTML = state.visible.map((n) => carouselCardMarkup(n)).join('');
-}
-
-function carouselCardMarkup(n) {
-  const t = localized(n);
-  const translit = t.name || '';
-  const bg = safePath(n.background_image);
-  const isFav = state.favorites.has(n.id);
-  const isPlaying = state.playingId === n.id;
-  const tint = safeColor(n.color);
-
-  return `
-    <article class="carousel-card" data-id="${n.id}"${tint ? ` style="background-color: ${tint}"` : ''}>
-      ${bg ? `<img class="card-bg is-loading" src="${escapeHtml(bg)}" alt="" loading="lazy" decoding="async" onload="this.classList.remove('is-loading')" onerror="this.remove()">` : ''}
-      <div class="card-arabic">${escapeHtml(n.default_name)}</div>
-      <div class="card-foot">
-        <button class="card-icon-btn card-play${isPlaying ? ' is-playing' : ''}" data-action="play" aria-label="Play" type="button">
-          ${isPlaying ? iconPause() : iconPlay()}
-        </button>
-        <span class="card-translit">${escapeHtml(translit)}</span>
-        <button class="card-icon-btn card-fav${isFav ? ' is-fav' : ''}" data-action="fav" aria-label="Favorite" type="button">
-          ${iconHeart()}
-        </button>
-      </div>
-    </article>
-  `;
-}
-
-function updatePanelMeaning(id) {
-  const name = state.names.find((n) => n.id === id);
-  if (!name) return;
-  const t = localized(name);
-  setSanitizedHTML($('#meaning'), t.short_meaning_val);
-}
-
-function onCarouselScroll() {
-  clearTimeout(state.scrollTimer);
-  state.scrollTimer = setTimeout(() => {
-    const carousel = $('#carousel');
-    const cards = $$('.carousel-card', carousel);
-    const center = carousel.scrollLeft + carousel.clientWidth / 2;
-    let nearest = cards[0];
-    let nearestDist = Infinity;
-    for (const card of cards) {
-      const cardCenter = card.offsetLeft + card.clientWidth / 2;
-      const dist = Math.abs(cardCenter - center);
-      if (dist < nearestDist) { nearestDist = dist; nearest = card; }
-    }
-    if (!nearest) return;
-    const id = Number(nearest.dataset.id);
-    if (id !== state.currentId) {
-      state.currentId = id;
-      updatePanelMeaning(id);
-      if (location.hash !== `#name-${id}`) {
-        history.replaceState(null, '', `#name-${id}`);
-      }
-    }
-  }, 80);
-}
-
-/* ================ share ================ */
-
-async function shareCurrent() {
-  if (!state.currentId) return;
-  const name = state.names.find((n) => n.id === state.currentId);
-  if (!name) return;
-  const t = localized(name);
-  const text = `${name.default_name} — ${t.name || ''}\n${shortText(t.short_meaning_val).slice(0, 200)}`;
-  const url = location.href;
-  try {
-    if (navigator.share) {
-      await navigator.share({ title: name.default_name, text, url });
-    } else {
-      await navigator.clipboard.writeText(`${text}\n${url}`);
-      showToast('Copied to clipboard');
-    }
-  } catch (e) {
-    if (e && e.name !== 'AbortError') showToast('Share failed');
-  }
 }
 
 /* ================ events ================ */
@@ -397,21 +253,13 @@ function bindGlobalEvents() {
     state.lang = e.target.value;
     localStorage.setItem('lang', state.lang);
     applyDir();
-    state.carouselKey = '';
     renderList();
-    if (state.currentId) {
-      buildCarousel();
-      updatePanelMeaning(state.currentId);
-    }
   });
 
   let searchTimer;
   $('#search').addEventListener('input', () => {
     clearTimeout(searchTimer);
-    searchTimer = setTimeout(() => {
-      state.carouselKey = '';
-      renderList();
-    }, 120);
+    searchTimer = setTimeout(renderList, 120);
   });
 
   $$('.chip').forEach((chip) => {
@@ -419,7 +267,6 @@ function bindGlobalEvents() {
       state.sort = chip.dataset.sort;
       localStorage.setItem('sort', state.sort);
       applySort();
-      state.carouselKey = '';
       renderList();
     });
   });
@@ -432,142 +279,18 @@ function bindGlobalEvents() {
   });
 
   $('#list').addEventListener('click', onListClick);
-  $('#list').addEventListener('keydown', (e) => {
-    if (e.key !== 'Enter' && e.key !== ' ') return;
-    const link = e.target.closest('.card-link');
-    if (!link) return;
-    e.preventDefault();
-    const card = link.closest('.name-card');
-    if (card) openPanel(Number(card.dataset.id));
-  });
-
-  const carousel = $('#carousel');
-  carousel.addEventListener('click', (e) => {
-    const action = e.target.closest('[data-action]');
-    if (!action) return;
-    const card = action.closest('.carousel-card');
-    if (!card) return;
-    e.stopPropagation();
-    const id = Number(card.dataset.id);
-    if (action.dataset.action === 'play') togglePlay(id);
-    if (action.dataset.action === 'fav') toggleFav(id);
-  });
-  carousel.addEventListener('scroll', onCarouselScroll, { passive: true });
-
-  $('.bar-btn.back', $('#panel')).addEventListener('click', closePanel);
-  $('.bar-btn.share', $('#panel')).addEventListener('click', shareCurrent);
-
-  $$('.more-btn').forEach((btn) => {
-    btn.addEventListener('click', () => onMoreAction(btn.dataset.act));
-  });
-
-  document.addEventListener('keydown', (e) => {
-    const panel = $('#panel');
-    if (panel.getAttribute('aria-hidden') === 'true') return;
-    if (e.key === 'Escape') closePanel();
-    if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
-      const dir = document.documentElement.dir === 'rtl' ? -1 : 1;
-      const step = (e.key === 'ArrowRight' ? 1 : -1) * dir;
-      const idx = state.visible.findIndex((n) => n.id === state.currentId);
-      const next = state.visible[idx + step];
-      if (next) {
-        const card = $(`#carousel .carousel-card[data-id="${next.id}"]`);
-        if (card) {
-          carousel.scrollTo({
-            left: card.offsetLeft - (carousel.clientWidth - card.clientWidth) / 2,
-            behavior: 'smooth',
-          });
-        }
-      }
-    }
-  });
-
-  window.addEventListener('hashchange', openFromHash);
 }
 
 function onListClick(e) {
   const action = e.target.closest('[data-action]');
-  if (action) {
-    const card = action.closest('.name-card');
-    if (!card) return;
-    e.stopPropagation();
-    const id = Number(card.dataset.id);
-    if (action.dataset.action === 'play') togglePlay(id);
-    if (action.dataset.action === 'fav') toggleFav(id);
-    return;
-  }
-  const link = e.target.closest('.card-link');
-  if (!link) return;
+  if (!action) return;
+  const card = action.closest('.name-card');
+  if (!card) return;
   e.preventDefault();
-  const card = link.closest('.name-card');
-  if (!card || card.classList.contains('skeleton')) return;
-  openPanel(Number(card.dataset.id));
-}
-
-function openFromHash() {
-  const m = /^#name-(\d+)$/.exec(location.hash);
-  if (!m) return;
-  const id = Number(m[1]);
-  if (state.visible.find((n) => n.id === id)) openPanel(id);
-}
-
-function onMoreAction(act) {
-  const name = state.names.find((n) => n.id === state.currentId);
-  if (!name) return;
-  if (act === 'scholars') {
-    const t = localized(name);
-    if (!t.meanings_val) { showToast('No content'); return; }
-    showLongMeaning(t.meanings_key, t.meanings_val);
-  } else if (act === 'calligraphy') {
-    const path = safePath(name.image);
-    if (!path) { showToast('No image'); return; }
-    showCalligraphy(name.default_name, path);
-  }
-}
-
-/* ================ long-meaning sheet ================ */
-
-function ensureSheet() {
-  let sheet = $('#long-sheet');
-  if (sheet) return sheet;
-  sheet = document.createElement('div');
-  sheet.id = 'long-sheet';
-  sheet.className = 'long-sheet';
-  sheet.innerHTML = `
-    <div class="long-backdrop"></div>
-    <div class="long-card">
-      <button class="long-close" aria-label="Close" type="button">×</button>
-      <h4 class="long-key"></h4>
-      <div class="long-body"></div>
-    </div>
-  `;
-  sheet.querySelector('.long-backdrop').addEventListener('click', () => sheet.classList.remove('open'));
-  sheet.querySelector('.long-close').addEventListener('click', () => sheet.classList.remove('open'));
-  document.body.appendChild(sheet);
-  return sheet;
-}
-
-function showLongMeaning(key, html) {
-  if (!html) { showToast('No content'); return; }
-  const sheet = ensureSheet();
-  $('.long-key', sheet).textContent = key || '';
-  setSanitizedHTML($('.long-body', sheet), html);
-  requestAnimationFrame(() => sheet.classList.add('open'));
-}
-
-function showCalligraphy(title, src) {
-  const sheet = ensureSheet();
-  $('.long-key', sheet).textContent = title || '';
-  const body = $('.long-body', sheet);
-  body.replaceChildren();
-  const img = document.createElement('img');
-  img.src = src;
-  img.alt = title || '';
-  img.className = 'long-image';
-  img.loading = 'lazy';
-  img.decoding = 'async';
-  body.appendChild(img);
-  requestAnimationFrame(() => sheet.classList.add('open'));
+  e.stopPropagation();
+  const id = Number(card.dataset.id);
+  if (action.dataset.action === 'play') togglePlay(id);
+  if (action.dataset.action === 'fav') toggleFav(id);
 }
 
 /* ================ toast ================ */
@@ -584,37 +307,13 @@ function showToast(msg) {
   }, 1800);
 }
 
-/* ================ sanitization & helpers ================ */
+/* ================ helpers ================ */
 
 function shortText(html) {
   if (!html) return '';
   const tmp = document.createElement('div');
   tmp.innerHTML = String(html);
   return (tmp.textContent || '').replace(/\s+/g, ' ').trim();
-}
-
-function setSanitizedHTML(el, html) {
-  el.replaceChildren();
-  if (!html) return;
-  const tmpl = document.createElement('template');
-  tmpl.innerHTML = String(html);
-  cleanNode(tmpl.content);
-  el.appendChild(tmpl.content);
-}
-
-function cleanNode(node) {
-  for (const child of [...node.childNodes]) {
-    if (child.nodeType === Node.ELEMENT_NODE) {
-      if (!ALLOWED_HTML_TAGS.has(child.tagName)) {
-        child.replaceWith(document.createTextNode(child.textContent || ''));
-        continue;
-      }
-      for (const attr of [...child.attributes]) child.removeAttribute(attr.name);
-      cleanNode(child);
-    } else if (child.nodeType !== Node.TEXT_NODE) {
-      child.remove();
-    }
-  }
 }
 
 function safePath(p) {
