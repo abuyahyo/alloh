@@ -1,5 +1,12 @@
-const RTL_LANGS = new Set(['ar', 'fa', 'ur']);
-const DEFAULT_LANG = 'ar';
+import {
+  DEFAULT_LANG,
+  $, $$,
+  loadJSON, applyDir, buildLangSelect, localized,
+  escapeHtml, shortText, safePath, safeColor,
+  iconPlay, iconPause, iconHeart,
+  showToast, createAudioController, attachImgFade,
+} from './shared.js';
+
 const ALLOWED_HTML_TAGS = new Set([
   'P', 'BR', 'SPAN', 'STRONG', 'EM', 'B', 'I', 'U',
   'UL', 'OL', 'LI', 'BLOCKQUOTE', 'H3', 'H4', 'H5', 'HR',
@@ -56,19 +63,15 @@ const state = {
   lang: localStorage.getItem('lang') || DEFAULT_LANG,
   favorites: new Set(JSON.parse(localStorage.getItem('favorites') || '[]')),
   currentId: null,
-  playingId: null,
-  missingAudio: new Set(),
 };
 
-const $ = (s, r = document) => r.querySelector(s);
-const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const audio = $('#audio');
-
-async function loadJSON(path) {
-  const r = await fetch(path);
-  if (!r.ok) throw new Error(`Failed to load ${path}`);
-  return r.json();
-}
+const audioCtrl = createAudioController({
+  audio,
+  getName: (id) => state.names.find((n) => n.id === id),
+  getLang: () => state.lang,
+  onChange: refreshPlayingUI,
+});
 
 async function init() {
   const params = new URLSearchParams(location.search);
@@ -99,28 +102,13 @@ async function init() {
 
   if (!state.languages.find((l) => l.code === state.lang)) state.lang = DEFAULT_LANG;
 
-  buildLangSelect();
-  applyDir();
+  buildLangSelect($('#lang'), state.languages, state.lang);
+  applyDir(state.lang);
   render();
 }
 
-function buildLangSelect() {
-  const sel = $('#lang');
-  sel.innerHTML = state.languages
-    .map((l) => `<option value="${escapeHtml(l.code)}">${escapeHtml(l.name)}</option>`)
-    .join('');
-  sel.value = state.lang;
-}
-
-function applyDir() {
-  const dir = RTL_LANGS.has(state.lang) ? 'rtl' : 'ltr';
-  document.documentElement.setAttribute('dir', dir);
-  document.documentElement.setAttribute('lang', state.lang);
-}
-
-function localized(name) {
-  const tr = state.translations.get(name.id) || {};
-  return tr[state.lang] || tr[DEFAULT_LANG] || {};
+function loc(name) {
+  return localized(state.translations, name, state.lang);
 }
 
 function render() {
@@ -132,11 +120,11 @@ function render() {
     return;
   }
 
-  const t = localized(name);
+  const t = loc(name);
   const translit = t.name || '';
   const bg = safePath(name.background_image);
   const isFav = state.favorites.has(name.id);
-  const isPlaying = state.playingId === name.id;
+  const isPlaying = audioCtrl.isPlaying(name.id);
   const tint = safeColor(name.color);
 
   document.title = `${name.default_name}${translit ? ' — ' + translit : ''} | هو الله`;
@@ -144,7 +132,7 @@ function render() {
 
   hero.removeAttribute('aria-busy');
   hero.innerHTML = `
-    ${bg ? `<img class="card-bg is-loading" src="${escapeHtml(bg)}" alt="" loading="eager" decoding="async" fetchpriority="high" onload="this.classList.remove('is-loading')" onerror="this.remove()">` : ''}
+    ${bg ? `<img class="card-bg is-loading" src="${escapeHtml(bg)}" alt="" loading="eager" decoding="async" fetchpriority="high">` : ''}
     <span class="card-arabic">${escapeHtml(name.default_name)}</span>
     <div class="card-foot">
       <button class="card-icon-btn card-play${isPlaying ? ' is-playing' : ''}" data-action="play" aria-label="Play" type="button">
@@ -156,10 +144,7 @@ function render() {
       </button>
     </div>
   `;
-  const heroImg = hero.querySelector('img.card-bg.is-loading');
-  if (heroImg && heroImg.complete && heroImg.naturalWidth > 0) {
-    heroImg.classList.remove('is-loading');
-  }
+  attachImgFade(hero.querySelector('img.card-bg.is-loading'));
 
   setSanitizedHTML($('#meaning'), t.short_meaning_val);
   renderUiStrings();
@@ -182,7 +167,7 @@ function renderUiStrings() {
 }
 
 function renderSectionAvailability(name) {
-  const t = localized(name);
+  const t = loc(name);
   const tAr = (state.translations.get(name.id) || {}).ar || {};
   for (const s of SECTIONS) {
     const btn = $(`.more-btn[data-act="${s.act}"]`);
@@ -200,12 +185,8 @@ function hasContent(html) {
 
 function renderPrevNext(name) {
   const idx = state.names.findIndex((n) => n.id === name.id);
-  const prev = state.names[idx - 1];
-  const next = state.names[idx + 1];
-  const prevEl = $('#prev');
-  const nextEl = $('#next');
-  setNavLink(prevEl, prev, 'prev');
-  setNavLink(nextEl, next, 'next');
+  setNavLink($('#prev'), state.names[idx - 1], 'prev');
+  setNavLink($('#next'), state.names[idx + 1], 'next');
 }
 
 function setNavLink(el, name, dir) {
@@ -217,86 +198,31 @@ function setNavLink(el, name, dir) {
   }
   el.style.visibility = '';
   el.href = `name.html?id=${name.id}`;
-  const t = localized(name);
+  const t = loc(name);
   const arrow = (dir === 'prev') === (document.documentElement.dir === 'rtl') ? '←' : '→';
   el.innerHTML = `<span class="nav-arrow" aria-hidden="true">${arrow}</span><span class="nav-text">${escapeHtml(name.default_name)}${t.name ? `<small>${escapeHtml(t.name)}</small>` : ''}</span>`;
-}
-
-/* ================ inline audio ================ */
-
-const NO_AUDIO_MSG = {
-  ar: 'لا يوجد تسجيل صوتي لهذا الاسم',
-  ru: 'Аудио недоступно',
-  en: 'No audio for this name',
-};
-function audioMissingMsg() { return NO_AUDIO_MSG[state.lang] || NO_AUDIO_MSG.en; }
-
-async function togglePlay(id) {
-  const name = state.names.find((n) => n.id === id);
-  const safeVoice = name ? safePath(name.voice) : '';
-  if (!safeVoice || state.missingAudio.has(id)) {
-    showToast(audioMissingMsg());
-    refreshPlayingUI();
-    return;
-  }
-  if (state.playingId === id && !audio.paused) {
-    audio.pause();
-    state.playingId = null;
-    refreshPlayingUI();
-    return;
-  }
-  audio.pause();
-  audio.src = safeVoice;
-  state.playingId = id;
-  refreshPlayingUI();
-  try {
-    await audio.play();
-  } catch {
-    state.missingAudio.add(id);
-    if (state.playingId === id) state.playingId = null;
-    refreshPlayingUI();
-    showToast(audioMissingMsg());
-  }
 }
 
 function refreshPlayingUI() {
   const btn = $('.card-play', $('#hero'));
   if (!btn) return;
-  const playing = state.currentId === state.playingId;
+  const playing = audioCtrl.isPlaying(state.currentId);
   btn.classList.toggle('is-playing', playing);
   btn.innerHTML = playing ? iconPause() : iconPlay();
 }
-
-audio.addEventListener('ended', () => {
-  state.playingId = null;
-  refreshPlayingUI();
-});
-audio.addEventListener('error', () => {
-  if (state.playingId != null) {
-    state.missingAudio.add(state.playingId);
-    state.playingId = null;
-    refreshPlayingUI();
-    showToast(audioMissingMsg());
-  }
-});
-
-/* ================ favorites ================ */
 
 function toggleFav(id) {
   if (state.favorites.has(id)) state.favorites.delete(id);
   else state.favorites.add(id);
   localStorage.setItem('favorites', JSON.stringify([...state.favorites]));
-  const isFav = state.favorites.has(id);
   const btn = $('.card-fav', $('#hero'));
-  if (btn) btn.classList.toggle('is-fav', isFav);
+  if (btn) btn.classList.toggle('is-fav', state.favorites.has(id));
 }
-
-/* ================ share ================ */
 
 async function shareCurrent() {
   const name = state.names.find((n) => n.id === state.currentId);
   if (!name) return;
-  const t = localized(name);
+  const t = loc(name);
   const text = `${name.default_name} — ${t.name || ''}\n${shortText(t.short_meaning_val).slice(0, 200)}`;
   const url = location.href;
   try {
@@ -311,13 +237,11 @@ async function shareCurrent() {
   }
 }
 
-/* ================ events ================ */
-
 function bindEvents() {
   $('#lang').addEventListener('change', (e) => {
     state.lang = e.target.value;
     localStorage.setItem('lang', state.lang);
-    applyDir();
+    applyDir(state.lang);
     render();
   });
 
@@ -325,7 +249,7 @@ function bindEvents() {
     const action = e.target.closest('[data-action]');
     if (!action) return;
     e.preventDefault();
-    if (action.dataset.action === 'play') togglePlay(state.currentId);
+    if (action.dataset.action === 'play') audioCtrl.toggle(state.currentId);
     if (action.dataset.action === 'fav') toggleFav(state.currentId);
   });
 
@@ -336,13 +260,12 @@ function bindEvents() {
   $('.bar-btn.share').addEventListener('click', shareCurrent);
 
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
-      const dir = document.documentElement.dir === 'rtl' ? -1 : 1;
-      const step = (e.key === 'ArrowRight' ? 1 : -1) * dir;
-      const idx = state.names.findIndex((n) => n.id === state.currentId);
-      const next = state.names[idx + step];
-      if (next) location.assign(`name.html?id=${next.id}`);
-    }
+    if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+    const dir = document.documentElement.dir === 'rtl' ? -1 : 1;
+    const step = (e.key === 'ArrowRight' ? 1 : -1) * dir;
+    const idx = state.names.findIndex((n) => n.id === state.currentId);
+    const next = state.names[idx + step];
+    if (next) location.assign(`name.html?id=${next.id}`);
   });
 }
 
@@ -351,19 +274,30 @@ function onMoreAction(act) {
   if (!name) return;
   const section = SECTIONS.find((s) => s.act === act);
   if (!section) return;
-  const t = localized(name);
+
+  const t = loc(name);
   const tAr = (state.translations.get(name.id) || {}).ar || {};
+
   let html = t[section.valKey];
+  let entryKey = t[section.keyKey];
   let usedFallback = false;
   if (!hasContent(html)) {
     html = tAr[section.valKey];
+    entryKey = tAr[section.keyKey];
     usedFallback = true;
   }
   if (!hasContent(html)) { showToast(ui('no_content')); return; }
-  showLongMeaning(ui(act), html, usedFallback ? ui('ar_only') : '');
-}
 
-/* ================ long-meaning sheet ================ */
+  // Per-name labels are heterogeneous in the source data — e.g. some entries
+  // carry "وقفات" under effects_key and "الارتباط" under mercy_key. The button
+  // labels are deliberately uniform, but the modal title shows the actual
+  // section label for that name (Arabic only — non-Arabic UIs keep the
+  // hardcoded label for clarity).
+  const useEntryKey = (state.lang === 'ar' || usedFallback) && typeof entryKey === 'string' && entryKey.trim().length > 1;
+  const title = useEntryKey ? entryKey : ui(act);
+
+  showLongMeaning(title, html, usedFallback ? ui('ar_only') : '');
+}
 
 function ensureSheet() {
   let sheet = $('#long-sheet');
@@ -379,8 +313,9 @@ function ensureSheet() {
       <div class="long-body"></div>
     </div>
   `;
-  sheet.querySelector('.long-backdrop').addEventListener('click', () => sheet.classList.remove('open'));
-  sheet.querySelector('.long-close').addEventListener('click', () => sheet.classList.remove('open'));
+  const close = () => sheet.classList.remove('open');
+  sheet.querySelector('.long-backdrop').addEventListener('click', close);
+  sheet.querySelector('.long-close').addEventListener('click', close);
   document.body.appendChild(sheet);
   return sheet;
 }
@@ -408,56 +343,6 @@ function showLongMeaning(key, html, note) {
   requestAnimationFrame(() => sheet.classList.add('open'));
 }
 
-function showCalligraphy(title, src) {
-  const sheet = ensureSheet();
-  $('.long-key', sheet).textContent = title || '';
-  const body = $('.long-body', sheet);
-  body.replaceChildren();
-  const img = document.createElement('img');
-  img.src = src;
-  img.alt = title || '';
-  img.className = 'long-image';
-  img.loading = 'lazy';
-  img.decoding = 'async';
-  body.appendChild(img);
-  requestAnimationFrame(() => sheet.classList.add('open'));
-}
-
-/* ================ toast ================ */
-
-function showToast(msg) {
-  const toast = $('#toast');
-  toast.hidden = false;
-  toast.textContent = msg;
-  requestAnimationFrame(() => toast.classList.add('show'));
-  clearTimeout(showToast._t);
-  showToast._t = setTimeout(() => {
-    toast.classList.remove('show');
-    setTimeout(() => { toast.hidden = true; }, 250);
-  }, 1800);
-}
-
-/* ================ icons ================ */
-
-function iconPlay() {
-  return `<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M7 5l12 7-12 7z"/></svg>`;
-}
-function iconPause() {
-  return `<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>`;
-}
-function iconHeart() {
-  return `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M12 20s-7-4.5-7-10a4.5 4.5 0 0 1 8-2.5A4.5 4.5 0 0 1 19 10c0 5.5-7 10-7 10z" stroke-linejoin="round"/></svg>`;
-}
-
-/* ================ sanitization & helpers ================ */
-
-function shortText(html) {
-  if (!html) return '';
-  const tmp = document.createElement('div');
-  tmp.innerHTML = String(html);
-  return (tmp.textContent || '').replace(/\s+/g, ' ').trim();
-}
-
 function setSanitizedHTML(el, html) {
   el.replaceChildren();
   if (!html) return;
@@ -480,22 +365,6 @@ function cleanNode(node) {
       child.remove();
     }
   }
-}
-
-function safePath(p) {
-  if (typeof p !== 'string' || !p) return '';
-  return /^(voices|images)\/[\w-]+\.[a-z0-9]+$/i.test(p) ? p : '';
-}
-
-function safeColor(c) {
-  if (typeof c !== 'string') return '';
-  return /^#[0-9a-f]{3}([0-9a-f]{3})?$/i.test(c) ? c : '';
-}
-
-function escapeHtml(s) {
-  return String(s ?? '').replace(/[&<>"']/g, (c) => ({
-    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
-  }[c]));
 }
 
 init().catch((err) => {

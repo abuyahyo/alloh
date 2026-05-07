@@ -45,16 +45,16 @@
       </button>
       <span class="filter-text">ترتيب</span>
     </div>
-    <div class="chip-row" role="tablist" aria-label="Sort">
-      <button class="chip is-active" role="tab" data-sort="default" aria-selected="true" type="button">
+    <div class="chip-row" role="radiogroup" aria-label="Sort">
+      <button class="chip is-active" role="radio" data-sort="default" aria-checked="true" type="button">
         <svg class="chip-icon" viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M3 4h10M3 8h10M3 12h10" stroke-linecap="round"/></svg>
         <span>إفتراضي</span>
       </button>
-      <button class="chip" role="tab" data-sort="alpha" aria-selected="false" type="button">
+      <button class="chip" role="radio" data-sort="alpha" aria-checked="false" type="button">
         <svg class="chip-icon" viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M3 4h10M3 8h7M3 12h4" stroke-linecap="round"/></svg>
         <span>أبجدي</span>
       </button>
-      <button class="chip" role="tab" data-sort="meaning" aria-selected="false" type="button">
+      <button class="chip" role="radio" data-sort="meaning" aria-checked="false" type="button">
         <span>المعاني</span>
       </button>
     </div>
@@ -72,6 +72,6 @@
 
   <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
 
-  <script src="app.js?v=2026050840"></script>
+  <script type="module" src="app.js?v=2026050841"></script>
 </body>
 </html>

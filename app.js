@@ -1,5 +1,17 @@
-const RTL_LANGS = new Set(['ar', 'fa', 'ur']);
-const DEFAULT_LANG = 'ar';
+import {
+  RTL_LANGS, DEFAULT_LANG,
+  $, $$,
+  loadJSON, applyDir, buildLangSelect, localized,
+  escapeHtml, shortText, safePath, safeColor,
+  iconPlay, iconPause, iconHeart,
+  showToast, createAudioController, attachImgFade,
+} from './shared.js';
+
+const SEARCH_PLACEHOLDER = {
+  ar: 'البحث',
+  ru: 'Поиск',
+  en: 'Search',
+};
 
 const state = {
   names: [],
@@ -10,19 +22,15 @@ const state = {
   sort: localStorage.getItem('sort') || 'default',
   favorites: new Set(JSON.parse(localStorage.getItem('favorites') || '[]')),
   view: localStorage.getItem('view') || 'rows',
-  playingId: null,
-  missingAudio: new Set(),
 };
 
-const $ = (s, r = document) => r.querySelector(s);
-const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const audio = $('#audio');
-
-async function loadJSON(path) {
-  const r = await fetch(path);
-  if (!r.ok) throw new Error(`Failed to load ${path}`);
-  return r.json();
-}
+const audioCtrl = createAudioController({
+  audio,
+  getName: (id) => state.names.find((n) => n.id === id),
+  getLang: () => state.lang,
+  onChange: refreshPlayingUI,
+});
 
 async function init() {
   bindGlobalEvents();
@@ -45,44 +53,34 @@ async function init() {
 
   if (!state.languages.find((l) => l.code === state.lang)) state.lang = DEFAULT_LANG;
 
-  buildLangSelect();
-  applyDir();
+  buildLangSelect($('#lang'), state.languages, state.lang);
+  applyDir(state.lang);
   applyView();
   applySort();
+  applySearchPlaceholder();
   renderList();
-}
-
-function buildLangSelect() {
-  const sel = $('#lang');
-  sel.innerHTML = state.languages
-    .map((l) => `<option value="${escapeHtml(l.code)}">${escapeHtml(l.name)}</option>`)
-    .join('');
-  sel.value = state.lang;
-}
-
-function applyDir() {
-  const dir = RTL_LANGS.has(state.lang) ? 'rtl' : 'ltr';
-  document.documentElement.setAttribute('dir', dir);
-  document.documentElement.setAttribute('lang', state.lang);
 }
 
 function applyView() {
   $('#list').dataset.view = state.view;
-  const btn = $('#grid-toggle');
-  btn.setAttribute('aria-pressed', state.view === 'grid');
+  $('#grid-toggle').setAttribute('aria-pressed', state.view === 'grid');
 }
 
 function applySort() {
   $$('.chip').forEach((c) => {
     const active = c.dataset.sort === state.sort;
     c.classList.toggle('is-active', active);
-    c.setAttribute('aria-selected', active ? 'true' : 'false');
+    c.setAttribute('aria-checked', active ? 'true' : 'false');
   });
 }
 
-function localized(name) {
-  const tr = state.translations.get(name.id) || {};
-  return tr[state.lang] || tr[DEFAULT_LANG] || {};
+function applySearchPlaceholder() {
+  const ph = SEARCH_PLACEHOLDER[state.lang] || SEARCH_PLACEHOLDER.en;
+  $('#search').setAttribute('placeholder', ph);
+}
+
+function loc(name) {
+  return localized(state.translations, name, state.lang);
 }
 
 function getOrdered(filterText = '') {
@@ -91,21 +89,21 @@ function getOrdered(filterText = '') {
 
   if (state.sort === 'alpha') {
     arr.sort((a, b) => {
-      const ta = localized(a).name || a.default_name;
-      const tb = localized(b).name || b.default_name;
+      const ta = loc(a).name || a.default_name;
+      const tb = loc(b).name || b.default_name;
       return String(ta).localeCompare(String(tb), state.lang);
     });
   } else if (state.sort === 'meaning') {
     arr.sort((a, b) => {
-      const ma = shortText(localized(a).short_meaning_val);
-      const mb = shortText(localized(b).short_meaning_val);
+      const ma = shortText(loc(a).short_meaning_val);
+      const mb = shortText(loc(b).short_meaning_val);
       return ma.localeCompare(mb, state.lang);
     });
   }
 
   if (q) {
     arr = arr.filter((n) => {
-      const t = localized(n);
+      const t = loc(n);
       return `${n.default_name} ${t.name || ''}`.toLowerCase().includes(q);
     });
   }
@@ -115,8 +113,7 @@ function getOrdered(filterText = '') {
 
 function renderList() {
   const list = $('#list');
-  const filter = $('#search').value;
-  state.visible = getOrdered(filter);
+  state.visible = getOrdered($('#search').value);
 
   list.removeAttribute('aria-busy');
 
@@ -128,16 +125,16 @@ function renderList() {
   list.innerHTML = state.visible.map((n, i) => cardMarkup(n, i)).join('');
 
   for (const img of list.querySelectorAll('img.card-bg.is-loading')) {
-    if (img.complete && img.naturalWidth > 0) img.classList.remove('is-loading');
+    attachImgFade(img);
   }
 }
 
 function cardMarkup(n, i) {
-  const t = localized(n);
+  const t = loc(n);
   const translit = t.name || '';
   const bg = safePath(n.background_image);
   const isFav = state.favorites.has(n.id);
-  const isPlaying = state.playingId === n.id;
+  const isPlaying = audioCtrl.isPlaying(n.id);
   const delay = Math.min(i * 24, 360);
   const eager = i < 3;
   const ariaLabel = `${n.default_name}${translit ? ', ' + translit : ''}`;
@@ -147,7 +144,7 @@ function cardMarkup(n, i) {
   return `
     <article class="name-card" data-id="${n.id}" style="${cardStyle}">
       <a class="card-link" href="name.html?id=${n.id}" aria-label="${escapeHtml(ariaLabel)}">
-        ${bg ? `<img class="card-bg is-loading" src="${escapeHtml(bg)}" alt="" loading="${eager ? 'eager' : 'lazy'}" decoding="async" fetchpriority="${eager ? 'high' : 'low'}" onload="this.classList.remove('is-loading')" onerror="this.remove()">` : ''}
+        ${bg ? `<img class="card-bg is-loading" src="${escapeHtml(bg)}" alt="" loading="${eager ? 'eager' : 'lazy'}" decoding="async" fetchpriority="${eager ? 'high' : 'low'}">` : ''}
         <span class="card-arabic">${escapeHtml(n.default_name)}</span>
       </a>
       <div class="card-foot">
@@ -163,78 +160,16 @@ function cardMarkup(n, i) {
   `;
 }
 
-function iconPlay() {
-  return `<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M7 5l12 7-12 7z"/></svg>`;
-}
-function iconPause() {
-  return `<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>`;
-}
-function iconHeart() {
-  return `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M12 20s-7-4.5-7-10a4.5 4.5 0 0 1 8-2.5A4.5 4.5 0 0 1 19 10c0 5.5-7 10-7 10z" stroke-linejoin="round"/></svg>`;
-}
-
-/* ================ inline audio ================ */
-
-const NO_AUDIO_MSG = {
-  ar: 'لا يوجد تسجيل صوتي لهذا الاسم',
-  ru: 'Аудио недоступно',
-  en: 'No audio for this name',
-};
-function audioMissingMsg() { return NO_AUDIO_MSG[state.lang] || NO_AUDIO_MSG.en; }
-
-async function togglePlay(id) {
-  const name = state.names.find((n) => n.id === id);
-  const safeVoice = name ? safePath(name.voice) : '';
-  if (!safeVoice || state.missingAudio.has(id)) {
-    showToast(audioMissingMsg());
-    refreshPlayingUI();
-    return;
-  }
-  if (state.playingId === id && !audio.paused) {
-    audio.pause();
-    state.playingId = null;
-    refreshPlayingUI();
-    return;
-  }
-  audio.pause();
-  audio.src = safeVoice;
-  state.playingId = id;
-  refreshPlayingUI();
-  try {
-    await audio.play();
-  } catch {
-    state.missingAudio.add(id);
-    if (state.playingId === id) state.playingId = null;
-    refreshPlayingUI();
-    showToast(audioMissingMsg());
-  }
-}
-
-audio.addEventListener('ended', () => {
-  state.playingId = null;
-  refreshPlayingUI();
-});
-audio.addEventListener('error', () => {
-  if (state.playingId != null) {
-    state.missingAudio.add(state.playingId);
-    state.playingId = null;
-    refreshPlayingUI();
-    showToast(audioMissingMsg());
-  }
-});
-
 function refreshPlayingUI() {
   $$('.name-card').forEach((card) => {
     const id = Number(card.dataset.id);
     const btn = $('.card-play', card);
     if (!btn) return;
-    const playing = id === state.playingId;
+    const playing = audioCtrl.isPlaying(id);
     btn.classList.toggle('is-playing', playing);
     btn.innerHTML = playing ? iconPause() : iconPlay();
   });
 }
-
-/* ================ favorites ================ */
 
 function toggleFav(id) {
   if (state.favorites.has(id)) state.favorites.delete(id);
@@ -246,13 +181,12 @@ function toggleFav(id) {
   });
 }
 
-/* ================ events ================ */
-
 function bindGlobalEvents() {
   $('#lang').addEventListener('change', (e) => {
     state.lang = e.target.value;
     localStorage.setItem('lang', state.lang);
-    applyDir();
+    applyDir(state.lang);
+    applySearchPlaceholder();
     renderList();
   });
 
@@ -275,7 +209,6 @@ function bindGlobalEvents() {
     state.view = state.view === 'grid' ? 'rows' : 'grid';
     localStorage.setItem('view', state.view);
     applyView();
-    renderList();
   });
 
   $('#list').addEventListener('click', onListClick);
@@ -289,47 +222,8 @@ function onListClick(e) {
   e.preventDefault();
   e.stopPropagation();
   const id = Number(card.dataset.id);
-  if (action.dataset.action === 'play') togglePlay(id);
+  if (action.dataset.action === 'play') audioCtrl.toggle(id);
   if (action.dataset.action === 'fav') toggleFav(id);
-}
-
-/* ================ toast ================ */
-
-function showToast(msg) {
-  const toast = $('#toast');
-  toast.hidden = false;
-  toast.textContent = msg;
-  requestAnimationFrame(() => toast.classList.add('show'));
-  clearTimeout(showToast._t);
-  showToast._t = setTimeout(() => {
-    toast.classList.remove('show');
-    setTimeout(() => { toast.hidden = true; }, 250);
-  }, 1800);
-}
-
-/* ================ helpers ================ */
-
-function shortText(html) {
-  if (!html) return '';
-  const tmp = document.createElement('div');
-  tmp.innerHTML = String(html);
-  return (tmp.textContent || '').replace(/\s+/g, ' ').trim();
-}
-
-function safePath(p) {
-  if (typeof p !== 'string' || !p) return '';
-  return /^(voices|images)\/[\w-]+\.[a-z0-9]+$/i.test(p) ? p : '';
-}
-
-function safeColor(c) {
-  if (typeof c !== 'string') return '';
-  return /^#[0-9a-f]{3}([0-9a-f]{3})?$/i.test(c) ? c : '';
-}
-
-function escapeHtml(s) {
-  return String(s ?? '').replace(/[&<>"']/g, (c) => ({
-    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
-  }[c]));
 }
 
 init().catch((err) => {

@@ -777,7 +777,6 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
 
 @media (min-width: 720px) {
   .name-card { aspect-ratio: 16 / 6.5; }
-  .carousel-card { flex: 0 0 min(560px, calc(100% - 4rem)); aspect-ratio: 16 / 8; }
 }
 
 /* =========================================================================
