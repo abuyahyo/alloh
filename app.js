@@ -16,6 +16,7 @@ const state = {
   view: localStorage.getItem('view') || 'rows',
   currentId: null,
   playingId: null,
+  missingAudio: new Set(),
   scrollTimer: null,
 };
 
@@ -140,6 +141,7 @@ function cardMarkup(n, i) {
   const bg = safePath(n.background_image);
   const isFav = state.favorites.has(n.id);
   const isPlaying = state.playingId === n.id;
+  const noAudio = !n.voice || state.missingAudio.has(n.id);
   const delay = Math.min(i * 24, 360);
   const bgStyle = bg ? `background-image: url('${bg}')` : '';
 
@@ -147,7 +149,7 @@ function cardMarkup(n, i) {
     <article class="name-card" data-id="${n.id}" tabindex="0" role="button" style="animation-delay: ${delay}ms; ${bgStyle}">
       <div class="card-arabic">${escapeHtml(n.default_name)}</div>
       <div class="card-foot">
-        <button class="card-icon-btn card-play${isPlaying ? ' is-playing' : ''}" data-action="play" aria-label="Play" type="button">
+        <button class="card-icon-btn card-play${isPlaying ? ' is-playing' : ''}${noAudio ? ' is-missing' : ''}" data-action="play" aria-label="Play" type="button">
           ${isPlaying ? iconPause() : iconPlay()}
         </button>
         <span class="card-translit">${escapeHtml(translit)}</span>
@@ -171,43 +173,63 @@ function iconHeart() {
 
 /* ================ inline audio ================ */
 
-function togglePlay(id) {
+const NO_AUDIO_MSG = {
+  ar: 'لا يوجد تسجيل صوتي لهذا الاسم',
+  fa: 'صوتی برای این نام موجود نیست',
+  ur: 'اس نام کے لیے آڈیو دستیاب نہیں',
+  ru: 'Аудио недоступно',
+  uz: 'Audio mavjud emas',
+  en: 'No audio for this name',
+};
+function audioMissingMsg() { return NO_AUDIO_MSG[state.lang] || NO_AUDIO_MSG.en; }
+
+function markAudioMissing(id) {
+  if (id == null) return;
+  state.missingAudio.add(id);
+  $$(`.card-play`).forEach((btn) => {
+    const card = btn.closest('[data-id]');
+    if (card && Number(card.dataset.id) === id) btn.classList.add('is-missing');
+  });
+}
+
+async function togglePlay(id) {
   const name = state.names.find((n) => n.id === id);
-  if (!name || !name.voice) {
-    showToast('No audio for this name');
+  if (!name || !name.voice || state.missingAudio.has(id)) {
+    showToast(audioMissingMsg());
     return;
   }
-  if (state.playingId === id) {
+  if (state.playingId === id && !audio.paused) {
     audio.pause();
+    state.playingId = null;
+    refreshPlayingUI();
     return;
   }
   audio.pause();
   audio.src = name.voice;
-  audio.play().then(() => {
-    state.playingId = id;
+  state.playingId = id;
+  refreshPlayingUI();
+  try {
+    await audio.play();
+  } catch {
+    if (state.playingId === id) state.playingId = null;
+    markAudioMissing(id);
     refreshPlayingUI();
-  }).catch(() => {
-    showToast('Could not play audio');
-    state.playingId = null;
-    refreshPlayingUI();
-  });
+    showToast(audioMissingMsg());
+  }
 }
 
-audio.addEventListener('pause', () => {
-  if (audio.ended || audio.currentTime === 0 || audio.currentTime === audio.duration) {
-    state.playingId = null;
-  } else {
-    state.playingId = null;
-  }
-  refreshPlayingUI();
-});
 audio.addEventListener('ended', () => {
   state.playingId = null;
   refreshPlayingUI();
 });
 audio.addEventListener('error', () => {
-  state.playingId = null;
-  refreshPlayingUI();
+  const id = state.playingId;
+  if (id != null) {
+    markAudioMissing(id);
+    state.playingId = null;
+    refreshPlayingUI();
+    showToast(audioMissingMsg());
+  }
 });
 
 function refreshPlayingUI() {
@@ -286,13 +308,14 @@ function carouselCardMarkup(n) {
   const bg = safePath(n.background_image);
   const isFav = state.favorites.has(n.id);
   const isPlaying = state.playingId === n.id;
+  const noAudio = !n.voice || state.missingAudio.has(n.id);
   const bgStyle = bg ? `background-image: url('${bg}')` : '';
 
   return `
     <article class="carousel-card" data-id="${n.id}" style="${bgStyle}">
       <div class="card-arabic">${escapeHtml(n.default_name)}</div>
       <div class="card-foot">
-        <button class="card-icon-btn card-play${isPlaying ? ' is-playing' : ''}" data-action="play" aria-label="Play" type="button">
+        <button class="card-icon-btn card-play${isPlaying ? ' is-playing' : ''}${noAudio ? ' is-missing' : ''}" data-action="play" aria-label="Play" type="button">
           ${isPlaying ? iconPause() : iconPlay()}
         </button>
         <span class="card-translit">${escapeHtml(translit)}</span>
