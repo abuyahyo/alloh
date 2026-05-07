@@ -20,23 +20,30 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri+Quran&family=Amiri:wght@400;700&family=Cairo:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap">
-  <link rel="stylesheet" href="style.css?v=2026050854">
+  <link rel="stylesheet" href="style.css?v=2026050855">
 </head>
 <body class="detail-body">
   <a class="skip-link" href="#main">Skip to content</a>
 
   <header class="detail-bar">
-    <div class="lang-floater inline">
-      <select id="lang" aria-label="Language"></select>
-    </div>
-    <button class="bar-btn share" type="button" aria-label="Share">
-      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
-        <circle cx="6.5" cy="12" r="2.6"/>
-        <circle cx="17.5" cy="6" r="2.6"/>
-        <circle cx="17.5" cy="18" r="2.6"/>
-        <path d="M8.8 11l6.7-3.7M8.8 13l6.7 3.7"/>
+    <a class="bar-btn home" href="index.html" aria-label="Home">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 11.5L12 5l8 6.5V20a1 1 0 0 1-1 1h-4v-6h-6v6H5a1 1 0 0 1-1-1z"/>
       </svg>
-    </button>
+    </a>
+    <div class="bar-actions">
+      <div class="lang-floater inline">
+        <select id="lang" aria-label="Language"></select>
+      </div>
+      <button class="bar-btn share" type="button" aria-label="Share">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+          <circle cx="6.5" cy="12" r="2.6"/>
+          <circle cx="17.5" cy="6" r="2.6"/>
+          <circle cx="17.5" cy="18" r="2.6"/>
+          <path d="M8.8 11l6.7-3.7M8.8 13l6.7 3.7"/>
+        </svg>
+      </button>
+    </div>
   </header>
 
   <main id="main" class="detail-main">
@@ -66,32 +73,17 @@
       <div class="library-pane" id="lib-cards" role="tabpanel"></div>
       <div class="library-pane" id="lib-videos" role="tabpanel" hidden></div>
     </section>
-  </main>
 
-  <nav class="name-fab" id="fab" aria-label="Name navigation" dir="ltr">
-    <a class="fab-btn fab-side" id="fab-left" rel="prev">
-      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <path d="M14 6l-7 6 7 6"/>
-        <path d="M7 12h12" opacity=".55"/>
-      </svg>
-    </a>
-    <a class="fab-btn fab-home" href="index.html" aria-label="Home">
-      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <path d="M4 11.5L12 5l8 6.5V20a1 1 0 0 1-1 1h-4v-6h-6v6H5a1 1 0 0 1-1-1z"/>
-      </svg>
-    </a>
-    <a class="fab-btn fab-side" id="fab-right" rel="next">
-      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <path d="M5 12h12" opacity=".55"/>
-        <path d="M10 6l7 6-7 6"/>
-      </svg>
-    </a>
-  </nav>
+    <nav class="page-nav" id="page-nav" aria-label="Name navigation" hidden>
+      <a class="page-nav-link" id="page-nav-prev" rel="prev"></a>
+      <a class="page-nav-link" id="page-nav-next" rel="next"></a>
+    </nav>
+  </main>
 
   <audio id="audio" preload="none"></audio>
 
   <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
 
-  <script type="module" src="name.js?v=2026050854"></script>
+  <script type="module" src="name.js?v=2026050855"></script>
 </body>
 </html>

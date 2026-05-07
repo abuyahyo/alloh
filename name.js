@@ -181,7 +181,7 @@ function render() {
   renderUiStrings();
   renderSectionsAndTOC(name);
   renderLibrary(name);
-  renderFab(name);
+  renderPageNav(name);
 }
 
 function renderUiStrings() {
@@ -420,35 +420,59 @@ function selectLibraryTab(tab) {
   $('#lib-videos').hidden = tab !== 'videos';
 }
 
+const NAV_LABEL = {
+  ar: { prev: 'السابق', next: 'التالي' },
+  ru: { prev: 'Предыдущее', next: 'Следующее' },
+  en: { prev: 'Previous', next: 'Next' },
+};
+
 /**
- * The floating bar at the bottom shows three actions: prev, home, next. The
- * left/right slots map to display_order ∓ 1 in LTR, but flip in RTL so the
- * leftward arrow always points "forward in the reading direction" — which
- * for an Arabic reader is the next name in the list.
+ * Inline previous / next block at the bottom of the article. Sits in
+ * normal flow so iOS Safari's URL bar can never hide it. The Home
+ * action lives in the sticky top bar instead.
  */
-function renderFab(name) {
+function renderPageNav(name) {
   const idx = state.names.findIndex((n) => n.id === name.id);
   const prev = state.names[idx - 1];
   const next = state.names[idx + 1];
-  const isRTL = document.documentElement.dir === 'rtl';
-  setFabLink($('#fab-left'), isRTL ? next : prev, isRTL ? 'next' : 'prev');
-  setFabLink($('#fab-right'), isRTL ? prev : next, isRTL ? 'prev' : 'next');
+  const nav = $('#page-nav');
+  const set = NAV_LABEL[state.lang] || NAV_LABEL.en;
+  fillPageNavLink($('#page-nav-prev'), prev, set.prev, 'prev');
+  fillPageNavLink($('#page-nav-next'), next, set.next, 'next');
+  nav.hidden = !prev && !next;
 }
 
-function setFabLink(el, target, role) {
+function fillPageNavLink(el, target, roleLabel, role) {
+  el.replaceChildren();
   if (!target) {
-    el.setAttribute('aria-disabled', 'true');
+    el.hidden = true;
     el.removeAttribute('href');
-    el.removeAttribute('title');
-    el.setAttribute('aria-label', role === 'prev' ? 'Previous' : 'Next');
+    el.setAttribute('aria-disabled', 'true');
     return;
   }
+  el.hidden = false;
   el.removeAttribute('aria-disabled');
   el.href = `name.html?id=${target.id}`;
   const tr = loc(target);
-  const label = `${role === 'prev' ? 'Previous' : 'Next'}: ${target.default_name}${tr.name ? ' — ' + tr.name : ''}`;
-  el.title = label;
-  el.setAttribute('aria-label', label);
+  const arrow = document.createElement('span');
+  arrow.className = 'page-nav-arrow';
+  arrow.setAttribute('aria-hidden', 'true');
+  arrow.textContent = role === 'prev' ? '‹' : '›';
+  const text = document.createElement('span');
+  text.className = 'page-nav-text';
+  const label = document.createElement('span');
+  label.className = 'page-nav-role';
+  label.textContent = roleLabel;
+  const title = document.createElement('span');
+  title.className = 'page-nav-name';
+  title.textContent = `${target.default_name}${tr.name ? ' — ' + tr.name : ''}`;
+  text.append(label, title);
+  if (role === 'prev') {
+    el.append(arrow, text);
+  } else {
+    el.append(text, arrow);
+  }
+  el.setAttribute('aria-label', `${roleLabel}: ${target.default_name}`);
 }
 
 function refreshPlayingUI() {

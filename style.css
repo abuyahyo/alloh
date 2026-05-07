@@ -443,13 +443,20 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
-  padding: 1rem 1.25rem 0.5rem;
+  padding: 0.75rem 1.25rem;
   position: sticky;
   top: 0;
-  background: linear-gradient(180deg, var(--bg) 60%, transparent);
+  background: rgba(235, 235, 237, 0.85);
+  backdrop-filter: blur(12px) saturate(140%);
+  -webkit-backdrop-filter: blur(12px) saturate(140%);
   z-index: 10;
   max-width: var(--content-w);
   margin: 0 auto;
+}
+.bar-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 .lang-floater.inline { position: static; }
 .bar-btn {
@@ -459,11 +466,14 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
   align-items: center;
   justify-content: center;
   color: var(--ink);
+  background: var(--surface);
   border-radius: 12px;
   text-decoration: none;
-  transition: background 0.15s var(--ease);
+  box-shadow: var(--shadow-sm);
+  transition: background 0.15s var(--ease), transform 0.12s var(--ease);
 }
-.bar-btn:hover { background: rgba(0, 0, 0, 0.06); }
+.bar-btn:hover { background: var(--surface-2); }
+.bar-btn:active { transform: scale(0.96); }
 .bar-btn:focus-visible {
   outline: 2px solid var(--ink);
   outline-offset: 2px;
@@ -472,9 +482,7 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
 .detail-main {
   max-width: var(--content-w);
   margin: 0 auto;
-  /* extra bottom padding clears the floating FAB so the last section is
-     fully readable when scrolled to the bottom */
-  padding: 0.5rem 1.25rem calc(7.5rem + env(safe-area-inset-bottom));
+  padding: 0.5rem 1.25rem calc(2rem + env(safe-area-inset-bottom));
 }
 
 .hero-card {
@@ -652,69 +660,77 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
 }
 
 /* =========================================================================
-   Floating navigation pill (prev / home / next)
+   Inline prev / next nav at the end of the article
    ========================================================================= */
 
-.name-fab {
-  position: fixed;
-  left: 50%;
-  /* Fallback for browsers without dvh: stay well above iOS Safari's
-     URL bar / bottom toolbar even if the @supports rule below is dropped. */
-  bottom: max(5.5rem, calc(env(safe-area-inset-bottom) + 5rem));
-  transform: translateX(-50%);
+.page-nav {
   display: flex;
-  align-items: stretch;
-  border-radius: 999px;
-  box-shadow: var(--shadow-lg);
-  z-index: 100;
-  backdrop-filter: blur(12px) saturate(140%);
-  -webkit-backdrop-filter: blur(12px) saturate(140%);
-  background: rgba(255, 255, 255, 0.95);
-  opacity: 1;
-  visibility: visible;
+  gap: 0.75rem;
+  margin: 2rem 0 1rem;
 }
+.page-nav[hidden] { display: none; }
 
-/* Anchor the bar's TOP a fixed distance above the *visible* viewport
-   bottom (`100dvh`). dvh shrinks while iOS Safari's URL bar / toolbar
-   is up, so the FAB always sits inside the visible area no matter how
-   the bar is configured — no fragile lvh − dvh subtraction needed. */
-@supports (height: 100dvh) {
-  .name-fab {
-    top: calc(100dvh - 56px - max(1.25rem, env(safe-area-inset-bottom) + 0.5rem));
-    bottom: auto;
-  }
-}
-
-.fab-btn {
-  width: 64px;
-  height: 56px;
-  display: inline-flex;
+.page-nav-link {
+  flex: 1;
+  display: flex;
   align-items: center;
-  justify-content: center;
-  color: var(--ink-soft);
+  gap: 0.65rem;
+  padding: 1rem 1.1rem;
+  background: var(--surface);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-sm);
   text-decoration: none;
-  position: relative;
-  transition: background 0.15s var(--ease), color 0.15s var(--ease), transform 0.12s var(--ease);
-  -webkit-tap-highlight-color: transparent;
+  color: var(--ink);
+  min-height: 56px;
+  transition: transform 0.15s var(--ease), box-shadow 0.15s var(--ease);
 }
-.fab-btn + .fab-btn::before {
-  content: '';
-  position: absolute;
-  top: 22%;
-  bottom: 22%;
-  left: 0;
-  width: 1px;
-  background: var(--rule);
+.page-nav-link[hidden] { display: none; }
+.page-nav-link:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
 }
-.fab-btn:first-child { border-radius: 999px 0 0 999px; }
-.fab-btn:last-child { border-radius: 0 999px 999px 0; }
-.fab-btn:hover { color: var(--ink); background: rgba(0, 0, 0, 0.04); }
-.fab-btn:active:not([aria-disabled="true"]) { transform: scale(0.96); }
-.fab-btn:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
-.fab-btn[aria-disabled="true"] {
-  color: var(--muted-2);
-  pointer-events: none;
+.page-nav-link:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
 }
+
+.page-nav-link.next { justify-content: flex-end; text-align: end; }
+.page-nav-link.prev { justify-content: flex-start; text-align: start; }
+
+.page-nav-arrow {
+  font-size: 1.6rem;
+  line-height: 1;
+  color: var(--muted);
+  flex-shrink: 0;
+  font-family: var(--font-ui);
+}
+
+.page-nav-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.page-nav-role {
+  font-family: var(--font-ui);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
+.page-nav-name {
+  font-family: var(--font-arabic);
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 
 .section-title {
   text-align: center;
