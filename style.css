@@ -280,7 +280,13 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(0, 0, 0, 0.05) 0%, rgba(0, 0, 0, 0.35) 100%);
+  /* Two-layer scrim: a soft radial spotlight that always darkens the patch
+     directly behind the calligraphy (so a white SVG keeps contrast even on
+     a bright photo), plus a top-to-bottom gradient that anchors the foot
+     bar. Edges of the photo stay vibrant — the darkening is targeted. */
+  background:
+    radial-gradient(ellipse 62% 52% at 50% 48%, rgba(0, 0, 0, 0.32) 0%, rgba(0, 0, 0, 0) 72%),
+    linear-gradient(180deg, rgba(0, 0, 0, 0.08) 0%, rgba(0, 0, 0, 0.45) 100%);
   z-index: 1;
   pointer-events: none;
 }
@@ -294,7 +300,11 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
   font-family: var(--font-quran);
   font-size: clamp(3.5rem, 10vw, 5.5rem);
   color: #ffffff;
-  text-shadow: 0 2px 16px rgba(0, 0, 0, 0.3);
+  /* Mirror the SVG's halo so the unicode fallback stays legible on bright
+     backgrounds too: a soft outer glow plus a tight downward drop. */
+  text-shadow:
+    0 0 16px rgba(0, 0, 0, 0.55),
+    0 2px 10px rgba(0, 0, 0, 0.45);
   line-height: 1;
   font-weight: 400;
   /* Slightly larger bottom padding nudges the flex-centered calligraphy
@@ -307,17 +317,22 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
 
 /* SVG calligraphy delivered with each name (e.g. images/<hash>.svg). The
    asset is a single-color path; brightness(0) flattens it to black, then
-   invert(1) flips it to white so it sits on the dark photo with a soft
-   glow that mimics the upstream "He Is Allah" app. max-height is tuned
-   so the calligraphy stays visually centred without colliding with the
-   blurred foot bar at the bottom of the card. */
+   invert(1) flips it to white. Two stacked drop-shadows give it a dark
+   halo so the silhouette stays legible even when the bg image is bright
+   (or fails to load and the card falls back to a light tint). max-height
+   is tuned so the calligraphy stays visually centred without colliding
+   with the blurred foot bar at the bottom of the card. */
 .card-arabic-svg {
   display: block;
   width: auto;
   max-width: 60%;
   max-height: 68%;
   object-fit: contain;
-  filter: brightness(0) invert(1) drop-shadow(0 2px 14px rgba(0, 0, 0, 0.35));
+  filter:
+    brightness(0)
+    invert(1)
+    drop-shadow(0 0 16px rgba(0, 0, 0, 0.55))
+    drop-shadow(0 2px 10px rgba(0, 0, 0, 0.45));
 }
 .cards[data-view="grid"] .card-arabic-svg { max-width: 70%; max-height: 60%; }
 .hero-card .card-arabic-svg { max-width: 50%; max-height: 72%; }
@@ -484,7 +499,9 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(0,0,0,0.05) 0%, rgba(0,0,0,0.35) 100%);
+  background:
+    radial-gradient(ellipse 60% 55% at 50% 46%, rgba(0, 0, 0, 0.34) 0%, rgba(0, 0, 0, 0) 72%),
+    linear-gradient(180deg, rgba(0, 0, 0, 0.08) 0%, rgba(0, 0, 0, 0.45) 100%);
   pointer-events: none;
   z-index: 1;
 }
