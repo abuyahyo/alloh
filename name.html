@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, viewport-fit=cover">
+  <meta name="description" content="One of the 99 beautiful names of Allah — Arabic, transliteration, audio recitation, calligraphy, and meaning.">
+  <meta name="theme-color" content="#ebebed">
+  <meta property="og:title" content="هو الله — Asmaa-ul-Husna">
+  <meta property="og:type" content="article">
+  <title id="page-title">هو الله — Asmaa-ul-Husna</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri+Quran&family=Amiri:wght@400;700&family=Cairo:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="style.css?v=2026050810">
+</head>
+<body class="detail-body">
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="detail-bar">
+    <a class="bar-btn back" href="index.html" aria-label="Back">
+      <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M5 12h14M14 5l7 7-7 7"/>
+      </svg>
+    </a>
+    <div class="lang-floater inline">
+      <select id="lang" aria-label="Language"></select>
+    </div>
+    <button class="bar-btn share" type="button" aria-label="Share">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+        <circle cx="6.5" cy="12" r="2.6"/>
+        <circle cx="17.5" cy="6" r="2.6"/>
+        <circle cx="17.5" cy="18" r="2.6"/>
+        <path d="M8.8 11l6.7-3.7M8.8 13l6.7 3.7"/>
+      </svg>
+    </button>
+  </header>
+
+  <main id="main" class="detail-main">
+    <article class="hero-card" id="hero" aria-busy="true"></article>
+
+    <div class="detail-meaning" id="meaning"></div>
+
+    <section class="more-section">
+      <h3 class="more-title"><span>المزيد عن هذا الاسم</span></h3>
+      <div class="more-grid">
+        <button class="more-btn" data-act="scholars" type="button">
+          <span class="more-icon" style="--c: #e08940">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><path d="M5 5h11a3 3 0 0 1 3 3v5a3 3 0 0 1-3 3h-3l-3 3v-3H5a3 3 0 0 1-3-3V8a3 3 0 0 1 3-3z"/></svg>
+          </span>
+          <span class="more-label">أقوال العلماء</span>
+        </button>
+        <button class="more-btn" data-act="calligraphy" type="button">
+          <span class="more-icon" style="--c: #c46963">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="5" width="16" height="14" rx="2"/><circle cx="9" cy="11" r="1.6"/><path d="M5 18l4-4 3 3 3.5-3.5L20 18"/></svg>
+          </span>
+          <span class="more-label">الخط العربي</span>
+        </button>
+      </div>
+    </section>
+
+    <nav class="prev-next" id="nav" aria-label="Other names">
+      <a class="nav-link prev" id="prev" rel="prev"></a>
+      <a class="nav-link next" id="next" rel="next"></a>
+    </nav>
+  </main>
+
+  <audio id="audio" preload="none"></audio>
+
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+  <script src="name.js?v=2026050810"></script>
+</body>
+</html>
