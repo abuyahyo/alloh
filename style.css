@@ -451,12 +451,13 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
   outline: 2px solid var(--ink);
   outline-offset: 2px;
 }
-[dir="rtl"] .bar-btn.back svg { transform: scaleX(-1); }
 
 .detail-main {
   max-width: var(--content-w);
   margin: 0 auto;
-  padding: 0.5rem 1.25rem 4rem;
+  /* extra bottom padding clears the floating FAB so the last section is
+     fully readable when scrolled to the bottom */
+  padding: 0.5rem 1.25rem calc(7.5rem + env(safe-area-inset-bottom));
 }
 
 .hero-card {
@@ -500,52 +501,62 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
 [dir="rtl"] .detail-meaning { font-family: var(--font-arabic); }
 .detail-meaning:empty { display: none; }
 
-.prev-next {
+/* =========================================================================
+   Floating navigation pill (prev / home / next)
+   ========================================================================= */
+
+.name-fab {
+  position: fixed;
+  left: 50%;
+  bottom: max(1.25rem, env(safe-area-inset-bottom));
+  transform: translateX(-50%);
   display: flex;
-  gap: 0.75rem;
-  margin-top: 1.5rem;
-}
-.nav-link {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  padding: 0.85rem 1rem;
+  align-items: stretch;
   background: var(--surface);
-  border-radius: 14px;
+  border-radius: 999px;
+  box-shadow: var(--shadow-lg);
+  z-index: 50;
+  backdrop-filter: blur(12px) saturate(140%);
+  -webkit-backdrop-filter: blur(12px) saturate(140%);
+  background: rgba(255, 255, 255, 0.92);
+  animation: fabIn 0.45s var(--ease) backwards;
+  animation-delay: 0.15s;
+}
+
+@keyframes fabIn {
+  from { opacity: 0; transform: translate(-50%, 8px); }
+  to   { opacity: 1; transform: translate(-50%, 0); }
+}
+
+.fab-btn {
+  width: 64px;
+  height: 56px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink-soft);
   text-decoration: none;
-  color: var(--ink);
-  box-shadow: var(--shadow-sm);
-  transition: transform 0.15s var(--ease), box-shadow 0.15s var(--ease);
-  overflow: hidden;
+  position: relative;
+  transition: background 0.15s var(--ease), color 0.15s var(--ease), transform 0.12s var(--ease);
+  -webkit-tap-highlight-color: transparent;
 }
-.nav-link:hover {
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-md);
+.fab-btn + .fab-btn::before {
+  content: '';
+  position: absolute;
+  top: 22%;
+  bottom: 22%;
+  left: 0;
+  width: 1px;
+  background: var(--rule);
 }
-.nav-link.next { justify-content: flex-end; text-align: end; }
-.nav-link.prev { text-align: start; }
-.nav-arrow {
-  font-size: 1.2rem;
-  color: var(--muted);
-  flex-shrink: 0;
-}
-.nav-text {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-  font-family: var(--font-arabic);
-  font-weight: 600;
-  font-size: 1rem;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.nav-text small {
-  font-family: var(--font-ui);
-  font-weight: 400;
-  font-size: 0.8rem;
-  color: var(--muted);
+.fab-btn:first-child { border-radius: 999px 0 0 999px; }
+.fab-btn:last-child { border-radius: 0 999px 999px 0; }
+.fab-btn:hover { color: var(--ink); background: rgba(0, 0, 0, 0.04); }
+.fab-btn:active:not([aria-disabled="true"]) { transform: scale(0.96); }
+.fab-btn:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.fab-btn[aria-disabled="true"] {
+  color: var(--muted-2);
+  pointer-events: none;
 }
 
 .section-title {

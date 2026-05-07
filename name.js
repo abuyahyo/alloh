@@ -149,7 +149,7 @@ function render() {
   setSanitizedHTML($('#meaning'), t.short_meaning_val);
   renderUiStrings();
   renderSectionsAndTOC(name);
-  renderPrevNext(name);
+  renderFab(name);
 }
 
 function renderUiStrings() {
@@ -271,24 +271,35 @@ function hasContent(html) {
   return shortText(html).length > 5;
 }
 
-function renderPrevNext(name) {
+/**
+ * The floating bar at the bottom shows three actions: prev, home, next. The
+ * left/right slots map to display_order ∓ 1 in LTR, but flip in RTL so the
+ * leftward arrow always points "forward in the reading direction" — which
+ * for an Arabic reader is the next name in the list.
+ */
+function renderFab(name) {
   const idx = state.names.findIndex((n) => n.id === name.id);
-  setNavLink($('#prev'), state.names[idx - 1], 'prev');
-  setNavLink($('#next'), state.names[idx + 1], 'next');
+  const prev = state.names[idx - 1];
+  const next = state.names[idx + 1];
+  const isRTL = document.documentElement.dir === 'rtl';
+  setFabLink($('#fab-left'), isRTL ? next : prev, isRTL ? 'next' : 'prev');
+  setFabLink($('#fab-right'), isRTL ? prev : next, isRTL ? 'prev' : 'next');
 }
 
-function setNavLink(el, name, dir) {
-  if (!name) {
-    el.style.visibility = 'hidden';
+function setFabLink(el, target, role) {
+  if (!target) {
+    el.setAttribute('aria-disabled', 'true');
     el.removeAttribute('href');
-    el.textContent = '';
+    el.removeAttribute('title');
+    el.setAttribute('aria-label', role === 'prev' ? 'Previous' : 'Next');
     return;
   }
-  el.style.visibility = '';
-  el.href = `name.html?id=${name.id}`;
-  const t = loc(name);
-  const arrow = (dir === 'prev') === (document.documentElement.dir === 'rtl') ? '←' : '→';
-  el.innerHTML = `<span class="nav-arrow" aria-hidden="true">${arrow}</span><span class="nav-text">${escapeHtml(name.default_name)}${t.name ? `<small>${escapeHtml(t.name)}</small>` : ''}</span>`;
+  el.removeAttribute('aria-disabled');
+  el.href = `name.html?id=${target.id}`;
+  const tr = loc(target);
+  const label = `${role === 'prev' ? 'Previous' : 'Next'}: ${target.default_name}${tr.name ? ' — ' + tr.name : ''}`;
+  el.title = label;
+  el.setAttribute('aria-label', label);
 }
 
 function refreshPlayingUI() {
