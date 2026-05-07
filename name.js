@@ -499,6 +499,10 @@ function renderPageNav(name) {
 }
 
 function fillFloatNavLink(el, target, roleLabel, keyShortcut) {
+  // Defensive: a stale cached copy of name.html (without the float-nav
+  // markup) combined with the latest name.js would otherwise trip a
+  // null-deref here and abort the entire render.
+  if (!el) return;
   if (!target) {
     el.removeAttribute('href');
     el.setAttribute('aria-disabled', 'true');
