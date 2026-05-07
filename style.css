@@ -306,7 +306,10 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
 
 .card-arabic {
   position: absolute;
-  inset: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 64px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -317,7 +320,7 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
   line-height: 1;
   font-weight: 400;
   pointer-events: none;
-  padding: 0 1rem;
+  padding: 0.5rem 1rem;
   text-align: center;
   z-index: 1;
 }
