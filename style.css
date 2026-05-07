@@ -619,6 +619,7 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
 .library-pane[hidden] { display: none; }
 
 .lib-card {
+  position: relative;
   width: 100%;
   border-radius: var(--r-md);
   overflow: hidden;
@@ -630,6 +631,36 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
   display: block;
   width: 100%;
   height: auto;
+}
+
+/* Floating download button on each library card. Translucent dark pill so
+   it sits cleanly on any photo; positioned at the trailing-top corner so
+   it stays out of the calligraphy's centre. */
+.lib-card-download {
+  position: absolute;
+  top: 0.6rem;
+  inset-inline-end: 0.6rem;
+  width: 38px;
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(10px) saturate(140%);
+  -webkit-backdrop-filter: blur(10px) saturate(140%);
+  color: #ffffff;
+  border-radius: 50%;
+  text-decoration: none;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+  transition: background 0.15s var(--ease), transform 0.12s var(--ease);
+  -webkit-tap-highlight-color: transparent;
+  z-index: 2;
+}
+.lib-card-download:hover { background: rgba(0, 0, 0, 0.7); }
+.lib-card-download:active { transform: scale(0.94); }
+.lib-card-download:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .lib-video {
