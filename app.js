@@ -133,6 +133,27 @@ function renderList() {
 
   const html = state.visible.map((n, i) => cardMarkup(n, i)).join('');
   list.innerHTML = html;
+
+  // Direct listeners per card — iOS Safari sometimes drops bubbled clicks
+  // from <article role=button> elements, so don't rely on delegation alone.
+  for (const card of list.querySelectorAll('.name-card')) {
+    card.addEventListener('click', onCardActivate);
+  }
+}
+
+function onCardActivate(e) {
+  const card = e.currentTarget;
+  if (card.classList.contains('skeleton')) return;
+  const id = Number(card.dataset.id);
+  if (!Number.isFinite(id)) return;
+  const action = e.target.closest('[data-action]');
+  if (action) {
+    e.stopPropagation();
+    if (action.dataset.action === 'play') togglePlay(id);
+    if (action.dataset.action === 'fav') toggleFav(id);
+    return;
+  }
+  openPanel(id);
 }
 
 function cardMarkup(n, i) {
@@ -145,7 +166,7 @@ function cardMarkup(n, i) {
   const eager = i < 3;
 
   return `
-    <article class="name-card" data-id="${n.id}" tabindex="0" role="button" style="animation-delay: ${delay}ms">
+    <article class="name-card" data-id="${n.id}" tabindex="0" role="button" onclick="" style="animation-delay: ${delay}ms">
       ${bg ? `<img class="card-bg" src="${bg}" alt="" loading="${eager ? 'eager' : 'lazy'}" decoding="async" fetchpriority="${eager ? 'high' : 'low'}" onerror="this.remove()">` : ''}
       <div class="card-arabic">${escapeHtml(n.default_name)}</div>
       <div class="card-foot">
