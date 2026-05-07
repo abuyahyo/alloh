@@ -649,7 +649,7 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
    bar out of sticky+filter, so this sidesteps it. */
 .float-nav {
   position: fixed;
-  bottom: max(1rem, env(safe-area-inset-bottom) + 0.5rem);
+  bottom: 1rem;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
@@ -662,27 +662,26 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
   overflow: hidden;
 }
 
-/* Lift the pill above iOS Safari's full bottom-chrome stack
-   (home indicator + toolbar + URL bar ≈ 128px). Two parallel paths
-   so we don't depend on any single feature-detection working:
-     1. @supports for browsers where -webkit-touch-callout flips the
-        check (most iOS Safari).
-     2. html.ios class set from JS via UA / platform / maxTouchPoints
-        — covers the case where (1) fails to match. */
+/* Mobile devices have a dynamic bottom browser chrome (URL bar +
+   toolbar + home indicator) that hides fixed elements at the very
+   bottom edge. iOS Safari is the worst offender (~128px stack), but
+   even Android sometimes has 60+px of chrome at the bottom on a
+   gesture-nav phone. Triple-path detection so we don't rely on any
+   single feature signal landing:
+     - @media (pointer: coarse): catches every touch device.
+     - @supports (-webkit-touch-callout): catches iOS / iPadOS.
+     - html.ios from JS UA-sniffing: catches iPad masquerading as Mac.
+   All three set the same offset, so any one matching works. */
+@media (pointer: coarse) {
+  .float-nav { bottom: 11rem; }
+  .detail-main { padding-bottom: 14rem; }
+}
 @supports (-webkit-touch-callout: none) {
-  .float-nav {
-    bottom: max(9rem, env(safe-area-inset-bottom) + 8rem);
-  }
-  .detail-main {
-    padding-bottom: calc(env(safe-area-inset-bottom) + 12rem);
-  }
+  .float-nav { bottom: 11rem; }
+  .detail-main { padding-bottom: 14rem; }
 }
-html.ios .float-nav {
-  bottom: max(9rem, env(safe-area-inset-bottom) + 8rem);
-}
-html.ios .detail-main {
-  padding-bottom: calc(env(safe-area-inset-bottom) + 12rem);
-}
+html.ios .float-nav { bottom: 11rem; }
+html.ios .detail-main { padding-bottom: 14rem; }
 
 @keyframes floatNavIn {
   from { opacity: 0; transform: translateX(-50%) translateY(8px); }
