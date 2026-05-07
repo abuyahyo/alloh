@@ -415,21 +415,48 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
   align-items: center;
   gap: 0.5rem;
 }
-.lang-floater.inline { position: static; }
+/* In the detail bar, the language select joins the same tile system as the
+   icon buttons: 42px tall, rounded with --r-md, neutral surface fill, with
+   a custom chevron painted via the wrapper so users see it's a dropdown. */
+.lang-floater.inline { position: relative; }
+.lang-floater.inline select {
+  height: 42px;
+  padding: 0 1.95rem 0 0.95rem;
+  border-radius: var(--r-md);
+  font-size: 0.85rem;
+  letter-spacing: 0.02em;
+  color: var(--ink-soft);
+}
+[dir="rtl"] .lang-floater.inline select {
+  padding: 0 0.95rem 0 1.95rem;
+}
+.lang-floater.inline::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  inset-inline-end: 0.7rem;
+  width: 12px;
+  height: 12px;
+  pointer-events: none;
+  transform: translateY(-50%);
+  background: var(--muted);
+  -webkit-mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>") center / contain no-repeat;
+  mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>") center / contain no-repeat;
+}
 .bar-btn {
   width: 42px;
   height: 42px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: var(--bg);
-  background: var(--ink);
-  border-radius: 12px;
+  color: var(--ink-soft);
+  background: var(--surface);
+  border-radius: var(--r-md);
   text-decoration: none;
   box-shadow: var(--shadow-sm);
-  transition: background 0.15s var(--ease), transform 0.12s var(--ease);
+  transition: background 0.15s var(--ease), color 0.15s var(--ease), transform 0.12s var(--ease);
 }
-.bar-btn:hover { background: var(--ink-soft); }
+.bar-btn:hover { background: var(--surface-2); color: var(--ink); }
 .bar-btn:active { transform: scale(0.96); }
 .bar-btn:focus-visible {
   outline: 2px solid var(--ink);
@@ -901,12 +928,16 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
 :root:not([data-theme="dark"]) .theme-toggle .icon-moon { display: block; }
 
 /* When the theme toggle sits in the detail bar (next to the home/share
-   pill buttons) match their square shape so the row feels consistent. */
+   tiles) match their shape, fill, and hover so the row reads as one. */
 .detail-bar .chrome-btn {
   width: 42px;
   height: 42px;
-  border-radius: 12px;
+  border-radius: var(--r-md);
+  background: var(--surface);
+  color: var(--ink-soft);
+  box-shadow: var(--shadow-sm);
 }
+.detail-bar .chrome-btn:hover { background: var(--surface-2); color: var(--ink); }
 
 /* =========================================================================
    Search clear & favorites filter
