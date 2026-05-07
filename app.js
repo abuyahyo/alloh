@@ -134,6 +134,12 @@ function renderList() {
   }
 
   list.innerHTML = state.visible.map((n, i) => cardMarkup(n, i)).join('');
+
+  // onload may fire before the inline handler is wired up for cached images;
+  // reconcile so those images don't stay hidden under the .is-loading class.
+  for (const img of list.querySelectorAll('img.card-bg.is-loading')) {
+    if (img.complete && img.naturalWidth > 0) img.classList.remove('is-loading');
+  }
 }
 
 function cardMarkup(n, i) {
@@ -145,11 +151,13 @@ function cardMarkup(n, i) {
   const delay = Math.min(i * 24, 360);
   const eager = i < 3;
   const ariaLabel = `${n.default_name}${translit ? ', ' + translit : ''}`;
+  const tint = safeColor(n.color);
+  const cardStyle = `animation-delay: ${delay}ms${tint ? `; background-color: ${tint}` : ''}`;
 
   return `
-    <article class="name-card" data-id="${n.id}" style="animation-delay: ${delay}ms">
+    <article class="name-card" data-id="${n.id}" style="${cardStyle}">
       <a class="card-link" href="#name-${n.id}" aria-label="${escapeHtml(ariaLabel)}">
-        ${bg ? `<img class="card-bg" src="${escapeHtml(bg)}" alt="" loading="${eager ? 'eager' : 'lazy'}" decoding="async" fetchpriority="${eager ? 'high' : 'low'}" onerror="this.remove()">` : ''}
+        ${bg ? `<img class="card-bg is-loading" src="${escapeHtml(bg)}" alt="" loading="${eager ? 'eager' : 'lazy'}" decoding="async" fetchpriority="${eager ? 'high' : 'low'}" onload="this.classList.remove('is-loading')" onerror="this.remove()">` : ''}
         <span class="card-arabic">${escapeHtml(n.default_name)}</span>
       </a>
       <div class="card-foot">
@@ -310,10 +318,11 @@ function carouselCardMarkup(n) {
   const bg = safePath(n.background_image);
   const isFav = state.favorites.has(n.id);
   const isPlaying = state.playingId === n.id;
+  const tint = safeColor(n.color);
 
   return `
-    <article class="carousel-card" data-id="${n.id}">
-      ${bg ? `<img class="card-bg" src="${escapeHtml(bg)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">` : ''}
+    <article class="carousel-card" data-id="${n.id}"${tint ? ` style="background-color: ${tint}"` : ''}>
+      ${bg ? `<img class="card-bg is-loading" src="${escapeHtml(bg)}" alt="" loading="lazy" decoding="async" onload="this.classList.remove('is-loading')" onerror="this.remove()">` : ''}
       <div class="card-arabic">${escapeHtml(n.default_name)}</div>
       <div class="card-foot">
         <button class="card-icon-btn card-play${isPlaying ? ' is-playing' : ''}" data-action="play" aria-label="Play" type="button">
@@ -611,6 +620,11 @@ function cleanNode(node) {
 function safePath(p) {
   if (typeof p !== 'string' || !p) return '';
   return /^(voices|images)\/[\w-]+\.[a-z0-9]+$/i.test(p) ? p : '';
+}
+
+function safeColor(c) {
+  if (typeof c !== 'string') return '';
+  return /^#[0-9a-f]{3}([0-9a-f]{3})?$/i.test(c) ? c : '';
 }
 
 function escapeHtml(s) {
