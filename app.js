@@ -1,18 +1,12 @@
 import {
-  RTL_LANGS, DEFAULT_LANG,
+  DEFAULT_LANG,
   $, $$,
   loadJSON, applyDir, buildLangSelect, localized,
-  escapeHtml, safePath, safeSvgPath, safeColor,
-  iconPlay, iconPause, iconHeart,
+  escapeHtml, shortText, safePath, safeSvgPath, safeColor,
+  iconPlay, iconPause, iconLoading, iconHeart,
   showToast, createAudioController, attachImgFade,
-  bindThemeToggle,
+  bindThemeToggle, tFor,
 } from './shared.js';
-
-const SEARCH_PLACEHOLDER = {
-  ar: 'البحث',
-  ru: 'Поиск',
-  en: 'Search',
-};
 
 const state = {
   names: [],
@@ -21,6 +15,7 @@ const state = {
   languages: [],
   lang: localStorage.getItem('lang') || DEFAULT_LANG,
   favorites: new Set(JSON.parse(localStorage.getItem('favorites') || '[]')),
+  favoritesOnly: localStorage.getItem('favoritesOnly') === '1',
 };
 
 const audio = $('#audio');
@@ -31,15 +26,25 @@ const audioCtrl = createAudioController({
   onChange: refreshPlayingUI,
 });
 
+let syncThemeLabel = () => {};
+
 async function init() {
   bindGlobalEvents();
-  bindThemeToggle($('#theme-toggle'));
+  syncThemeLabel = bindThemeToggle($('#theme-toggle'), () => state.lang);
 
-  const [names, trans, langs] = await Promise.all([
-    loadJSON('json/names.json'),
-    loadJSON('json/name_translations.json'),
-    loadJSON('json/languages.json'),
-  ]);
+  let names, trans, langs;
+  try {
+    [names, trans, langs] = await Promise.all([
+      loadJSON('json/names.json'),
+      loadJSON('json/name_translations.json'),
+      loadJSON('json/languages.json'),
+    ]);
+  } catch (err) {
+    console.error(err);
+    $('#list').removeAttribute('aria-busy');
+    $('#list').innerHTML = `<p class="empty">${escapeHtml(tFor(state.lang, 'load_failed'))}</p>`;
+    return;
+  }
 
   state.names = names.sort((a, b) => a.display_order - b.display_order);
 
@@ -54,14 +59,27 @@ async function init() {
   if (!state.languages.find((l) => l.code === state.lang)) state.lang = DEFAULT_LANG;
 
   buildLangSelect($('#lang'), state.languages, state.lang);
-  applyDir(state.lang);
-  applySearchPlaceholder();
+  applyLangChrome();
   renderList();
 }
 
-function applySearchPlaceholder() {
-  const ph = SEARCH_PLACEHOLDER[state.lang] || SEARCH_PLACEHOLDER.en;
-  $('#search').setAttribute('placeholder', ph);
+function applyLangChrome() {
+  applyDir(state.lang);
+  $('#search').setAttribute('placeholder', tFor(state.lang, 'search'));
+  $('#search').setAttribute('aria-label', tFor(state.lang, 'search'));
+  $('#search-clear').setAttribute('aria-label', tFor(state.lang, 'clear_search'));
+  $('#lang').setAttribute('aria-label', tFor(state.lang, 'language'));
+  refreshFavoritesToggleLabel();
+  syncThemeLabel();
+}
+
+function refreshFavoritesToggleLabel() {
+  const btn = $('#favorites-toggle');
+  const key = state.favoritesOnly ? 'favorites_all' : 'favorites_show';
+  btn.setAttribute('aria-label', tFor(state.lang, key));
+  btn.setAttribute('title', tFor(state.lang, key));
+  btn.setAttribute('aria-pressed', state.favoritesOnly ? 'true' : 'false');
+  btn.classList.toggle('is-active', state.favoritesOnly);
 }
 
 function loc(name) {
@@ -69,11 +87,20 @@ function loc(name) {
 }
 
 function getOrdered(filterText = '') {
+  let pool = state.names;
+  if (state.favoritesOnly) {
+    pool = pool.filter((n) => state.favorites.has(n.id));
+  }
   const q = filterText.trim().toLowerCase();
-  if (!q) return state.names;
-  return state.names.filter((n) => {
+  if (!q) return pool;
+  return pool.filter((n) => {
     const t = loc(n);
-    return `${n.default_name} ${t.name || ''}`.toLowerCase().includes(q);
+    const haystack = [
+      n.default_name,
+      t.name,
+      shortText(t.short_meaning_val),
+    ].filter(Boolean).join(' ').toLowerCase();
+    return haystack.includes(q);
   });
 }
 
@@ -84,7 +111,8 @@ function renderList() {
   list.removeAttribute('aria-busy');
 
   if (state.visible.length === 0) {
-    list.innerHTML = '<p class="empty">لا توجد نتائج</p>';
+    const key = state.favoritesOnly && !$('#search').value.trim() ? 'favorites_empty' : 'no_results';
+    list.innerHTML = `<p class="empty">${escapeHtml(tFor(state.lang, key))}</p>`;
     return;
   }
 
@@ -107,13 +135,22 @@ function attachCalligraphyFallback(img) {
   }, { once: true });
 }
 
+function playIconFor(id) {
+  if (audioCtrl.isLoading(id)) return iconLoading();
+  return audioCtrl.isPlaying(id) ? iconPause() : iconPlay();
+}
+
+function playLabelKey(id) {
+  if (audioCtrl.isLoading(id)) return 'loading';
+  return audioCtrl.isPlaying(id) ? 'pause' : 'play';
+}
+
 function cardMarkup(n, i) {
   const t = loc(n);
   const translit = t.name || '';
   const bg = safePath(n.background_image);
   const calligraphy = safeSvgPath(n.image);
   const isFav = state.favorites.has(n.id);
-  const isPlaying = audioCtrl.isPlaying(n.id);
   const delay = Math.min(i * 24, 360);
   const eager = i < 3;
   const ariaLabel = `${n.default_name}${translit ? ', ' + translit : ''}`;
@@ -122,6 +159,10 @@ function cardMarkup(n, i) {
   const calligraphyHtml = calligraphy
     ? `<img class="card-arabic-svg" src="${escapeHtml(calligraphy)}" alt="${escapeHtml(n.default_name)}" loading="${eager ? 'eager' : 'lazy'}" decoding="async" data-fallback="${escapeHtml(n.default_name)}">`
     : escapeHtml(n.default_name);
+  const playLabel = tFor(state.lang, playLabelKey(n.id));
+  const favLabel = tFor(state.lang, isFav ? 'unfavorite' : 'favorite');
+  const playing = audioCtrl.isPlaying(n.id);
+  const loading = audioCtrl.isLoading(n.id);
 
   return `
     <article class="name-card" data-id="${n.id}" style="${cardStyle}">
@@ -130,11 +171,11 @@ function cardMarkup(n, i) {
         <span class="card-arabic">${calligraphyHtml}</span>
       </a>
       <div class="card-foot">
-        <button class="card-icon-btn card-play${isPlaying ? ' is-playing' : ''}" data-action="play" aria-label="Play" type="button">
-          ${isPlaying ? iconPause() : iconPlay()}
+        <button class="card-icon-btn card-play${playing ? ' is-playing' : ''}${loading ? ' is-loading' : ''}" data-action="play" aria-label="${escapeHtml(playLabel)}" type="button">
+          ${playIconFor(n.id)}
         </button>
         <span class="card-translit">${escapeHtml(translit)}</span>
-        <button class="card-icon-btn card-fav${isFav ? ' is-fav' : ''}" data-action="fav" aria-label="Favorite" type="button">
+        <button class="card-icon-btn card-fav${isFav ? ' is-fav' : ''}" data-action="fav" aria-label="${escapeHtml(favLabel)}" aria-pressed="${isFav ? 'true' : 'false'}" type="button">
           ${iconHeart()}
         </button>
       </div>
@@ -148,8 +189,11 @@ function refreshPlayingUI() {
     const btn = $('.card-play', card);
     if (!btn) return;
     const playing = audioCtrl.isPlaying(id);
+    const loading = audioCtrl.isLoading(id);
     btn.classList.toggle('is-playing', playing);
-    btn.innerHTML = playing ? iconPause() : iconPlay();
+    btn.classList.toggle('is-loading', loading);
+    btn.innerHTML = playIconFor(id);
+    btn.setAttribute('aria-label', tFor(state.lang, playLabelKey(id)));
   });
 }
 
@@ -160,22 +204,44 @@ function toggleFav(id) {
   const isFav = state.favorites.has(id);
   $$(`.name-card[data-id="${id}"] .card-fav`).forEach((b) => {
     b.classList.toggle('is-fav', isFav);
+    b.setAttribute('aria-pressed', isFav ? 'true' : 'false');
+    b.setAttribute('aria-label', tFor(state.lang, isFav ? 'unfavorite' : 'favorite'));
   });
+  if (state.favoritesOnly) renderList();
 }
 
 function bindGlobalEvents() {
   $('#lang').addEventListener('change', (e) => {
     state.lang = e.target.value;
     localStorage.setItem('lang', state.lang);
-    applyDir(state.lang);
-    applySearchPlaceholder();
+    applyLangChrome();
     renderList();
   });
 
   let searchTimer;
-  $('#search').addEventListener('input', () => {
+  const search = $('#search');
+  const clearBtn = $('#search-clear');
+  const updateClearVisible = () => {
+    clearBtn.hidden = !search.value;
+  };
+  search.addEventListener('input', () => {
+    updateClearVisible();
     clearTimeout(searchTimer);
     searchTimer = setTimeout(renderList, 120);
+  });
+  clearBtn.addEventListener('click', () => {
+    search.value = '';
+    updateClearVisible();
+    search.focus();
+    renderList();
+  });
+  updateClearVisible();
+
+  $('#favorites-toggle').addEventListener('click', () => {
+    state.favoritesOnly = !state.favoritesOnly;
+    localStorage.setItem('favoritesOnly', state.favoritesOnly ? '1' : '0');
+    refreshFavoritesToggleLabel();
+    renderList();
   });
 
   $('#list').addEventListener('click', onListClick);
@@ -194,6 +260,7 @@ function onListClick(e) {
 }
 
 init().catch((err) => {
-  $('#list').innerHTML = `<p class="empty">${escapeHtml(err.message)}</p>`;
   console.error(err);
+  $('#list').removeAttribute('aria-busy');
+  $('#list').innerHTML = `<p class="empty">${escapeHtml(tFor(state.lang, 'load_failed'))}</p>`;
 });

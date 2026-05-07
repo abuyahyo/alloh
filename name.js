@@ -3,9 +3,9 @@ import {
   $, $$,
   loadJSON, applyDir, buildLangSelect, localized,
   escapeHtml, shortText, safePath, safeSvgPath, safeColor,
-  iconPlay, iconPause, iconHeart,
+  iconPlay, iconPause, iconLoading, iconHeart,
   showToast, createAudioController, attachImgFade,
-  bindThemeToggle,
+  bindThemeToggle, tFor,
 } from './shared.js';
 
 const ALLOWED_HTML_TAGS = new Set([
@@ -22,43 +22,8 @@ const SECTIONS = [
   { act: 'benefits', valKey: 'benefits_val', keyKey: 'benefits_key' },
 ];
 
-const UI_STRINGS = {
-  ar: {
-    short_meaning: 'المعنى المختصر',
-    meanings: 'أقوال العلماء',
-    evidence: 'الأدلة',
-    effects: 'الآثار الإيمانية',
-    pray: 'الدعاء بالاسم',
-    mercy: 'وقفات',
-    benefits: 'فوائد وأحكام',
-    no_content: 'لا يوجد محتوى',
-    ar_only: 'هذا القسم متوفر بالعربية فقط',
-    copied: 'تم النسخ',
-    share_failed: 'تعذر المشاركة',
-    library: 'مكتبة المرئيات',
-    cards: 'البطاقات',
-    videos: 'مقاطع فيديو',
-  },
-  ru: {
-    short_meaning: 'Краткое значение',
-    meanings: 'Слова учёных',
-    evidence: 'Доказательства',
-    effects: 'Влияние на веру',
-    pray: 'Дуа и поминание',
-    mercy: 'Размышления',
-    benefits: 'Польза и предписания',
-    no_content: 'Содержимое отсутствует',
-    ar_only: 'Этот раздел доступен только на арабском',
-    copied: 'Скопировано',
-    share_failed: 'Не удалось поделиться',
-    library: 'Медиатека',
-    cards: 'Карточки',
-    videos: 'Видео',
-  },
-};
 function ui(key) {
-  const set = UI_STRINGS[state.lang] || UI_STRINGS[DEFAULT_LANG];
-  return set[key] || UI_STRINGS[DEFAULT_LANG][key] || '';
+  return tFor(state.lang, key);
 }
 
 const state = {
@@ -81,6 +46,7 @@ const audioCtrl = createAudioController({
 });
 
 let tocObserver = null;
+let syncThemeLabel = () => {};
 
 async function init() {
   const params = new URLSearchParams(location.search);
@@ -93,15 +59,23 @@ async function init() {
   state.currentId = id;
 
   bindEvents();
-  bindThemeToggle($('#theme-toggle'));
+  syncThemeLabel = bindThemeToggle($('#theme-toggle'), () => state.lang);
 
-  const [names, trans, langs, cards, videos] = await Promise.all([
-    loadJSON('json/names.json'),
-    loadJSON('json/name_translations.json'),
-    loadJSON('json/languages.json'),
-    loadJSON('json/cards.json').catch(() => []),
-    loadJSON('json/videos.json').catch(() => []),
-  ]);
+  let names, trans, langs, cards, videos;
+  try {
+    [names, trans, langs, cards, videos] = await Promise.all([
+      loadJSON('json/names.json'),
+      loadJSON('json/name_translations.json'),
+      loadJSON('json/languages.json'),
+      loadJSON('json/cards.json').catch((e) => { console.warn('cards.json:', e); return []; }),
+      loadJSON('json/videos.json').catch((e) => { console.warn('videos.json:', e); return []; }),
+    ]);
+  } catch (err) {
+    console.error(err);
+    $('#hero').removeAttribute('aria-busy');
+    $('#hero').innerHTML = `<p class="empty">${escapeHtml(ui('load_failed'))}</p>`;
+    return;
+  }
 
   state.names = names.sort((a, b) => a.display_order - b.display_order);
 
@@ -125,8 +99,18 @@ async function init() {
   if (!state.languages.find((l) => l.code === state.lang)) state.lang = DEFAULT_LANG;
 
   buildLangSelect($('#lang'), state.languages, state.lang);
-  applyDir(state.lang);
+  applyLangChrome();
   render();
+}
+
+function applyLangChrome() {
+  applyDir(state.lang);
+  $('#lang').setAttribute('aria-label', ui('language'));
+  const home = $('.bar-btn.home');
+  if (home) home.setAttribute('aria-label', ui('home'));
+  const share = $('.bar-btn.share');
+  if (share) share.setAttribute('aria-label', ui('share'));
+  syncThemeLabel();
 }
 
 function loc(name) {
@@ -138,7 +122,7 @@ function render() {
   const hero = $('#hero');
   if (!name) {
     hero.removeAttribute('aria-busy');
-    hero.innerHTML = '<p class="empty">Not found</p>';
+    hero.innerHTML = `<p class="empty">${escapeHtml(ui('not_found'))}</p>`;
     return;
   }
 
@@ -146,10 +130,9 @@ function render() {
   const translit = t.name || '';
   const bg = safePath(name.background_image);
   const isFav = state.favorites.has(name.id);
-  const isPlaying = audioCtrl.isPlaying(name.id);
   const tint = safeColor(name.color);
 
-  document.title = `${name.default_name}${translit ? ' — ' + translit : ''} | هو الله`;
+  document.title = `${name.default_name}${translit ? ' — ' + translit : ''} | ${ui('pwa_title')}`;
   if (tint) hero.style.backgroundColor = tint;
 
   const calligraphy = safeSvgPath(name.image);
@@ -157,16 +140,22 @@ function render() {
     ? `<img class="card-arabic-svg" src="${escapeHtml(calligraphy)}" alt="${escapeHtml(name.default_name)}" loading="eager" decoding="async" data-fallback="${escapeHtml(name.default_name)}">`
     : escapeHtml(name.default_name);
 
+  const playing = audioCtrl.isPlaying(name.id);
+  const loading = audioCtrl.isLoading(name.id);
+  const playLabel = ui(loading ? 'loading' : (playing ? 'pause' : 'play'));
+  const favLabel = ui(isFav ? 'unfavorite' : 'favorite');
+  const playIcon = loading ? iconLoading() : (playing ? iconPause() : iconPlay());
+
   hero.removeAttribute('aria-busy');
   hero.innerHTML = `
     ${bg ? `<img class="card-bg is-loading" src="${escapeHtml(bg)}" alt="" loading="eager" decoding="async" fetchpriority="high">` : ''}
     <span class="card-arabic">${calligraphyHtml}</span>
     <div class="card-foot">
-      <button class="card-icon-btn card-play${isPlaying ? ' is-playing' : ''}" data-action="play" aria-label="Play" type="button">
-        ${isPlaying ? iconPause() : iconPlay()}
+      <button class="card-icon-btn card-play${playing ? ' is-playing' : ''}${loading ? ' is-loading' : ''}" data-action="play" aria-label="${escapeHtml(playLabel)}" type="button">
+        ${playIcon}
       </button>
       <span class="card-translit">${escapeHtml(translit)}</span>
-      <button class="card-icon-btn card-fav${isFav ? ' is-fav' : ''}" data-action="fav" aria-label="Favorite" type="button">
+      <button class="card-icon-btn card-fav${isFav ? ' is-fav' : ''}" data-action="fav" aria-label="${escapeHtml(favLabel)}" aria-pressed="${isFav ? 'true' : 'false'}" type="button">
         ${iconHeart()}
       </button>
     </div>
@@ -295,7 +284,10 @@ function renderSectionsAndTOC(name) {
       onScreen.sort((a, b) => b.intersectionRatio - a.intersectionRatio);
       const act = onScreen[0].target.dataset.act;
       $$('.toc-chip', tocInner).forEach((c) => {
-        c.classList.toggle('is-current', c.dataset.act === act);
+        const current = c.dataset.act === act;
+        c.classList.toggle('is-current', current);
+        if (current) c.setAttribute('aria-current', 'location');
+        else c.removeAttribute('aria-current');
       });
     }, { rootMargin: '-40% 0px -50% 0px', threshold: [0, 0.25, 0.5, 0.75, 1] });
     $$('.section', sectionsEl).forEach((s) => tocObserver.observe(s));
@@ -417,6 +409,7 @@ function selectLibraryTab(tab) {
     const active = b.dataset.tab === tab;
     b.classList.toggle('is-active', active);
     b.setAttribute('aria-selected', active ? 'true' : 'false');
+    b.setAttribute('tabindex', active ? '0' : '-1');
   });
   $('#lib-cards').hidden = tab !== 'cards';
   $('#lib-videos').hidden = tab !== 'videos';
@@ -442,6 +435,17 @@ function renderPageNav(name) {
   fillPageNavLink($('#page-nav-prev'), prev, set.prev, 'prev');
   fillPageNavLink($('#page-nav-next'), next, set.next, 'next');
   nav.hidden = !prev && !next;
+
+  // Subtle, discoverable hint that arrow keys also work. Only shows on
+  // devices that have a fine pointer (i.e. a keyboard is likely available).
+  const hint = $('#kbd-hint');
+  if (hint) {
+    const rtl = document.documentElement.dir === 'rtl';
+    const prevKey = rtl ? '→' : '←';
+    const nextKey = rtl ? '←' : '→';
+    hint.textContent = `${prevKey} ${set.prev}  ·  ${nextKey} ${set.next}`;
+    hint.hidden = nav.hidden;
+  }
 }
 
 function fillPageNavLink(el, target, roleLabel, role) {
@@ -455,11 +459,18 @@ function fillPageNavLink(el, target, roleLabel, role) {
   el.hidden = false;
   el.removeAttribute('aria-disabled');
   el.href = `name.html?id=${target.id}`;
+  el.classList.toggle('prev', role === 'prev');
+  el.classList.toggle('next', role === 'next');
   const tr = loc(target);
   const arrow = document.createElement('span');
   arrow.className = 'page-nav-arrow';
   arrow.setAttribute('aria-hidden', 'true');
-  arrow.textContent = role === 'prev' ? '‹' : '›';
+  // Arrow direction depends on writing direction. In RTL, "previous" sits
+  // on the right and visually points right (›), and vice versa.
+  const rtl = document.documentElement.dir === 'rtl';
+  const prevArrow = rtl ? '›' : '‹';
+  const nextArrow = rtl ? '‹' : '›';
+  arrow.textContent = role === 'prev' ? prevArrow : nextArrow;
   const text = document.createElement('span');
   text.className = 'page-nav-text';
   const label = document.createElement('span');
@@ -471,26 +482,37 @@ function fillPageNavLink(el, target, roleLabel, role) {
   text.append(label, title);
   if (role === 'prev') {
     el.append(arrow, text);
+    el.setAttribute('aria-keyshortcuts', rtl ? 'ArrowRight' : 'ArrowLeft');
   } else {
     el.append(text, arrow);
+    el.setAttribute('aria-keyshortcuts', rtl ? 'ArrowLeft' : 'ArrowRight');
   }
   el.setAttribute('aria-label', `${roleLabel}: ${target.default_name}`);
+  el.setAttribute('title', `${roleLabel} — ${rtl ? (role === 'prev' ? '→' : '←') : (role === 'prev' ? '←' : '→')}`);
 }
 
 function refreshPlayingUI() {
   const btn = $('.card-play', $('#hero'));
   if (!btn) return;
   const playing = audioCtrl.isPlaying(state.currentId);
+  const loading = audioCtrl.isLoading(state.currentId);
   btn.classList.toggle('is-playing', playing);
-  btn.innerHTML = playing ? iconPause() : iconPlay();
+  btn.classList.toggle('is-loading', loading);
+  btn.innerHTML = loading ? iconLoading() : (playing ? iconPause() : iconPlay());
+  btn.setAttribute('aria-label', ui(loading ? 'loading' : (playing ? 'pause' : 'play')));
 }
 
 function toggleFav(id) {
   if (state.favorites.has(id)) state.favorites.delete(id);
   else state.favorites.add(id);
   localStorage.setItem('favorites', JSON.stringify([...state.favorites]));
+  const isFav = state.favorites.has(id);
   const btn = $('.card-fav', $('#hero'));
-  if (btn) btn.classList.toggle('is-fav', state.favorites.has(id));
+  if (btn) {
+    btn.classList.toggle('is-fav', isFav);
+    btn.setAttribute('aria-pressed', isFav ? 'true' : 'false');
+    btn.setAttribute('aria-label', ui(isFav ? 'unfavorite' : 'favorite'));
+  }
 }
 
 async function shareCurrent() {
@@ -515,7 +537,7 @@ function bindEvents() {
   $('#lang').addEventListener('change', (e) => {
     state.lang = e.target.value;
     localStorage.setItem('lang', state.lang);
-    applyDir(state.lang);
+    applyLangChrome();
     render();
   });
 
@@ -529,13 +551,37 @@ function bindEvents() {
 
   $('.bar-btn.share').addEventListener('click', shareCurrent);
 
-  $$('.lib-tab').forEach((btn) => {
-    btn.addEventListener('click', () => selectLibraryTab(btn.dataset.tab));
+  const tablist = $('#lib-tabs');
+  tablist.addEventListener('click', (e) => {
+    const btn = e.target.closest('.lib-tab');
+    if (btn && !btn.hidden) selectLibraryTab(btn.dataset.tab);
+  });
+  // Standard ARIA tabs keyboard support: arrow keys cycle, Home/End jump to ends.
+  tablist.addEventListener('keydown', (e) => {
+    if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) return;
+    const tabs = $$('.lib-tab', tablist).filter((t) => !t.hidden);
+    if (!tabs.length) return;
+    const rtl = document.documentElement.dir === 'rtl';
+    const currentIdx = tabs.findIndex((t) => t === document.activeElement) ;
+    const i = currentIdx < 0 ? tabs.findIndex((t) => t.classList.contains('is-active')) : currentIdx;
+    let next = i;
+    if (e.key === 'Home') next = 0;
+    else if (e.key === 'End') next = tabs.length - 1;
+    else {
+      const delta = (e.key === 'ArrowRight' ? 1 : -1) * (rtl ? -1 : 1);
+      next = (i + delta + tabs.length) % tabs.length;
+    }
+    e.preventDefault();
+    selectLibraryTab(tabs[next].dataset.tab);
+    tabs[next].focus();
   });
 
   document.addEventListener('keydown', (e) => {
     if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
     if (e.target && /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
+    // Don't hijack arrow keys when focus is inside the tablist — those are
+    // handled by the tablist's own listener above.
+    if (e.target && e.target.closest && e.target.closest('#lib-tabs')) return;
     const dir = document.documentElement.dir === 'rtl' ? -1 : 1;
     const step = (e.key === 'ArrowRight' ? 1 : -1) * dir;
     const idx = state.names.findIndex((n) => n.id === state.currentId);
@@ -569,7 +615,7 @@ function cleanNode(node) {
 }
 
 init().catch((err) => {
-  $('#hero').removeAttribute('aria-busy');
-  $('#hero').innerHTML = `<p class="empty">${escapeHtml(err.message)}</p>`;
   console.error(err);
+  $('#hero').removeAttribute('aria-busy');
+  $('#hero').innerHTML = `<p class="empty">${escapeHtml(ui('load_failed'))}</p>`;
 });
