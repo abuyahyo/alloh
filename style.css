@@ -243,7 +243,6 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
   text-decoration: none;
   color: inherit;
   cursor: pointer;
-  z-index: 2;
   -webkit-user-select: none;
   user-select: none;
   -webkit-touch-callout: none;
@@ -294,6 +293,7 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
 .card-arabic {
   position: absolute;
   inset: 0;
+  z-index: 2;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -369,8 +369,8 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
 }
 
 .card-icon-btn {
-  width: 32px;
-  height: 32px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   display: inline-flex;
   align-items: center;
@@ -525,13 +525,18 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
   margin: 0 auto 2rem;
   padding: 0 1rem;
   text-align: center;
-  font-family: var(--font-arabic-body);
-  font-size: 1.55rem;
-  line-height: 1.95;
+  font-family: var(--font-ui);
+  font-size: 1.2rem;
+  line-height: 1.7;
   color: var(--ink);
   font-weight: 400;
 }
-[dir="rtl"] .detail-meaning { font-family: var(--font-arabic-body); }
+[lang="ar"] .detail-meaning,
+[dir="rtl"] .detail-meaning {
+  font-family: var(--font-arabic-body);
+  font-size: 1.55rem;
+  line-height: 1.95;
+}
 .detail-meaning:empty { display: none; }
 
 /* =========================================================================
@@ -647,8 +652,8 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
   position: absolute;
   top: 0.6rem;
   inset-inline-end: 0.6rem;
-  width: 38px;
-  height: 38px;
+  width: 44px;
+  height: 44px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -926,11 +931,17 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
 }
 
 .section-body {
+  font-family: var(--font-ui);
+  font-size: 1rem;
+  line-height: 1.75;
+  color: var(--ink-soft);
+  font-weight: 400;
+}
+[lang="ar"] .section-body,
+[dir="rtl"] .section-body {
   font-family: var(--font-arabic-body);
   font-size: 1.2rem;
   line-height: 2;
-  color: var(--ink-soft);
-  font-weight: 400;
 }
 .section-body p + p { margin-top: 0.75rem; }
 .section-body ul, .section-body ol { padding-inline-start: 1.5rem; margin: 0.5rem 0; }
@@ -977,8 +988,8 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
    ========================================================================= */
 
 .chrome-btn {
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1019,8 +1030,8 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   color: var(--muted);
   background: transparent;
