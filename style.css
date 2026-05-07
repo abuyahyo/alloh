@@ -101,11 +101,16 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
   margin: 0 auto;
 }
 
-.lang-floater {
+.header-controls {
   position: absolute;
   top: 1rem;
   inset-inline-end: 1rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
 }
+
+.lang-floater { position: relative; }
 .lang-floater select {
   appearance: none;
   -webkit-appearance: none;
@@ -377,7 +382,7 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
-  padding: 0.75rem 1.25rem;
+  padding: max(0.75rem, env(safe-area-inset-top)) 1.25rem 0.75rem;
   position: sticky;
   top: 0;
   background: var(--header-bg);
@@ -819,43 +824,111 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
 }
 
 /* =========================================================================
-   Floating theme toggle
+   Inline chrome buttons (theme toggle, search clear, favorites toggle)
    ========================================================================= */
 
-.theme-toggle {
-  position: fixed;
-  inset-inline-start: 1rem;
-  bottom: max(1.25rem, calc(env(safe-area-inset-bottom) + 0.75rem));
-  width: 46px;
-  height: 46px;
-  border-radius: 50%;
+.chrome-btn {
+  width: 36px;
+  height: 36px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: var(--ink);
-  color: var(--bg);
-  box-shadow: var(--shadow-md);
-  z-index: 50;
-  transition: transform 0.15s var(--ease), background 0.15s var(--ease);
+  background: var(--surface);
+  color: var(--ink-soft);
+  border-radius: 999px;
+  box-shadow: var(--shadow-sm);
+  transition: background 0.15s var(--ease), color 0.15s var(--ease), transform 0.12s var(--ease);
   -webkit-tap-highlight-color: transparent;
 }
-.theme-toggle:hover { background: var(--ink-soft); }
-.theme-toggle:active { transform: scale(0.94); }
-.theme-toggle:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
-
-/* dvh-aware: anchor against the visible viewport so iOS Safari's URL
-   bar can't cover the toggle. */
-@supports (height: 100dvh) {
-  .theme-toggle {
-    top: calc(100dvh - 46px - max(1.25rem, env(safe-area-inset-bottom) + 0.75rem));
-    bottom: auto;
-  }
-}
+.chrome-btn:hover { color: var(--ink); }
+.chrome-btn:active { transform: scale(0.94); }
+.chrome-btn:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 
 .theme-toggle .icon-sun,
 .theme-toggle .icon-moon { display: none; }
 :root[data-theme="dark"] .theme-toggle .icon-sun { display: block; }
 :root:not([data-theme="dark"]) .theme-toggle .icon-moon { display: block; }
+
+/* When the theme toggle sits in the detail bar (next to the home/share
+   pill buttons) match their square shape so the row feels consistent. */
+.detail-bar .chrome-btn {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+}
+
+/* =========================================================================
+   Search clear & favorites filter
+   ========================================================================= */
+
+.search-clear {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  color: var(--muted);
+  background: transparent;
+  flex-shrink: 0;
+  transition: background 0.15s var(--ease), color 0.15s var(--ease);
+}
+.search-clear:hover { background: var(--surface-2); color: var(--ink); }
+.search-clear:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.search-clear[hidden] { display: none; }
+
+.search-shell {
+  display: flex;
+  gap: 0.6rem;
+  align-items: stretch;
+}
+.search-shell .search { flex: 1; }
+
+.favorites-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  flex-shrink: 0;
+  background: var(--surface);
+  color: var(--muted);
+  border-radius: 18px;
+  box-shadow: var(--shadow-md);
+  transition: color 0.15s var(--ease), background 0.15s var(--ease), transform 0.12s var(--ease);
+}
+.favorites-toggle:hover { color: var(--ink-soft); }
+.favorites-toggle:active { transform: scale(0.96); }
+.favorites-toggle:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.favorites-toggle.is-active {
+  color: #ff4d6d;
+  background: var(--surface);
+}
+.favorites-toggle.is-active svg { fill: #ff4d6d; stroke: #ff4d6d; }
+
+/* =========================================================================
+   Audio loading spinner + keyboard hint
+   ========================================================================= */
+
+@keyframes spin { to { transform: rotate(360deg); } }
+.spin { animation: spin 0.9s linear infinite; transform-origin: 50% 50%; }
+@media (prefers-reduced-motion: reduce) {
+  .spin { animation: none; }
+}
+.card-play.is-loading { background: rgba(255, 255, 255, 0.18); }
+
+.kbd-hint {
+  text-align: center;
+  font-family: var(--font-ui);
+  font-size: 0.78rem;
+  color: var(--muted);
+  margin: 0.75rem 0 0;
+  letter-spacing: 0.02em;
+}
+.kbd-hint[hidden] { display: none; }
+/* Coarse-pointer (touch) devices typically don't have a keyboard handy. */
+@media (pointer: coarse) {
+  .kbd-hint { display: none; }
+}
 
 /* =========================================================================
    Larger screens
