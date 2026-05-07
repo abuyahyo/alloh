@@ -47,28 +47,6 @@ const audioCtrl = createAudioController({
 
 let tocObserver = null;
 
-/**
- * iOS Safari renders fixed-position elements relative to the layout
- * viewport, which on portrait devices extends *behind* the bottom URL
- * bar — so a pill with bottom:1rem lands hidden under the URL bar. The
- * visualViewport API reports the actual visible region, and the
- * difference is how much of the layout viewport is currently obscured
- * at the bottom. We feed it back into the CSS as --vv-bottom and let
- * the pill add it to its bottom offset. No-op on browsers without the
- * API, which already position the pill correctly.
- */
-function trackVisualViewport() {
-  const vv = window.visualViewport;
-  if (!vv) return;
-  const update = () => {
-    const obscured = Math.max(0, window.innerHeight - (vv.height + vv.offsetTop));
-    document.documentElement.style.setProperty('--vv-bottom', `${obscured}px`);
-  };
-  vv.addEventListener('resize', update);
-  vv.addEventListener('scroll', update);
-  update();
-}
-
 async function init() {
   const params = new URLSearchParams(location.search);
   const idParam = params.get('id');
@@ -80,7 +58,6 @@ async function init() {
   state.currentId = id;
 
   bindEvents();
-  trackVisualViewport();
 
   let names, trans, langs, cards, videos;
   try {
