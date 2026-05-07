@@ -396,12 +396,7 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
 .detail-main {
   max-width: var(--content-w);
   margin: 0 auto;
-  /* Top padding clears the iOS notch / Android status bar — the detail
-     page is now headerless, so this is the only thing keeping the hero
-     card off the very top edge. Bottom padding clears the floating nav
-     pill (~52px tall + ~20px bottom offset) so the last bit of content
-     can scroll above it. */
-  padding: calc(env(safe-area-inset-top) + 1rem) 1.25rem calc(env(safe-area-inset-bottom) + 6rem);
+  padding: 0.5rem 1.25rem calc(env(safe-area-inset-bottom) + 1.5rem);
 }
 
 .hero-card {
@@ -639,59 +634,113 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
 }
 
 /* =========================================================================
-   Floating navigation pill (prev / home / next) on the detail page
+   Top bar with home button (only chrome on the detail page)
    ========================================================================= */
 
-/* Single pill anchored near the bottom of the viewport. Three equal
-   sections divided by hairline rules. Solid surface fill + soft shadow
-   rather than backdrop-blur — fixed-position + backdrop-filter has the
-   "transparent void" rendering bug on iOS Safari, so this sidesteps it. */
-.float-nav {
-  position: fixed;
-  bottom: max(1rem, env(safe-area-inset-bottom) + 0.5rem);
-  left: 50%;
-  transform: translateX(-50%);
+.detail-bar {
   display: flex;
-  align-items: stretch;
-  background: var(--surface-2);
-  border: 1px solid var(--rule);
-  border-radius: 999px;
-  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.55), 0 2px 6px rgba(0, 0, 0, 0.4);
-  z-index: 50;
-  overflow: hidden;
+  align-items: center;
+  padding: max(0.75rem, env(safe-area-inset-top)) 1.25rem 0.75rem;
+  position: relative;
+  background: var(--bg);
+  max-width: var(--content-w);
+  margin: 0 auto;
+  min-height: 60px;
 }
 
-.float-nav-btn {
+.bar-btn {
+  width: 44px;
+  height: 44px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 60px;
-  height: 52px;
   color: var(--ink-soft);
+  background: var(--surface-2);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-md);
   text-decoration: none;
-  -webkit-tap-highlight-color: transparent;
-  transition: background 0.15s var(--ease), color 0.15s var(--ease);
+  box-shadow: var(--shadow-sm);
+  transition: background 0.15s var(--ease), color 0.15s var(--ease), transform 0.12s var(--ease);
 }
-.float-nav-btn:hover { background: rgba(255, 255, 255, 0.06); color: var(--ink); }
-.float-nav-btn:active { background: rgba(255, 255, 255, 0.1); }
-.float-nav-btn:focus-visible {
+.bar-btn:hover { background: var(--surface); color: var(--ink); }
+.bar-btn:active { transform: scale(0.96); }
+.bar-btn:focus-visible {
   outline: 2px solid var(--ink);
-  outline-offset: -2px;
-}
-.float-nav-btn + .float-nav-btn {
-  border-inline-start: 1px solid var(--rule);
-}
-.float-nav-btn[aria-disabled="true"] {
-  color: var(--muted-2);
-  pointer-events: none;
+  outline-offset: 2px;
 }
 
-/* Logical-direction icon flip: the SVG glyphs are drawn for LTR
-   semantics (prev = ←, next = →). In RTL the meanings invert, so
-   flip both icons horizontally. */
-[dir="rtl"] .float-nav-prev .float-nav-icon,
-[dir="rtl"] .float-nav-next .float-nav-icon {
-  transform: scaleX(-1);
+/* =========================================================================
+   Inline prev / next nav at the end of the article
+   ========================================================================= */
+
+.page-nav {
+  display: flex;
+  gap: 0.75rem;
+  margin: 2rem 0 1rem;
+}
+.page-nav[hidden] { display: none; }
+
+.page-nav-link {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 1rem 1.1rem;
+  background: var(--surface-2);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-sm);
+  text-decoration: none;
+  color: var(--ink);
+  min-height: 64px;
+  transition: transform 0.15s var(--ease), box-shadow 0.15s var(--ease), background 0.15s var(--ease);
+}
+.page-nav-link[hidden] { display: none; }
+.page-nav-link:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+  background: var(--surface);
+}
+.page-nav-link:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+.page-nav-link.next { justify-content: flex-end; text-align: end; }
+.page-nav-link.prev { justify-content: flex-start; text-align: start; }
+
+.page-nav-arrow {
+  font-size: 1.6rem;
+  line-height: 1;
+  color: var(--accent);
+  flex-shrink: 0;
+  font-family: var(--font-ui);
+}
+
+.page-nav-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.page-nav-role {
+  font-family: var(--font-ui);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--accent);
+  text-transform: uppercase;
+}
+
+.page-nav-name {
+  font-family: var(--font-arabic);
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .section-title {
