@@ -684,26 +684,34 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
   position: relative;
   width: 100%;
   max-width: 720px;
-  max-height: 80vh;
+  height: 100vh;
+  height: 100dvh;
   background: var(--surface);
-  border-radius: 24px 24px 0 0;
-  padding: 1.75rem 1.5rem 2rem;
+  border-radius: 0;
+  padding: 1.25rem 1.5rem 2rem;
+  padding-top: max(1.25rem, env(safe-area-inset-top));
+  padding-bottom: max(2rem, env(safe-area-inset-bottom));
   transform: translateY(100%);
   transition: transform 0.35s var(--ease);
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.18);
+  display: flex;
+  flex-direction: column;
 }
 .long-sheet.open .long-card { transform: translateY(0); }
 .long-close {
-  position: absolute;
-  top: 0.75rem;
-  inset-inline-end: 0.85rem;
-  width: 32px;
-  height: 32px;
+  position: sticky;
+  top: 0;
+  align-self: flex-end;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
-  background: rgba(0, 0, 0, 0.06);
-  font-size: 1.4rem;
+  background: rgba(0, 0, 0, 0.08);
+  font-size: 1.5rem;
   line-height: 1;
+  flex-shrink: 0;
+  z-index: 10;
 }
 .long-key {
   font-family: var(--font-arabic);
