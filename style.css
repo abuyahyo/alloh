@@ -651,7 +651,6 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
 }
 
 .bar-btn {
-  width: 44px;
   height: 44px;
   display: inline-flex;
   align-items: center;
@@ -674,6 +673,41 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
   color: var(--muted-2);
   pointer-events: none;
   opacity: 0.5;
+}
+
+/* Home tile: square icon-only. */
+.bar-btn.home {
+  width: 44px;
+  flex: 0 0 44px;
+}
+
+/* Prev / next tiles: take the leftover row width and show the
+   target Arabic name beside the directional arrow. */
+.bar-btn-named {
+  flex: 1;
+  min-width: 0;
+  gap: 0.45rem;
+  padding: 0 0.7rem;
+}
+
+.bar-btn-icon {
+  flex-shrink: 0;
+}
+
+.bar-btn-name {
+  flex: 1;
+  font-family: var(--font-arabic);
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
+  /* Always render the name in its native LTR/RTL Arabic shape, no
+     matter the surrounding UI direction, so ligatures stay correct. */
+  direction: rtl;
+  unicode-bidi: isolate;
 }
 
 /* The arrow SVGs are drawn for LTR semantics (prev = ←, next = →).

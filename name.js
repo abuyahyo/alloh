@@ -472,12 +472,14 @@ function renderPageNav(name) {
 
 function fillBarNavLink(el, target, roleLabel, keyShortcut) {
   if (!el) return;
+  const nameEl = el.querySelector('.bar-btn-name');
   if (!target) {
     el.removeAttribute('href');
     el.setAttribute('aria-disabled', 'true');
     el.setAttribute('aria-label', roleLabel);
     el.removeAttribute('title');
     el.removeAttribute('aria-keyshortcuts');
+    if (nameEl) nameEl.textContent = '';
     return;
   }
   el.removeAttribute('aria-disabled');
@@ -487,6 +489,7 @@ function fillBarNavLink(el, target, roleLabel, keyShortcut) {
   el.setAttribute('aria-label', fullLabel);
   el.setAttribute('title', fullLabel);
   el.setAttribute('aria-keyshortcuts', keyShortcut);
+  if (nameEl) nameEl.textContent = target.default_name;
 }
 
 function refreshPlayingUI() {
