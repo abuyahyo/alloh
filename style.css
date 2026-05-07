@@ -420,87 +420,15 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
 
 .detail-body { padding-bottom: env(safe-area-inset-bottom); }
 
-.detail-bar {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 0.5rem;
-  padding: max(0.75rem, env(safe-area-inset-top)) 1.25rem 0.75rem;
-  /* Plain in-flow header — sticky+filter combinations have been unreliable
-     on iOS Safari (bar painted as a transparent void on first composite,
-     swallowing the buttons). In-flow sidesteps that whole class of bugs. */
-  position: relative;
-  background: var(--bg);
-  max-width: var(--content-w);
-  margin: 0 auto;
-  /* min-height ensures the row stays visible even if a child somehow
-     reports zero size (another iOS Safari rendering edge case we've hit). */
-  min-height: 60px;
-}
-.bar-actions {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-/* In the detail bar, the language select joins the same tile system as the
-   icon buttons: 42px tall, rounded with --r-md, neutral surface fill, with
-   a custom chevron painted via the wrapper so users see it's a dropdown. */
-.lang-floater.inline { position: relative; }
-.lang-floater.inline select {
-  height: 42px;
-  padding: 0 1.95rem 0 0.95rem;
-  border-radius: var(--r-md);
-  font-size: 0.85rem;
-  letter-spacing: 0.02em;
-  color: var(--ink-soft);
-  background: var(--surface-2);
-  border: 1px solid var(--rule);
-  box-shadow: var(--shadow-sm);
-}
-[dir="rtl"] .lang-floater.inline select {
-  padding: 0 0.95rem 0 1.95rem;
-}
-/* Unicode chevron — avoids data-URI / mask quirks on iOS Safari that were
-   silently breaking the inline lang chrome. */
-.lang-floater.inline::after {
-  content: '\25BE';
-  position: absolute;
-  top: 50%;
-  inset-inline-end: 0.7rem;
-  font-size: 0.75rem;
-  line-height: 1;
-  pointer-events: none;
-  transform: translateY(-50%);
-  color: var(--muted);
-  font-family: var(--font-ui);
-}
-.bar-btn {
-  width: 42px;
-  height: 42px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--ink-soft);
-  background: var(--surface-2);
-  border: 1px solid var(--rule);
-  border-radius: var(--r-md);
-  text-decoration: none;
-  box-shadow: var(--shadow-sm);
-  transition: background 0.15s var(--ease), color 0.15s var(--ease), transform 0.12s var(--ease);
-}
-.bar-btn:hover { background: var(--surface); color: var(--ink); }
-.bar-btn:active { transform: scale(0.96); }
-.bar-btn:focus-visible {
-  outline: 2px solid var(--ink);
-  outline-offset: 2px;
-}
-
 .detail-main {
   max-width: var(--content-w);
   margin: 0 auto;
-  /* Bottom padding clears the floating nav pill (~52px tall + ~20px
-     bottom offset) so the last bit of content can scroll above it. */
-  padding: 0.5rem 1.25rem calc(6rem + env(safe-area-inset-bottom));
+  /* Top padding clears the iOS notch / Android status bar — the detail
+     page is now headerless, so this is the only thing keeping the hero
+     card off the very top edge. Bottom padding clears the floating nav
+     pill (~52px tall + ~20px bottom offset) so the last bit of content
+     can scroll above it. */
+  padding: calc(env(safe-area-inset-top) + 1rem) 1.25rem calc(6rem + env(safe-area-inset-bottom));
 }
 
 .hero-card {
@@ -1052,19 +980,6 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
 .theme-toggle .icon-moon { display: none; }
 :root[data-theme="dark"] .theme-toggle .icon-sun { display: block; }
 :root:not([data-theme="dark"]) .theme-toggle .icon-moon { display: block; }
-
-/* When the theme toggle sits in the detail bar (next to the home/share
-   tiles) match their shape, fill, and hover so the row reads as one. */
-.detail-bar .chrome-btn {
-  width: 42px;
-  height: 42px;
-  border-radius: var(--r-md);
-  background: var(--surface-2);
-  color: var(--ink-soft);
-  border: 1px solid var(--rule);
-  box-shadow: var(--shadow-sm);
-}
-.detail-bar .chrome-btn:hover { background: var(--surface); color: var(--ink); }
 
 /* =========================================================================
    Search clear & favorites filter

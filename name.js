@@ -1,11 +1,11 @@
 import {
   DEFAULT_LANG,
   $, $$,
-  loadJSON, applyDir, buildLangSelect, localized,
+  loadJSON, applyDir, localized,
   escapeHtml, shortText, safePath, safeSvgPath, safeColor,
   iconPlay, iconPause, iconLoading, iconHeart, iconDownload,
-  showToast, createAudioController, attachImgFade,
-  bindThemeToggle, tFor,
+  createAudioController, attachImgFade,
+  tFor,
 } from './shared.js';
 
 const ALLOWED_HTML_TAGS = new Set([
@@ -46,7 +46,6 @@ const audioCtrl = createAudioController({
 });
 
 let tocObserver = null;
-let syncThemeLabel = () => {};
 
 /**
  * iOS Safari renders fixed-position elements relative to the layout
@@ -82,7 +81,6 @@ async function init() {
 
   bindEvents();
   trackVisualViewport();
-  syncThemeLabel = bindThemeToggle($('#theme-toggle'), () => state.lang);
 
   let names, trans, langs, cards, videos;
   try {
@@ -121,19 +119,19 @@ async function init() {
 
   if (!state.languages.find((l) => l.code === state.lang)) state.lang = DEFAULT_LANG;
 
-  buildLangSelect($('#lang'), state.languages, state.lang);
   applyLangChrome();
   render();
 }
 
+/**
+ * The detail page no longer carries a top bar — the floating pill is the
+ * only chrome — so the only document-level chrome we still update on a
+ * language change is the html lang/dir and the home button label.
+ */
 function applyLangChrome() {
   applyDir(state.lang);
-  $('#lang').setAttribute('aria-label', ui('language'));
   const home = $('#float-home');
   if (home) home.setAttribute('aria-label', ui('home'));
-  const share = $('.bar-btn.share');
-  if (share) share.setAttribute('aria-label', ui('share'));
-  syncThemeLabel();
 }
 
 function loc(name) {
@@ -542,32 +540,7 @@ function toggleFav(id) {
   }
 }
 
-async function shareCurrent() {
-  const name = state.names.find((n) => n.id === state.currentId);
-  if (!name) return;
-  const t = loc(name);
-  const text = `${name.default_name} — ${t.name || ''}\n${shortText(t.short_meaning_val).slice(0, 200)}`;
-  const url = location.href;
-  try {
-    if (navigator.share) {
-      await navigator.share({ title: name.default_name, text, url });
-    } else {
-      await navigator.clipboard.writeText(`${text}\n${url}`);
-      showToast(ui('copied'));
-    }
-  } catch (e) {
-    if (e && e.name !== 'AbortError') showToast(ui('share_failed'));
-  }
-}
-
 function bindEvents() {
-  $('#lang').addEventListener('change', (e) => {
-    state.lang = e.target.value;
-    localStorage.setItem('lang', state.lang);
-    applyLangChrome();
-    render();
-  });
-
   $('#hero').addEventListener('click', (e) => {
     const action = e.target.closest('[data-action]');
     if (!action) return;
@@ -575,8 +548,6 @@ function bindEvents() {
     if (action.dataset.action === 'play') audioCtrl.toggle(state.currentId);
     if (action.dataset.action === 'fav') toggleFav(state.currentId);
   });
-
-  $('.bar-btn.share').addEventListener('click', shareCurrent);
 
   const tablist = $('#lib-tabs');
   tablist.addEventListener('click', (e) => {
