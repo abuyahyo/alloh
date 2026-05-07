@@ -5,6 +5,50 @@ const ALLOWED_HTML_TAGS = new Set([
   'UL', 'OL', 'LI', 'BLOCKQUOTE', 'H3', 'H4', 'H5', 'HR',
 ]);
 
+const SECTIONS = [
+  { act: 'meanings', valKey: 'meanings_val', keyKey: 'meanings_key' },
+  { act: 'evidence', valKey: 'evidence_val', keyKey: 'evidence_key' },
+  { act: 'effects',  valKey: 'effects_val',  keyKey: 'effects_key' },
+  { act: 'pray',     valKey: 'pray_val',     keyKey: 'pray_key' },
+  { act: 'mercy',    valKey: 'mercy_val',    keyKey: 'mercy_key' },
+  { act: 'benefits', valKey: 'benefits_val', keyKey: 'benefits_key' },
+];
+
+const UI_STRINGS = {
+  ar: {
+    short_meaning: 'المعنى المختصر',
+    more: 'المزيد عن هذا الاسم',
+    meanings: 'أقوال العلماء',
+    evidence: 'الأدلة',
+    effects: 'الآثار الإيمانية',
+    pray: 'الدعاء بالاسم',
+    mercy: 'وقفات',
+    benefits: 'فوائد وأحكام',
+    no_content: 'لا يوجد محتوى',
+    ar_only: 'هذا القسم متوفر بالعربية فقط',
+    copied: 'تم النسخ',
+    share_failed: 'تعذر المشاركة',
+  },
+  ru: {
+    short_meaning: 'Краткое значение',
+    more: 'Подробнее об этом имени',
+    meanings: 'Слова учёных',
+    evidence: 'Доказательства',
+    effects: 'Влияние на веру',
+    pray: 'Дуа и поминание',
+    mercy: 'Размышления',
+    benefits: 'Польза и предписания',
+    no_content: 'Содержимое отсутствует',
+    ar_only: 'Этот раздел доступен только на арабском',
+    copied: 'Скопировано',
+    share_failed: 'Не удалось поделиться',
+  },
+};
+function ui(key) {
+  const set = UI_STRINGS[state.lang] || UI_STRINGS[DEFAULT_LANG];
+  return set[key] || UI_STRINGS[DEFAULT_LANG][key] || '';
+}
+
 const state = {
   names: [],
   translations: new Map(),
@@ -118,7 +162,40 @@ function render() {
   }
 
   setSanitizedHTML($('#meaning'), t.short_meaning_val);
+  renderUiStrings();
+  renderSectionAvailability(name);
   renderPrevNext(name);
+}
+
+function renderUiStrings() {
+  $$('[data-key]').forEach((el) => {
+    const key = el.dataset.key;
+    const text = ui(key);
+    if (!text) return;
+    if (el.classList.contains('section-title') || el.classList.contains('more-title')) {
+      const span = el.querySelector('span') || el;
+      span.textContent = text;
+    } else {
+      el.textContent = text;
+    }
+  });
+}
+
+function renderSectionAvailability(name) {
+  const t = localized(name);
+  const tAr = (state.translations.get(name.id) || {}).ar || {};
+  for (const s of SECTIONS) {
+    const btn = $(`.more-btn[data-act="${s.act}"]`);
+    if (!btn) continue;
+    const has = hasContent(t[s.valKey]) || hasContent(tAr[s.valKey]);
+    btn.disabled = !has;
+    btn.classList.toggle('is-disabled', !has);
+  }
+}
+
+function hasContent(html) {
+  if (!html) return false;
+  return shortText(html).length > 5;
 }
 
 function renderPrevNext(name) {
@@ -227,10 +304,10 @@ async function shareCurrent() {
       await navigator.share({ title: name.default_name, text, url });
     } else {
       await navigator.clipboard.writeText(`${text}\n${url}`);
-      showToast('Copied to clipboard');
+      showToast(ui('copied'));
     }
   } catch (e) {
-    if (e && e.name !== 'AbortError') showToast('Share failed');
+    if (e && e.name !== 'AbortError') showToast(ui('share_failed'));
   }
 }
 
@@ -272,15 +349,18 @@ function bindEvents() {
 function onMoreAction(act) {
   const name = state.names.find((n) => n.id === state.currentId);
   if (!name) return;
-  if (act === 'scholars') {
-    const t = localized(name);
-    if (!t.meanings_val) { showToast('No content'); return; }
-    showLongMeaning(t.meanings_key, t.meanings_val);
-  } else if (act === 'calligraphy') {
-    const path = safePath(name.image);
-    if (!path) { showToast('No image'); return; }
-    showCalligraphy(name.default_name, path);
+  const section = SECTIONS.find((s) => s.act === act);
+  if (!section) return;
+  const t = localized(name);
+  const tAr = (state.translations.get(name.id) || {}).ar || {};
+  let html = t[section.valKey];
+  let usedFallback = false;
+  if (!hasContent(html)) {
+    html = tAr[section.valKey];
+    usedFallback = true;
   }
+  if (!hasContent(html)) { showToast(ui('no_content')); return; }
+  showLongMeaning(ui(act), html, usedFallback ? ui('ar_only') : '');
 }
 
 /* ================ long-meaning sheet ================ */
@@ -305,11 +385,26 @@ function ensureSheet() {
   return sheet;
 }
 
-function showLongMeaning(key, html) {
-  if (!html) { showToast('No content'); return; }
+function showLongMeaning(key, html, note) {
+  if (!html) { showToast(ui('no_content')); return; }
   const sheet = ensureSheet();
   $('.long-key', sheet).textContent = key || '';
-  setSanitizedHTML($('.long-body', sheet), html);
+  const body = $('.long-body', sheet);
+  body.replaceChildren();
+  if (note) {
+    const noteEl = document.createElement('p');
+    noteEl.className = 'long-note';
+    noteEl.textContent = note;
+    body.appendChild(noteEl);
+    body.setAttribute('dir', 'rtl');
+    body.setAttribute('lang', 'ar');
+  } else {
+    body.removeAttribute('dir');
+    body.removeAttribute('lang');
+  }
+  const fragHost = document.createElement('div');
+  setSanitizedHTML(fragHost, html);
+  while (fragHost.firstChild) body.appendChild(fragHost.firstChild);
   requestAnimationFrame(() => sheet.classList.add('open'));
 }
 
