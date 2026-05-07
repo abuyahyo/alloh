@@ -1,7 +1,7 @@
 name: Fetch missing voice recordings
 
-# Backfills voices/*.mp3 from app.isokoon.com whenever new entries appear in
-# json/names.json or the script changes. Cron is the safety net.
+# Backfills voices/*.mp3 from app.isokoon.com whenever names.json or the
+# script changes; cron is the safety net.
 
 on:
   workflow_dispatch:
