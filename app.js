@@ -142,10 +142,11 @@ function cardMarkup(n, i) {
   const isFav = state.favorites.has(n.id);
   const isPlaying = state.playingId === n.id;
   const delay = Math.min(i * 24, 360);
-  const bgStyle = bg ? `background-image: url('${bg}')` : '';
+  const eager = i < 3;
 
   return `
-    <article class="name-card" data-id="${n.id}" tabindex="0" role="button" style="animation-delay: ${delay}ms; ${bgStyle}">
+    <article class="name-card" data-id="${n.id}" tabindex="0" role="button" style="animation-delay: ${delay}ms">
+      ${bg ? `<img class="card-bg" src="${bg}" alt="" loading="${eager ? 'eager' : 'lazy'}" decoding="async" fetchpriority="${eager ? 'high' : 'low'}" onerror="this.remove()">` : ''}
       <div class="card-arabic">${escapeHtml(n.default_name)}</div>
       <div class="card-foot">
         <button class="card-icon-btn card-play${isPlaying ? ' is-playing' : ''}" data-action="play" aria-label="Play" type="button">
@@ -304,10 +305,10 @@ function carouselCardMarkup(n) {
   const bg = safePath(n.background_image);
   const isFav = state.favorites.has(n.id);
   const isPlaying = state.playingId === n.id;
-  const bgStyle = bg ? `background-image: url('${bg}')` : '';
 
   return `
-    <article class="carousel-card" data-id="${n.id}" style="${bgStyle}">
+    <article class="carousel-card" data-id="${n.id}">
+      ${bg ? `<img class="card-bg" src="${bg}" alt="" loading="lazy" decoding="async" onerror="this.remove()">` : ''}
       <div class="card-arabic">${escapeHtml(n.default_name)}</div>
       <div class="card-foot">
         <button class="card-icon-btn card-play${isPlaying ? ' is-playing' : ''}" data-action="play" aria-label="Play" type="button">
