@@ -3,7 +3,7 @@ import {
   $, $$,
   loadJSON, applyDir, buildLangSelect, localized,
   escapeHtml, shortText, safePath, safeSvgPath, safeColor,
-  iconPlay, iconPause, iconLoading, iconHeart,
+  iconPlay, iconPause, iconLoading, iconHeart, iconDownload,
   showToast, createAudioController, attachImgFade,
   bindThemeToggle, tFor,
 } from './shared.js';
@@ -312,9 +312,9 @@ function renderLibrary(name) {
   const videos = pickByLang(state.videos.get(name.id) || []);
 
   cardsPane.replaceChildren();
-  for (const c of cards) {
+  cards.forEach((c, i) => {
     const safe = safeCardPath(c.image);
-    if (!safe) continue;
+    if (!safe) return;
     const fig = document.createElement('figure');
     fig.className = 'lib-card';
     const img = document.createElement('img');
@@ -326,8 +326,22 @@ function renderLibrary(name) {
     // workflow hasn't run for a freshly added entry).
     img.addEventListener('error', () => fig.remove(), { once: true });
     fig.appendChild(img);
+
+    // Overlay download button — uses <a download> so same-origin assets
+    // save directly without a fetch round-trip. The filename suggestion
+    // is the localized name plus an index so multiple cards stay distinct.
+    const dl = document.createElement('a');
+    dl.className = 'lib-card-download';
+    dl.href = safe;
+    dl.download = suggestedDownloadName(name, safe, i);
+    const label = ui('download');
+    dl.setAttribute('aria-label', label);
+    dl.setAttribute('title', label);
+    dl.innerHTML = iconDownload();
+    fig.appendChild(dl);
+
     cardsPane.appendChild(fig);
-  }
+  });
 
   videosPane.replaceChildren();
   for (const v of videos) {
@@ -364,6 +378,16 @@ function pickByLang(items) {
 function safeCardPath(p) {
   if (typeof p !== 'string' || !p) return '';
   return /^(cards|images)\/[\w-]+\.(jpe?g|png|webp)$/i.test(p) ? p : '';
+}
+
+function suggestedDownloadName(nameRecord, path, index) {
+  const ext = (path.match(/\.([a-z0-9]+)$/i)?.[1] || 'jpg').toLowerCase();
+  const tr = loc(nameRecord);
+  const base = (tr.name || nameRecord.default_name)
+    .replace(/[\\/:*?"<>|]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim() || 'card';
+  return `${base}-${index + 1}.${ext}`;
 }
 
 function extractYouTubeId(url) {

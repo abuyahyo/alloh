@@ -41,6 +41,7 @@ export const UI_STRINGS = {
     load_failed: 'تعذر تحميل المحتوى. حاول تحديث الصفحة.',
     not_found: 'الاسم غير موجود',
     no_audio: 'لا يوجد تسجيل صوتي لهذا الاسم',
+    download: 'تنزيل الصورة',
     pwa_title: 'هو الله',
   },
   ru: {
@@ -77,6 +78,7 @@ export const UI_STRINGS = {
     load_failed: 'Не удалось загрузить. Попробуйте обновить страницу.',
     not_found: 'Имя не найдено',
     no_audio: 'Аудио недоступно',
+    download: 'Скачать изображение',
     pwa_title: 'Он — Аллах',
   },
   en: {
@@ -113,6 +115,7 @@ export const UI_STRINGS = {
     load_failed: 'Could not load. Please refresh the page.',
     not_found: 'Name not found',
     no_audio: 'No audio for this name',
+    download: 'Download image',
     pwa_title: 'He Is Allah',
   },
 };
@@ -219,6 +222,9 @@ export function iconHeart() {
 }
 export function iconClose() {
   return `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>`;
+}
+export function iconDownload() {
+  return `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v12M6 11l6 6 6-6M5 20h14"/></svg>`;
 }
 
 export function showToast(msg, timeout = 2400) {
