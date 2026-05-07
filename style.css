@@ -423,7 +423,7 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
 .detail-bar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: 0.5rem;
   padding: max(0.75rem, env(safe-area-inset-top)) 1.25rem 0.75rem;
   /* Plain in-flow header — sticky+filter combinations have been unreliable
@@ -498,7 +498,9 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
 .detail-main {
   max-width: var(--content-w);
   margin: 0 auto;
-  padding: 0.5rem 1.25rem calc(2rem + env(safe-area-inset-bottom));
+  /* Bottom padding clears the floating nav pill (~52px tall + ~20px
+     bottom offset) so the last bit of content can scroll above it. */
+  padding: 0.5rem 1.25rem calc(6rem + env(safe-area-inset-bottom));
 }
 
 .hero-card {
@@ -739,76 +741,73 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
 }
 
 /* =========================================================================
-   Inline prev / next nav at the end of the article
+   Floating navigation pill (prev / home / next) on the detail page
    ========================================================================= */
 
-.page-nav {
+/* Single pill anchored above the home indicator. Three equal sections
+   divided by hairline rules; backdrop-blurred so it stays legible over
+   any content scrolling underneath. */
+.float-nav {
+  position: fixed;
+  bottom: max(1rem, calc(env(safe-area-inset-bottom) + 0.5rem));
+  left: 50%;
+  transform: translateX(-50%);
   display: flex;
-  gap: 0.75rem;
-  margin: 2rem 0 1rem;
-}
-.page-nav[hidden] { display: none; }
-
-.page-nav-link {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  gap: 0.65rem;
-  padding: 1rem 1.1rem;
-  background: var(--ink);
-  border-radius: var(--r-md);
-  box-shadow: var(--shadow-sm);
-  text-decoration: none;
-  color: var(--bg);
-  min-height: 56px;
-  transition: transform 0.15s var(--ease), box-shadow 0.15s var(--ease), background 0.15s var(--ease);
-}
-.page-nav-link[hidden] { display: none; }
-.page-nav-link:hover {
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-md);
-  background: var(--ink-soft);
-}
-.page-nav-link:focus-visible {
-  outline: 2px solid var(--ink);
-  outline-offset: 2px;
-}
-
-.page-nav-link.next { justify-content: flex-end; text-align: end; }
-.page-nav-link.prev { justify-content: flex-start; text-align: start; }
-
-.page-nav-arrow {
-  font-size: 1.6rem;
-  line-height: 1;
-  color: var(--accent);
-  flex-shrink: 0;
-  font-family: var(--font-ui);
-}
-
-.page-nav-text {
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
-  min-width: 0;
-}
-
-.page-nav-role {
-  font-family: var(--font-ui);
-  font-size: 0.72rem;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  color: var(--accent);
-  text-transform: uppercase;
-}
-
-.page-nav-name {
-  font-family: var(--font-arabic);
-  font-weight: 600;
-  font-size: 0.95rem;
-  color: var(--bg);
-  white-space: nowrap;
+  align-items: stretch;
+  background: color-mix(in srgb, var(--surface-2) 88%, transparent);
+  backdrop-filter: blur(16px) saturate(150%);
+  -webkit-backdrop-filter: blur(16px) saturate(150%);
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  box-shadow: var(--shadow-lg);
+  z-index: 50;
   overflow: hidden;
-  text-overflow: ellipsis;
+  /* Subtle entrance so it doesn't pop in abruptly on first paint. */
+  animation: floatNavIn 0.4s var(--ease) backwards;
+  animation-delay: 0.1s;
+}
+
+@keyframes floatNavIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(8px); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+.float-nav-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 60px;
+  height: 52px;
+  color: var(--ink-soft);
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.15s var(--ease), color 0.15s var(--ease);
+}
+.float-nav-btn:hover { background: rgba(0, 0, 0, 0.05); color: var(--ink); }
+:root[data-theme="dark"] .float-nav-btn:hover { background: rgba(255, 255, 255, 0.06); }
+.float-nav-btn:active { background: rgba(0, 0, 0, 0.08); }
+.float-nav-btn:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: -2px;
+}
+.float-nav-btn + .float-nav-btn {
+  border-inline-start: 1px solid var(--rule);
+}
+.float-nav-btn[aria-disabled="true"] {
+  color: var(--muted-2);
+  pointer-events: none;
+}
+
+/* Logical-direction icon flip: the SVG glyphs are drawn for LTR
+   semantics (prev = ←, next = →). In RTL the meanings invert, so
+   flip both icons horizontally. */
+[dir="rtl"] .float-nav-prev .float-nav-icon,
+[dir="rtl"] .float-nav-next .float-nav-icon {
+  transform: scaleX(-1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .float-nav { animation: none; }
 }
 
 
