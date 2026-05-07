@@ -672,10 +672,24 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
    portrait — so a plain bottom:1rem lands hidden. lvh/dvh math and the
    visualViewport API both failed to lift the pill in practice on real
    devices, so feature-detect iOS Safari (Apple-only -webkit-touch-callout)
-   and add a generous extra offset that clears the URL bar in any state. */
+   and add a generous extra offset that clears the URL bar in any state.
+
+   iPhone bottom chrome stack when the URL bar is fully extended:
+     - home indicator gesture area (env(safe-area-inset-bottom), ~34px)
+     - browser toolbar with arrows / + / tabs / menu (~44px)
+     - URL bar (~50px)
+   Total ≈ 128px. The pill needs to sit above all of it, hence the
+   9rem / safe-area + 8rem floor. When the URL bar minimizes during
+   scroll the pill ends up a touch higher than strictly needed, but
+   it's always visible — which is the only bar we couldn't clear before. */
 @supports (-webkit-touch-callout: none) {
   .float-nav {
-    bottom: max(4.5rem, env(safe-area-inset-bottom) + 4rem);
+    bottom: max(9rem, env(safe-area-inset-bottom) + 8rem);
+  }
+  /* The pill sits a lot higher on iOS, so the article needs more
+     bottom padding for the last paragraph to scroll clear of it. */
+  .detail-main {
+    padding-bottom: calc(env(safe-area-inset-bottom) + 12rem);
   }
 }
 
