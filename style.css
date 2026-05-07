@@ -401,7 +401,7 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
      card off the very top edge. Bottom padding clears the floating nav
      pill (~52px tall + ~20px bottom offset) so the last bit of content
      can scroll above it. */
-  padding: calc(env(safe-area-inset-top) + 1rem) 1.25rem calc(6rem + env(safe-area-inset-bottom));
+  padding: calc(env(safe-area-inset-top) + 1rem) 1.25rem calc(env(safe-area-inset-bottom) + 6rem);
 }
 
 .hero-card {
@@ -642,14 +642,13 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
    Floating navigation pill (prev / home / next) on the detail page
    ========================================================================= */
 
-/* Single pill anchored above the home indicator. Three equal sections
-   divided by hairline rules. Solid surface fill + soft shadow rather
-   than backdrop-blur — fixed-position + backdrop-filter has the same
-   "transparent void" rendering bug on iOS Safari that took the detail
-   bar out of sticky+filter, so this sidesteps it. */
+/* Single pill anchored near the bottom of the viewport. Three equal
+   sections divided by hairline rules. Solid surface fill + soft shadow
+   rather than backdrop-blur — fixed-position + backdrop-filter has the
+   "transparent void" rendering bug on iOS Safari, so this sidesteps it. */
 .float-nav {
   position: fixed;
-  bottom: 1rem;
+  bottom: max(1rem, env(safe-area-inset-bottom) + 0.5rem);
   left: 50%;
   transform: translateX(-50%);
   display: flex;
@@ -660,32 +659,6 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
   box-shadow: 0 8px 28px rgba(0, 0, 0, 0.55), 0 2px 6px rgba(0, 0, 0, 0.4);
   z-index: 50;
   overflow: hidden;
-}
-
-/* Mobile devices have a dynamic bottom browser chrome (URL bar +
-   toolbar + home indicator) that hides fixed elements at the very
-   bottom edge. iOS Safari is the worst offender (~128px stack), but
-   even Android sometimes has 60+px of chrome at the bottom on a
-   gesture-nav phone. Triple-path detection so we don't rely on any
-   single feature signal landing:
-     - @media (pointer: coarse): catches every touch device.
-     - @supports (-webkit-touch-callout): catches iOS / iPadOS.
-     - html.ios from JS UA-sniffing: catches iPad masquerading as Mac.
-   All three set the same offset, so any one matching works. */
-@media (pointer: coarse) {
-  .float-nav { bottom: 11rem; }
-  .detail-main { padding-bottom: 14rem; }
-}
-@supports (-webkit-touch-callout: none) {
-  .float-nav { bottom: 11rem; }
-  .detail-main { padding-bottom: 14rem; }
-}
-html.ios .float-nav { bottom: 11rem; }
-html.ios .detail-main { padding-bottom: 14rem; }
-
-@keyframes floatNavIn {
-  from { opacity: 0; transform: translateX(-50%) translateY(8px); }
-  to { opacity: 1; transform: translateX(-50%) translateY(0); }
 }
 
 .float-nav-btn {
@@ -720,11 +693,6 @@ html.ios .detail-main { padding-bottom: 14rem; }
 [dir="rtl"] .float-nav-next .float-nav-icon {
   transform: scaleX(-1);
 }
-
-@media (prefers-reduced-motion: reduce) {
-  .float-nav { animation: none; }
-}
-
 
 .section-title {
   text-align: center;
