@@ -495,19 +495,29 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
 .library-title {
   text-align: center;
   font-family: var(--font-arabic);
-  font-size: 0.95rem;
+  font-size: 1.05rem;
   font-weight: 700;
-  color: var(--ink-soft);
-  margin: 0 auto 1rem;
+  color: var(--ink);
+  margin: 2rem auto 1.25rem;
+  letter-spacing: 0.01em;
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
 }
 .library-title span {
-  background: var(--surface);
-  border-radius: 999px;
-  box-shadow: var(--shadow-sm);
-  padding: 0.4rem 1.25rem;
+  background: transparent;
+  box-shadow: none;
+  padding: 0;
   display: inline-block;
+}
+.library-title::after {
+  content: '';
+  display: block;
+  width: 32px;
+  height: 2px;
+  background: var(--accent);
+  border-radius: 2px;
 }
 
 .library-tabs {
@@ -694,19 +704,29 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
 .section-title {
   text-align: center;
   font-family: var(--font-arabic);
-  font-size: 0.95rem;
+  font-size: 1.05rem;
   font-weight: 700;
-  color: var(--ink-soft);
-  margin: 0 auto 0.85rem;
+  color: var(--ink);
+  margin: 1.5rem auto 1.25rem;
+  letter-spacing: 0.01em;
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
 }
 .section-title span {
-  background: var(--surface);
-  border-radius: 999px;
-  box-shadow: var(--shadow-sm);
-  padding: 0.4rem 1.25rem;
+  background: transparent;
+  box-shadow: none;
+  padding: 0;
   display: inline-block;
+}
+.section-title::after {
+  content: '';
+  display: block;
+  width: 32px;
+  height: 2px;
+  background: var(--accent);
+  border-radius: 2px;
 }
 
 /* =========================================================================
@@ -734,25 +754,24 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
 
 .toc-chip {
   flex-shrink: 0;
-  padding: 0.5rem 1rem;
+  padding: 0.42rem 0.95rem;
   border-radius: 999px;
-  background: var(--surface);
+  background: var(--surface-2);
   color: var(--ink-soft);
   font-family: var(--font-arabic);
-  font-size: 0.92rem;
+  font-size: 0.88rem;
   font-weight: 600;
   text-decoration: none;
   white-space: nowrap;
-  box-shadow: var(--shadow-sm);
   scroll-snap-align: start;
   transition: background 0.15s var(--ease), color 0.15s var(--ease), transform 0.15s var(--ease);
 }
-.toc-chip:hover { color: var(--ink); transform: translateY(-1px); }
+.toc-chip:hover { color: var(--ink); background: var(--rule); transform: translateY(-1px); }
 .toc-chip:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 .toc-chip.is-current {
   background: var(--accent);
   color: var(--accent-ink);
-  box-shadow: var(--shadow-sm), 0 0 0 4px var(--accent-soft);
+  box-shadow: 0 0 0 4px var(--accent-soft);
 }
 
 .sections {
@@ -782,18 +801,30 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
 }
 
 .section-head {
-  text-align: center;
-  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin-bottom: 0.85rem;
+  text-align: start;
+}
+.section-head::before {
+  content: '';
+  width: 3px;
+  align-self: stretch;
+  background: var(--accent);
+  border-radius: 2px;
+  flex-shrink: 0;
+  min-height: 1.4em;
 }
 .section-head h3 {
   display: inline-block;
   font-family: var(--font-arabic);
-  font-size: 1rem;
+  font-size: 1.1rem;
   font-weight: 700;
   color: var(--ink);
-  background: var(--surface-2);
-  padding: 0.4rem 1.25rem;
-  border-radius: 999px;
+  background: transparent;
+  padding: 0;
+  border-radius: 0;
 }
 
 .section-body {
