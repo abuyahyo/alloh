@@ -47,6 +47,11 @@ export function safePath(p) {
   return /^(voices|images)\/[\w-]+\.[a-z0-9]+$/i.test(p) ? p : '';
 }
 
+export function safeSvgPath(p) {
+  if (typeof p !== 'string' || !p) return '';
+  return /^images\/[\w-]+\.svg$/i.test(p) ? p : '';
+}
+
 export function safeColor(c) {
   if (typeof c !== 'string') return '';
   return /^#[0-9a-f]{3}([0-9a-f]{3})?$/i.test(c) ? c : '';

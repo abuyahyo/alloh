@@ -348,6 +348,21 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
   pointer-events: none;
 }
 
+/* SVG calligraphy delivered with each name (e.g. images/<hash>.svg). The
+   asset is a single-color path; brightness(0) flattens it to black, then
+   invert(1) flips it to white so it sits on the dark photo with a soft
+   glow that mimics the upstream "He Is Allah" app. */
+.card-arabic-svg {
+  display: block;
+  width: auto;
+  max-width: 60%;
+  max-height: 78%;
+  object-fit: contain;
+  filter: brightness(0) invert(1) drop-shadow(0 2px 14px rgba(0, 0, 0, 0.35));
+}
+.cards[data-view="grid"] .card-arabic-svg { max-width: 70%; max-height: 70%; }
+.hero-card .card-arabic-svg { max-width: 50%; max-height: 78%; }
+
 .card-foot {
   position: absolute;
   left: 0.6rem;

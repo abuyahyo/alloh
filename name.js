@@ -2,7 +2,7 @@ import {
   DEFAULT_LANG,
   $, $$,
   loadJSON, applyDir, buildLangSelect, localized,
-  escapeHtml, shortText, safePath, safeColor,
+  escapeHtml, shortText, safePath, safeSvgPath, safeColor,
   iconPlay, iconPause, iconHeart,
   showToast, createAudioController, attachImgFade,
 } from './shared.js';
@@ -149,10 +149,15 @@ function render() {
   document.title = `${name.default_name}${translit ? ' — ' + translit : ''} | هو الله`;
   if (tint) hero.style.backgroundColor = tint;
 
+  const calligraphy = safeSvgPath(name.image);
+  const calligraphyHtml = calligraphy
+    ? `<img class="card-arabic-svg" src="${escapeHtml(calligraphy)}" alt="${escapeHtml(name.default_name)}" loading="eager" decoding="async" data-fallback="${escapeHtml(name.default_name)}">`
+    : escapeHtml(name.default_name);
+
   hero.removeAttribute('aria-busy');
   hero.innerHTML = `
     ${bg ? `<img class="card-bg is-loading" src="${escapeHtml(bg)}" alt="" loading="eager" decoding="async" fetchpriority="high">` : ''}
-    <span class="card-arabic">${escapeHtml(name.default_name)}</span>
+    <span class="card-arabic">${calligraphyHtml}</span>
     <div class="card-foot">
       <button class="card-icon-btn card-play${isPlaying ? ' is-playing' : ''}" data-action="play" aria-label="Play" type="button">
         ${isPlaying ? iconPause() : iconPlay()}
@@ -164,6 +169,12 @@ function render() {
     </div>
   `;
   attachImgFade(hero.querySelector('img.card-bg.is-loading'));
+  const calligraphyImg = hero.querySelector('img.card-arabic-svg');
+  if (calligraphyImg) {
+    calligraphyImg.addEventListener('error', () => {
+      calligraphyImg.replaceWith(document.createTextNode(calligraphyImg.dataset.fallback || ''));
+    }, { once: true });
+  }
 
   setSanitizedHTML($('#meaning'), t.short_meaning_val);
   renderUiStrings();

@@ -2,7 +2,7 @@ import {
   RTL_LANGS, DEFAULT_LANG,
   $, $$,
   loadJSON, applyDir, buildLangSelect, localized,
-  escapeHtml, shortText, safePath, safeColor,
+  escapeHtml, shortText, safePath, safeSvgPath, safeColor,
   iconPlay, iconPause, iconHeart,
   showToast, createAudioController, attachImgFade,
 } from './shared.js';
@@ -127,12 +127,25 @@ function renderList() {
   for (const img of list.querySelectorAll('img.card-bg.is-loading')) {
     attachImgFade(img);
   }
+  for (const img of list.querySelectorAll('img.card-arabic-svg')) {
+    attachCalligraphyFallback(img);
+  }
+}
+
+// If the SVG calligraphy isn't on disk (5 entries are missing in the source
+// dump), swap it for the default Unicode name so the card never renders blank.
+function attachCalligraphyFallback(img) {
+  img.addEventListener('error', () => {
+    const text = img.dataset.fallback || '';
+    img.replaceWith(document.createTextNode(text));
+  }, { once: true });
 }
 
 function cardMarkup(n, i) {
   const t = loc(n);
   const translit = t.name || '';
   const bg = safePath(n.background_image);
+  const calligraphy = safeSvgPath(n.image);
   const isFav = state.favorites.has(n.id);
   const isPlaying = audioCtrl.isPlaying(n.id);
   const delay = Math.min(i * 24, 360);
@@ -140,12 +153,15 @@ function cardMarkup(n, i) {
   const ariaLabel = `${n.default_name}${translit ? ', ' + translit : ''}`;
   const tint = safeColor(n.color);
   const cardStyle = `animation-delay: ${delay}ms${tint ? `; background-color: ${tint}` : ''}`;
+  const calligraphyHtml = calligraphy
+    ? `<img class="card-arabic-svg" src="${escapeHtml(calligraphy)}" alt="${escapeHtml(n.default_name)}" loading="${eager ? 'eager' : 'lazy'}" decoding="async" data-fallback="${escapeHtml(n.default_name)}">`
+    : escapeHtml(n.default_name);
 
   return `
     <article class="name-card" data-id="${n.id}" style="${cardStyle}">
       <a class="card-link" href="name.html?id=${n.id}" aria-label="${escapeHtml(ariaLabel)}">
         ${bg ? `<img class="card-bg is-loading" src="${escapeHtml(bg)}" alt="" loading="${eager ? 'eager' : 'lazy'}" decoding="async" fetchpriority="${eager ? 'high' : 'low'}">` : ''}
-        <span class="card-arabic">${escapeHtml(n.default_name)}</span>
+        <span class="card-arabic">${calligraphyHtml}</span>
       </a>
       <div class="card-foot">
         <button class="card-icon-btn card-play${isPlaying ? ' is-playing' : ''}" data-action="play" aria-label="Play" type="button">
