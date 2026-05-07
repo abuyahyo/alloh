@@ -31,13 +31,7 @@
   --ease: cubic-bezier(0.32, 0.72, 0.24, 1);
 }
 
-html {
-  scroll-behavior: smooth;
-  /* Prevent the page itself from being horizontally pannable. Combined with
-     `overscroll-behavior-x: contain` on body this also tells iOS Safari 16+
-     to swallow the edge swipe-back gesture rather than navigate history. */
-  overflow-x: clip;
-}
+html { scroll-behavior: smooth; }
 
 body {
   font-family: var(--font-ui);
@@ -48,8 +42,7 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
-  overflow-x: clip;
-  overscroll-behavior: none;
+  overscroll-behavior-y: none;
 }
 
 [lang="ar"] body, [dir="rtl"] body { font-family: var(--font-arabic); }
