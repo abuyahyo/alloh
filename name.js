@@ -106,7 +106,7 @@ async function init() {
 function applyLangChrome() {
   applyDir(state.lang);
   $('#lang').setAttribute('aria-label', ui('language'));
-  const home = $('.bar-btn.home');
+  const home = $('#float-home');
   if (home) home.setAttribute('aria-label', ui('home'));
   const share = $('.bar-btn.share');
   if (share) share.setAttribute('aria-label', ui('share'));
@@ -453,73 +453,46 @@ const NAV_LABEL = {
 };
 
 /**
- * Inline previous / next block at the bottom of the article. Sits in
- * normal flow so iOS Safari's URL bar can never hide it. The Home
- * action lives in the sticky top bar instead.
+ * Populate the floating prev / home / next pill at the bottom of the
+ * viewport. Home is static markup; only the prev / next links need
+ * per-render updates (target id, accessible label, disabled state).
  */
 function renderPageNav(name) {
   const idx = state.names.findIndex((n) => n.id === name.id);
   const prev = state.names[idx - 1];
   const next = state.names[idx + 1];
-  const nav = $('#page-nav');
   const set = NAV_LABEL[state.lang] || NAV_LABEL.en;
-  fillPageNavLink($('#page-nav-prev'), prev, set.prev, 'prev');
-  fillPageNavLink($('#page-nav-next'), next, set.next, 'next');
-  nav.hidden = !prev && !next;
+  const rtl = document.documentElement.dir === 'rtl';
+  fillFloatNavLink($('#float-prev'), prev, set.prev, rtl ? 'ArrowRight' : 'ArrowLeft');
+  fillFloatNavLink($('#float-next'), next, set.next, rtl ? 'ArrowLeft' : 'ArrowRight');
 
   // Subtle, discoverable hint that arrow keys also work. Only shows on
   // devices that have a fine pointer (i.e. a keyboard is likely available).
   const hint = $('#kbd-hint');
   if (hint) {
-    const rtl = document.documentElement.dir === 'rtl';
     const prevKey = rtl ? '→' : '←';
     const nextKey = rtl ? '←' : '→';
     hint.textContent = `${prevKey} ${set.prev}  ·  ${nextKey} ${set.next}`;
-    hint.hidden = nav.hidden;
+    hint.hidden = !prev && !next;
   }
 }
 
-function fillPageNavLink(el, target, roleLabel, role) {
-  el.replaceChildren();
+function fillFloatNavLink(el, target, roleLabel, keyShortcut) {
   if (!target) {
-    el.hidden = true;
     el.removeAttribute('href');
     el.setAttribute('aria-disabled', 'true');
+    el.setAttribute('aria-label', roleLabel);
+    el.removeAttribute('title');
+    el.removeAttribute('aria-keyshortcuts');
     return;
   }
-  el.hidden = false;
   el.removeAttribute('aria-disabled');
   el.href = `name.html?id=${target.id}`;
-  el.classList.toggle('prev', role === 'prev');
-  el.classList.toggle('next', role === 'next');
   const tr = loc(target);
-  const arrow = document.createElement('span');
-  arrow.className = 'page-nav-arrow';
-  arrow.setAttribute('aria-hidden', 'true');
-  // Arrow direction depends on writing direction. In RTL, "previous" sits
-  // on the right and visually points right (›), and vice versa.
-  const rtl = document.documentElement.dir === 'rtl';
-  const prevArrow = rtl ? '›' : '‹';
-  const nextArrow = rtl ? '‹' : '›';
-  arrow.textContent = role === 'prev' ? prevArrow : nextArrow;
-  const text = document.createElement('span');
-  text.className = 'page-nav-text';
-  const label = document.createElement('span');
-  label.className = 'page-nav-role';
-  label.textContent = roleLabel;
-  const title = document.createElement('span');
-  title.className = 'page-nav-name';
-  title.textContent = `${target.default_name}${tr.name ? ' — ' + tr.name : ''}`;
-  text.append(label, title);
-  if (role === 'prev') {
-    el.append(arrow, text);
-    el.setAttribute('aria-keyshortcuts', rtl ? 'ArrowRight' : 'ArrowLeft');
-  } else {
-    el.append(text, arrow);
-    el.setAttribute('aria-keyshortcuts', rtl ? 'ArrowLeft' : 'ArrowRight');
-  }
-  el.setAttribute('aria-label', `${roleLabel}: ${target.default_name}`);
-  el.setAttribute('title', `${roleLabel} — ${rtl ? (role === 'prev' ? '→' : '←') : (role === 'prev' ? '←' : '→')}`);
+  const fullLabel = `${roleLabel}: ${target.default_name}${tr.name ? ' — ' + tr.name : ''}`;
+  el.setAttribute('aria-label', fullLabel);
+  el.setAttribute('title', fullLabel);
+  el.setAttribute('aria-keyshortcuts', keyShortcut);
 }
 
 function refreshPlayingUI() {
