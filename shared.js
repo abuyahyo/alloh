@@ -44,12 +44,17 @@ export function shortText(html) {
 
 export function safePath(p) {
   if (typeof p !== 'string' || !p) return '';
-  return /^(voices|images)\/[\w-]+\.[a-z0-9]+$/i.test(p) ? p : '';
+  return /^images\/[\w-]+\.(jpe?g|png|webp)$/i.test(p) ? p : '';
 }
 
 export function safeSvgPath(p) {
   if (typeof p !== 'string' || !p) return '';
   return /^images\/[\w-]+\.svg$/i.test(p) ? p : '';
+}
+
+export function safeVoicePath(p) {
+  if (typeof p !== 'string' || !p) return '';
+  return /^voices\/[\w-]+\.mp3$/i.test(p) ? p : '';
 }
 
 export function safeColor(c) {
@@ -125,7 +130,7 @@ export function createAudioController({ audio, getName, getLang, onChange }) {
 
   async function toggle(id) {
     const name = getName(id);
-    const safeVoice = name ? safePath(name.voice) : '';
+    const safeVoice = name ? safeVoicePath(name.voice) : '';
     if (!safeVoice || missing.has(id)) {
       showToast(audioMissingMsg(getLang()));
       onChange();

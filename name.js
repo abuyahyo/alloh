@@ -188,8 +188,10 @@ function renderUiStrings() {
     const key = el.dataset.key;
     const text = ui(key);
     if (!text) return;
-    if (el.classList.contains('section-title')) {
-      const span = el.querySelector('span') || el;
+    // If the element wraps a single <span> (used by section/library titles
+    // for the pill background), update the span so the styling survives.
+    const span = el.querySelector(':scope > span');
+    if (span && el.children.length === 1) {
       span.textContent = text;
     } else {
       el.textContent = text;
