@@ -267,6 +267,13 @@ function renderSectionsAndTOC(name) {
   }
   tocNav.hidden = false;
 
+  // Sticky name pill anchors the chip strip so the user sees which name
+  // they're reading even after the TOC has stuck to the top of the viewport.
+  const namePill = document.createElement('span');
+  namePill.className = 'toc-name-pill';
+  namePill.textContent = name.default_name;
+  tocInner.appendChild(namePill);
+
   for (const v of visible) {
     const a = document.createElement('a');
     a.className = 'toc-chip';

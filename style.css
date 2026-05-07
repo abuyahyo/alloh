@@ -162,6 +162,10 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
 .logo-w1 { transform: translateX(0.25em) translateY(0.05em); }
 .logo-w2 { transform: translateX(-0.15em) translateY(-0.18em); }
 
+:root[data-theme="dark"] .logo-art {
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.5);
+}
+
 .logo-tag {
   font-family: var(--font-ui);
   font-size: 0.78rem;
@@ -234,6 +238,13 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
   isolation: isolate;
   animation: cardIn 0.45s var(--ease) backwards;
   -webkit-tap-highlight-color: transparent;
+  /* Skip layout/paint work for cards that are off-screen. With 100
+     entries each carrying a backdrop-blur foot pill and an SVG filter
+     stack, this cuts scroll jank on lower-end mobiles. The intrinsic
+     size matches the 16/9 aspect on a typical mobile column width
+     so the scrollbar doesn't jitter as cards mount in and out. */
+  content-visibility: auto;
+  contain-intrinsic-size: auto 200px;
 }
 
 .card-link {
@@ -334,7 +345,6 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
     drop-shadow(0 0 16px rgba(0, 0, 0, 0.55))
     drop-shadow(0 2px 10px rgba(0, 0, 0, 0.45));
 }
-.cards[data-view="grid"] .card-arabic-svg { max-width: 70%; max-height: 60%; }
 .hero-card .card-arabic-svg { max-width: 50%; max-height: 72%; }
 
 .card-foot {
@@ -852,8 +862,33 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
   scrollbar-width: none;
   padding: 0 1.25rem;
   scroll-snap-type: x proximity;
+  /* Soft fade at both edges so users can see there's more content to
+     scroll to when the chips overflow. */
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 1.25rem, #000 calc(100% - 1.25rem), transparent 100%);
+          mask-image: linear-gradient(90deg, transparent 0, #000 1.25rem, #000 calc(100% - 1.25rem), transparent 100%);
 }
 .section-toc-inner::-webkit-scrollbar { display: none; }
+
+/* The current name sits as the first item in the chip strip and is sticky
+   to the leading edge so it stays visible while the user horizontally
+   scrolls the section chips — keeping the "where am I" context intact when
+   the TOC bar itself is sticky to the top of the viewport. */
+.toc-name-pill {
+  flex-shrink: 0;
+  padding: 0.42rem 0.85rem;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--bg);
+  font-family: var(--font-arabic);
+  font-size: 0.95rem;
+  font-weight: 700;
+  white-space: nowrap;
+  position: sticky;
+  inset-inline-start: 1.25rem;
+  z-index: 1;
+  pointer-events: none;
+  box-shadow: var(--shadow-sm);
+}
 
 .toc-chip {
   flex-shrink: 0;
@@ -888,7 +923,9 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
   box-shadow: var(--shadow-sm);
   padding: 1.25rem 1.4rem 1.5rem;
   margin-bottom: 1.1rem;
-  scroll-margin-top: 130px;
+  /* Just enough offset so the section title clears the sticky TOC
+     (which is ~48px tall: 0.5rem padding + ~36px chip + sticky-name pill). */
+  scroll-margin-top: 72px;
   animation: sectionIn 0.35s var(--ease) backwards;
 }
 .section:nth-child(1) { animation-delay: 0ms; }
