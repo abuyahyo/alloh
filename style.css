@@ -340,7 +340,10 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
   text-shadow: 0 2px 16px rgba(0, 0, 0, 0.3);
   line-height: 1;
   font-weight: 400;
-  padding: 0.5rem 1rem;
+  /* Slightly larger bottom padding nudges the flex-centered calligraphy
+     a few pixels above the geometric centre so it sits visually higher
+     than the foot bar without colliding with it. */
+  padding: 0.5rem 1rem 1.75rem;
   text-align: center;
   pointer-events: none;
 }
