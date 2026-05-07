@@ -5,6 +5,7 @@ import {
   escapeHtml, shortText, safePath, safeSvgPath, safeColor,
   iconPlay, iconPause, iconHeart,
   showToast, createAudioController, attachImgFade,
+  bindThemeToggle,
 } from './shared.js';
 
 const ALLOWED_HTML_TAGS = new Set([
@@ -92,6 +93,7 @@ async function init() {
   state.currentId = id;
 
   bindEvents();
+  bindThemeToggle($('#theme-toggle'));
 
   const [names, trans, langs, cards, videos] = await Promise.all([
     loadJSON('json/names.json'),

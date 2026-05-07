@@ -6,9 +6,10 @@
 * { margin: 0; padding: 0; }
 
 :root {
-  --bg: #ebebed;
+  /* Light theme — pure, paper-like surface for the prose. */
+  --bg: #f4f4f6;
   --surface: #ffffff;
-  --surface-2: #f5f5f7;
+  --surface-2: #ebebed;
   --ink: #0e0e10;
   --ink-soft: #2c2c2f;
   --muted: #9a9aa0;
@@ -17,6 +18,7 @@
   --shadow-sm: 0 1px 2px rgba(15, 15, 20, 0.04), 0 1px 3px rgba(15, 15, 20, 0.04);
   --shadow-md: 0 4px 14px rgba(15, 15, 20, 0.07), 0 2px 6px rgba(15, 15, 20, 0.04);
   --shadow-lg: 0 16px 40px rgba(15, 15, 20, 0.12);
+  --header-bg: rgba(244, 244, 246, 0.85);
 
   --r-sm: 10px;
   --r-md: 16px;
@@ -30,6 +32,25 @@
 
   --content-w: 720px;
   --ease: cubic-bezier(0.32, 0.72, 0.24, 1);
+
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  --bg: #0c0c0f;
+  --surface: #18181c;
+  --surface-2: #232328;
+  --ink: #f4f4f7;
+  --ink-soft: #d1d1d6;
+  --muted: #6e6e73;
+  --muted-2: #48484a;
+  --rule: #2c2c30;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.45), 0 1px 3px rgba(0, 0, 0, 0.35);
+  --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.55), 0 2px 6px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.65);
+  --header-bg: rgba(12, 12, 15, 0.78);
+
+  color-scheme: dark;
 }
 
 html { scroll-behavior: smooth; }
@@ -89,7 +110,7 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
   appearance: none;
   -webkit-appearance: none;
   border: none;
-  background: rgba(255, 255, 255, 0.8);
+  background: var(--surface);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   color: var(--ink-soft);
@@ -168,85 +189,6 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
 .search:focus-within .search-icon { color: var(--ink); }
 
 /* =========================================================================
-   Filter bar
-   ========================================================================= */
-
-.filter-bar {
-  max-width: var(--content-w);
-  margin: 0 auto;
-  padding: 1.5rem 1.25rem 1rem;
-  display: flex;
-  align-items: center;
-  gap: 0.85rem;
-  flex-direction: row-reverse;
-}
-
-[dir="rtl"] .filter-bar { flex-direction: row; }
-
-.filter-label {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  flex-shrink: 0;
-  color: var(--ink);
-}
-.filter-text {
-  font-weight: 600;
-  font-size: 0.95rem;
-}
-.grid-toggle {
-  width: 36px;
-  height: 36px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--ink);
-  border-radius: 10px;
-  transition: background 0.15s var(--ease);
-}
-.grid-toggle:hover, .grid-toggle:focus-visible {
-  background: var(--surface);
-  outline: none;
-  box-shadow: var(--shadow-sm);
-}
-
-.chip-row {
-  display: flex;
-  align-items: center;
-  gap: 0.45rem;
-  flex: 1;
-  min-width: 0;
-  overflow-x: auto;
-  scrollbar-width: none;
-  scroll-snap-type: x proximity;
-}
-.chip-row::-webkit-scrollbar { display: none; }
-
-.chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  flex-shrink: 0;
-  padding: 0.55rem 0.95rem;
-  border-radius: 14px;
-  background: transparent;
-  color: var(--muted);
-  border: 1px solid transparent;
-  font-size: 0.92rem;
-  font-weight: 500;
-  transition: background 0.15s var(--ease), color 0.15s var(--ease), box-shadow 0.15s var(--ease);
-  scroll-snap-align: start;
-}
-.chip:hover { color: var(--ink-soft); }
-.chip.is-active {
-  background: var(--surface);
-  color: var(--ink);
-  box-shadow: var(--shadow-sm);
-  font-weight: 600;
-}
-.chip-icon { opacity: 0.85; }
-
-/* =========================================================================
    Card list
    ========================================================================= */
 
@@ -255,17 +197,8 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
   flex-direction: column;
   gap: 1rem;
   list-style: none;
+  margin-top: 1.5rem;
 }
-
-.cards[data-view="grid"] {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
-  gap: 0.85rem;
-}
-.cards[data-view="grid"] .name-card { aspect-ratio: 1 / 1.1; }
-.cards[data-view="grid"] .card-arabic { font-size: 2.6rem; }
-.cards[data-view="grid"] .card-foot { padding: 0.55rem 0.7rem; }
-.cards[data-view="grid"] .card-translit { font-size: 0.85rem; }
 
 .name-card {
   position: relative;
@@ -447,7 +380,7 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
   padding: 0.75rem 1.25rem;
   position: sticky;
   top: 0;
-  background: rgba(235, 235, 237, 0.85);
+  background: var(--header-bg);
   backdrop-filter: blur(12px) saturate(140%);
   -webkit-backdrop-filter: blur(12px) saturate(140%);
   z-index: 10;
@@ -884,6 +817,45 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
   opacity: 1;
   transform: translateX(-50%) translateY(0);
 }
+
+/* =========================================================================
+   Floating theme toggle
+   ========================================================================= */
+
+.theme-toggle {
+  position: fixed;
+  inset-inline-start: 1rem;
+  bottom: max(1.25rem, calc(env(safe-area-inset-bottom) + 0.75rem));
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--ink);
+  color: var(--bg);
+  box-shadow: var(--shadow-md);
+  z-index: 50;
+  transition: transform 0.15s var(--ease), background 0.15s var(--ease);
+  -webkit-tap-highlight-color: transparent;
+}
+.theme-toggle:hover { background: var(--ink-soft); }
+.theme-toggle:active { transform: scale(0.94); }
+.theme-toggle:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+/* dvh-aware: anchor against the visible viewport so iOS Safari's URL
+   bar can't cover the toggle. */
+@supports (height: 100dvh) {
+  .theme-toggle {
+    top: calc(100dvh - 46px - max(1.25rem, env(safe-area-inset-bottom) + 0.75rem));
+    bottom: auto;
+  }
+}
+
+.theme-toggle .icon-sun,
+.theme-toggle .icon-moon { display: none; }
+:root[data-theme="dark"] .theme-toggle .icon-sun { display: block; }
+:root:not([data-theme="dark"]) .theme-toggle .icon-moon { display: block; }
 
 /* =========================================================================
    Larger screens
