@@ -745,31 +745,39 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
    ========================================================================= */
 
 /* Single pill anchored above the home indicator. Three equal sections
-   divided by hairline rules; backdrop-blurred so it stays legible over
-   any content scrolling underneath. */
+   divided by hairline rules. Solid surface fill + soft shadow rather
+   than backdrop-blur — fixed-position + backdrop-filter has the same
+   "transparent void" rendering bug on iOS Safari that took the detail
+   bar out of sticky+filter, so this sidesteps it. The --vv-bottom
+   custom property is set from JS on iOS Safari to lift the pill above
+   the dynamic URL bar (which floats over the layout viewport, so a
+   plain bottom:1rem ends up *behind* it on first paint). */
 .float-nav {
   position: fixed;
-  bottom: max(1rem, calc(env(safe-area-inset-bottom) + 0.5rem));
-  left: 50%;
-  transform: translateX(-50%);
+  bottom: calc(max(1rem, env(safe-area-inset-bottom) + 0.5rem) + var(--vv-bottom, 0px));
+  /* Center horizontally without transform: translateX, which has been
+     known to interact badly with iOS Safari fixed-position scrolling. */
+  left: 0;
+  right: 0;
+  margin-inline: auto;
+  width: max-content;
   display: flex;
   align-items: stretch;
-  background: color-mix(in srgb, var(--surface-2) 88%, transparent);
-  backdrop-filter: blur(16px) saturate(150%);
-  -webkit-backdrop-filter: blur(16px) saturate(150%);
+  background: var(--surface-2);
   border: 1px solid var(--rule);
   border-radius: 999px;
-  box-shadow: var(--shadow-lg);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18), 0 2px 6px rgba(0, 0, 0, 0.10);
   z-index: 50;
   overflow: hidden;
-  /* Subtle entrance so it doesn't pop in abruptly on first paint. */
-  animation: floatNavIn 0.4s var(--ease) backwards;
-  animation-delay: 0.1s;
+  animation: floatNavIn 0.4s var(--ease) 0.1s backwards;
+}
+:root[data-theme="dark"] .float-nav {
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.55), 0 2px 6px rgba(0, 0, 0, 0.4);
 }
 
 @keyframes floatNavIn {
-  from { opacity: 0; transform: translateX(-50%) translateY(8px); }
-  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .float-nav-btn {
