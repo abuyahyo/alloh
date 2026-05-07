@@ -1,5 +1,6 @@
 import {
   DEFAULT_LANG,
+  UI_STRINGS,
   $, $$,
   loadJSON, applyDir, localized,
   escapeHtml, shortText, safePath, safeSvgPath, safeColor,
@@ -77,8 +78,10 @@ async function init() {
 
   state.names = names.sort((a, b) => a.display_order - b.display_order);
 
+  // Show a language in the dropdown if it has either name-content
+  // translations or just UI strings (content then falls back to Arabic).
   const transLangs = new Set(trans.map((t) => t.lang));
-  state.languages = langs.filter((l) => transLangs.has(l.code));
+  state.languages = langs.filter((l) => transLangs.has(l.code) || l.code in UI_STRINGS);
 
   for (const t of trans) {
     if (!state.translations.has(t.gods_name_id)) state.translations.set(t.gods_name_id, {});
@@ -191,7 +194,12 @@ function renderUiStrings() {
  */
 function renderSectionsAndTOC(name) {
   const t = loc(name);
-  const tAr = (state.translations.get(name.id) || {}).ar || {};
+  const tr = state.translations.get(name.id) || {};
+  const tAr = tr.ar || {};
+  // If the user picked a language we don't have any name content for
+  // (e.g. uz before its translations land), every section is implicitly
+  // an Arabic fallback — surface the ar_only notice on every one of them.
+  const langWideFallback = !tr[state.lang] && state.lang !== DEFAULT_LANG;
   const sectionsEl = $('#sections');
   const tocInner = $('#toc-inner');
   const tocNav = $('#toc');
@@ -205,7 +213,7 @@ function renderSectionsAndTOC(name) {
   for (const s of SECTIONS) {
     let html = t[s.valKey];
     let entryKey = t[s.keyKey];
-    let usedFallback = false;
+    let usedFallback = langWideFallback;
     if (!hasContent(html)) {
       html = tAr[s.valKey];
       entryKey = tAr[s.keyKey];
