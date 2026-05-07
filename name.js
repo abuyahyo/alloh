@@ -24,7 +24,6 @@ const SECTIONS = [
 const UI_STRINGS = {
   ar: {
     short_meaning: 'المعنى المختصر',
-    more: 'المزيد عن هذا الاسم',
     meanings: 'أقوال العلماء',
     evidence: 'الأدلة',
     effects: 'الآثار الإيمانية',
@@ -38,7 +37,6 @@ const UI_STRINGS = {
   },
   ru: {
     short_meaning: 'Краткое значение',
-    more: 'Подробнее об этом имени',
     meanings: 'Слова учёных',
     evidence: 'Доказательства',
     effects: 'Влияние на веру',
@@ -72,6 +70,8 @@ const audioCtrl = createAudioController({
   getLang: () => state.lang,
   onChange: refreshPlayingUI,
 });
+
+let tocObserver = null;
 
 async function init() {
   const params = new URLSearchParams(location.search);
@@ -148,7 +148,7 @@ function render() {
 
   setSanitizedHTML($('#meaning'), t.short_meaning_val);
   renderUiStrings();
-  renderSectionAvailability(name);
+  renderSectionsAndTOC(name);
   renderPrevNext(name);
 }
 
@@ -157,7 +157,7 @@ function renderUiStrings() {
     const key = el.dataset.key;
     const text = ui(key);
     if (!text) return;
-    if (el.classList.contains('section-title') || el.classList.contains('more-title')) {
+    if (el.classList.contains('section-title')) {
       const span = el.querySelector('span') || el;
       span.textContent = text;
     } else {
@@ -166,15 +166,103 @@ function renderUiStrings() {
   });
 }
 
-function renderSectionAvailability(name) {
+/**
+ * Build the (visible) sections and the matching TOC chips. Sections with no
+ * content (after Arabic fallback) are skipped entirely so the page only
+ * shows what's actually there.
+ */
+function renderSectionsAndTOC(name) {
   const t = loc(name);
   const tAr = (state.translations.get(name.id) || {}).ar || {};
+  const sectionsEl = $('#sections');
+  const tocInner = $('#toc-inner');
+  const tocNav = $('#toc');
+
+  sectionsEl.replaceChildren();
+  tocInner.replaceChildren();
+  if (tocObserver) { tocObserver.disconnect(); tocObserver = null; }
+
+  const visible = [];
+
   for (const s of SECTIONS) {
-    const btn = $(`.more-btn[data-act="${s.act}"]`);
-    if (!btn) continue;
-    const has = hasContent(t[s.valKey]) || hasContent(tAr[s.valKey]);
-    btn.disabled = !has;
-    btn.classList.toggle('is-disabled', !has);
+    let html = t[s.valKey];
+    let entryKey = t[s.keyKey];
+    let usedFallback = false;
+    if (!hasContent(html)) {
+      html = tAr[s.valKey];
+      entryKey = tAr[s.keyKey];
+      usedFallback = true;
+    }
+    if (!hasContent(html)) continue;
+
+    // Per-name labels are heterogeneous in the source data — e.g. some
+    // entries carry "وقفات" under effects_key. Show the actual entry label
+    // when reading Arabic content; the generic UI label otherwise.
+    const showEntryKey = (state.lang === 'ar' || usedFallback)
+      && typeof entryKey === 'string' && entryKey.trim().length > 1;
+    const headLabel = showEntryKey ? entryKey : ui(s.act);
+    const tocLabel = ui(s.act);
+
+    visible.push({ act: s.act, headLabel, tocLabel });
+
+    const section = document.createElement('section');
+    section.className = 'section';
+    section.id = `sec-${s.act}`;
+    section.setAttribute('data-act', s.act);
+
+    const head = document.createElement('div');
+    head.className = 'section-head';
+    const h3 = document.createElement('h3');
+    h3.textContent = headLabel;
+    head.appendChild(h3);
+    section.appendChild(head);
+
+    if (usedFallback) {
+      const note = document.createElement('p');
+      note.className = 'section-note';
+      note.textContent = ui('ar_only');
+      section.appendChild(note);
+    }
+
+    const body = document.createElement('div');
+    body.className = 'section-body';
+    if (usedFallback) {
+      body.setAttribute('dir', 'rtl');
+      body.setAttribute('lang', 'ar');
+    }
+    setSanitizedHTML(body, html);
+    section.appendChild(body);
+
+    sectionsEl.appendChild(section);
+  }
+
+  if (visible.length === 0) {
+    tocNav.hidden = true;
+    return;
+  }
+  tocNav.hidden = false;
+
+  for (const v of visible) {
+    const a = document.createElement('a');
+    a.className = 'toc-chip';
+    a.href = `#sec-${v.act}`;
+    a.dataset.act = v.act;
+    a.textContent = v.tocLabel;
+    tocInner.appendChild(a);
+  }
+
+  // Track which section is in view so the active chip stays in sync.
+  if ('IntersectionObserver' in window) {
+    tocObserver = new IntersectionObserver((entries) => {
+      const onScreen = entries.filter((e) => e.isIntersecting);
+      if (!onScreen.length) return;
+      onScreen.sort((a, b) => b.intersectionRatio - a.intersectionRatio);
+      const act = onScreen[0].target.dataset.act;
+      $$('.toc-chip', tocInner).forEach((c) => {
+        c.classList.toggle('is-current', c.dataset.act === act);
+      });
+    }, { rootMargin: '-40% 0px -50% 0px', threshold: [0, 0.25, 0.5, 0.75, 1] });
+    $$('.section', sectionsEl).forEach((s) => tocObserver.observe(s));
   }
 }
 
@@ -253,94 +341,17 @@ function bindEvents() {
     if (action.dataset.action === 'fav') toggleFav(state.currentId);
   });
 
-  $$('.more-btn').forEach((btn) => {
-    btn.addEventListener('click', () => onMoreAction(btn.dataset.act));
-  });
-
   $('.bar-btn.share').addEventListener('click', shareCurrent);
 
   document.addEventListener('keydown', (e) => {
     if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+    if (e.target && /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
     const dir = document.documentElement.dir === 'rtl' ? -1 : 1;
     const step = (e.key === 'ArrowRight' ? 1 : -1) * dir;
     const idx = state.names.findIndex((n) => n.id === state.currentId);
     const next = state.names[idx + step];
     if (next) location.assign(`name.html?id=${next.id}`);
   });
-}
-
-function onMoreAction(act) {
-  const name = state.names.find((n) => n.id === state.currentId);
-  if (!name) return;
-  const section = SECTIONS.find((s) => s.act === act);
-  if (!section) return;
-
-  const t = loc(name);
-  const tAr = (state.translations.get(name.id) || {}).ar || {};
-
-  let html = t[section.valKey];
-  let entryKey = t[section.keyKey];
-  let usedFallback = false;
-  if (!hasContent(html)) {
-    html = tAr[section.valKey];
-    entryKey = tAr[section.keyKey];
-    usedFallback = true;
-  }
-  if (!hasContent(html)) { showToast(ui('no_content')); return; }
-
-  // Per-name labels are heterogeneous in the source data — e.g. some entries
-  // carry "وقفات" under effects_key and "الارتباط" under mercy_key. The button
-  // labels are deliberately uniform, but the modal title shows the actual
-  // section label for that name (Arabic only — non-Arabic UIs keep the
-  // hardcoded label for clarity).
-  const useEntryKey = (state.lang === 'ar' || usedFallback) && typeof entryKey === 'string' && entryKey.trim().length > 1;
-  const title = useEntryKey ? entryKey : ui(act);
-
-  showLongMeaning(title, html, usedFallback ? ui('ar_only') : '');
-}
-
-function ensureSheet() {
-  let sheet = $('#long-sheet');
-  if (sheet) return sheet;
-  sheet = document.createElement('div');
-  sheet.id = 'long-sheet';
-  sheet.className = 'long-sheet';
-  sheet.innerHTML = `
-    <div class="long-backdrop"></div>
-    <div class="long-card">
-      <button class="long-close" aria-label="Close" type="button">×</button>
-      <h4 class="long-key"></h4>
-      <div class="long-body"></div>
-    </div>
-  `;
-  const close = () => sheet.classList.remove('open');
-  sheet.querySelector('.long-backdrop').addEventListener('click', close);
-  sheet.querySelector('.long-close').addEventListener('click', close);
-  document.body.appendChild(sheet);
-  return sheet;
-}
-
-function showLongMeaning(key, html, note) {
-  if (!html) { showToast(ui('no_content')); return; }
-  const sheet = ensureSheet();
-  $('.long-key', sheet).textContent = key || '';
-  const body = $('.long-body', sheet);
-  body.replaceChildren();
-  if (note) {
-    const noteEl = document.createElement('p');
-    noteEl.className = 'long-note';
-    noteEl.textContent = note;
-    body.appendChild(noteEl);
-    body.setAttribute('dir', 'rtl');
-    body.setAttribute('lang', 'ar');
-  } else {
-    body.removeAttribute('dir');
-    body.removeAttribute('lang');
-  }
-  const fragHost = document.createElement('div');
-  setSanitizedHTML(fragHost, html);
-  while (fragHost.firstChild) body.appendChild(fragHost.firstChild);
-  requestAnimationFrame(() => sheet.classList.add('open'));
 }
 
 function setSanitizedHTML(el, html) {
