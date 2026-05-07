@@ -166,15 +166,15 @@ function cardMarkup(n, i) {
   const eager = i < 3;
 
   return `
-    <article class="name-card" data-id="${n.id}" tabindex="0" role="button" onclick="" style="animation-delay: ${delay}ms">
+    <article class="name-card" data-id="${n.id}" tabindex="0" role="button" onclick="window.__openName(${n.id})" style="animation-delay: ${delay}ms">
       ${bg ? `<img class="card-bg" src="${bg}" alt="" loading="${eager ? 'eager' : 'lazy'}" decoding="async" fetchpriority="${eager ? 'high' : 'low'}" onerror="this.remove()">` : ''}
       <div class="card-arabic">${escapeHtml(n.default_name)}</div>
       <div class="card-foot">
-        <button class="card-icon-btn card-play${isPlaying ? ' is-playing' : ''}" data-action="play" aria-label="Play" type="button">
+        <button class="card-icon-btn card-play${isPlaying ? ' is-playing' : ''}" data-action="play" aria-label="Play" type="button" onclick="event.stopPropagation(); window.__playName(${n.id})">
           ${isPlaying ? iconPause() : iconPlay()}
         </button>
         <span class="card-translit">${escapeHtml(translit)}</span>
-        <button class="card-icon-btn card-fav${isFav ? ' is-fav' : ''}" data-action="fav" aria-label="Favorite" type="button">
+        <button class="card-icon-btn card-fav${isFav ? ' is-fav' : ''}" data-action="fav" aria-label="Favorite" type="button" onclick="event.stopPropagation(); window.__favName(${n.id})">
           ${iconHeart()}
         </button>
       </div>
@@ -332,11 +332,11 @@ function carouselCardMarkup(n) {
       ${bg ? `<img class="card-bg" src="${bg}" alt="" loading="lazy" decoding="async" onerror="this.remove()">` : ''}
       <div class="card-arabic">${escapeHtml(n.default_name)}</div>
       <div class="card-foot">
-        <button class="card-icon-btn card-play${isPlaying ? ' is-playing' : ''}" data-action="play" aria-label="Play" type="button">
+        <button class="card-icon-btn card-play${isPlaying ? ' is-playing' : ''}" data-action="play" aria-label="Play" type="button" onclick="event.stopPropagation(); window.__playName(${n.id})">
           ${isPlaying ? iconPause() : iconPlay()}
         </button>
         <span class="card-translit">${escapeHtml(translit)}</span>
-        <button class="card-icon-btn card-fav${isFav ? ' is-fav' : ''}" data-action="fav" aria-label="Favorite" type="button">
+        <button class="card-icon-btn card-fav${isFav ? ' is-fav' : ''}" data-action="fav" aria-label="Favorite" type="button" onclick="event.stopPropagation(); window.__favName(${n.id})">
           ${iconHeart()}
         </button>
       </div>
@@ -608,6 +608,10 @@ function escapeHtml(s) {
 function escapeAttr(s) {
   return String(s ?? '').replace(/["'<>&]/g, '');
 }
+
+window.__openName = (id) => openPanel(Number(id));
+window.__playName = (id) => togglePlay(Number(id));
+window.__favName = (id) => toggleFav(Number(id));
 
 init().catch((err) => {
   $('#list').innerHTML = `<p class="empty">${escapeHtml(err.message)}</p>`;
