@@ -564,14 +564,17 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
   border-radius: 2px;
 }
 
+/* iOS-style segmented control: the container acts as a recessed track,
+   the active tab visibly rests on top of it. The track uses surface-2
+   (which is darker than surface in light mode and lighter than surface
+   in dark mode — exactly the "depressed" reading we want in both). */
 .library-tabs {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.4rem;
   margin-bottom: 1rem;
   padding: 0.35rem;
-  background: var(--surface);
+  background: var(--surface-2);
   border-radius: 999px;
-  box-shadow: var(--shadow-sm);
 }
 .lib-tab {
   flex: 1;
@@ -586,13 +589,24 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
   font-size: 0.92rem;
   font-weight: 600;
   background: transparent;
-  transition: background 0.15s var(--ease), color 0.15s var(--ease);
+  transition: background 0.15s var(--ease), color 0.15s var(--ease), transform 0.12s var(--ease);
 }
-.lib-tab:hover { color: var(--ink-soft); }
+.lib-tab:hover {
+  color: var(--ink);
+  background: rgba(0, 0, 0, 0.05);
+}
+:root[data-theme="dark"] .lib-tab:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+.lib-tab:active { transform: scale(0.98); }
 .lib-tab.is-active {
   background: var(--accent);
   color: var(--accent-ink);
   box-shadow: var(--shadow-sm);
+}
+.lib-tab.is-active:hover {
+  background: var(--accent);
+  color: var(--accent-ink);
 }
 .lib-tab[hidden] { display: none; }
 .lib-tab:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
