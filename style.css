@@ -523,6 +523,21 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
   animation-delay: 0.15s;
 }
 
+/* iOS Safari overlays its URL bar on top of position: fixed elements
+   anchored to the viewport bottom, hiding the FAB on a fresh load. Anchor
+   to the dynamic viewport instead so the bar always sits above the URL
+   bar regardless of whether it's expanded or collapsed. */
+@supports (top: 100dvh) {
+  .name-fab {
+    top: calc(100dvh - 56px - max(1.25rem, env(safe-area-inset-bottom)));
+    bottom: auto;
+  }
+  @keyframes fabIn {
+    from { opacity: 0; transform: translate(-50%, 8px); }
+    to   { opacity: 1; transform: translate(-50%, 0); }
+  }
+}
+
 @keyframes fabIn {
   from { opacity: 0; transform: translate(-50%, 8px); }
   to   { opacity: 1; transform: translate(-50%, 0); }
