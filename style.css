@@ -465,14 +465,14 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: var(--ink);
-  background: var(--surface);
+  color: var(--bg);
+  background: var(--ink);
   border-radius: 12px;
   text-decoration: none;
   box-shadow: var(--shadow-sm);
   transition: background 0.15s var(--ease), transform 0.12s var(--ease);
 }
-.bar-btn:hover { background: var(--surface-2); }
+.bar-btn:hover { background: var(--ink-soft); }
 .bar-btn:active { transform: scale(0.96); }
 .bar-btn:focus-visible {
   outline: 2px solid var(--ink);
@@ -676,18 +676,19 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
   align-items: center;
   gap: 0.65rem;
   padding: 1rem 1.1rem;
-  background: var(--surface);
+  background: var(--ink);
   border-radius: var(--r-md);
   box-shadow: var(--shadow-sm);
   text-decoration: none;
-  color: var(--ink);
+  color: var(--bg);
   min-height: 56px;
-  transition: transform 0.15s var(--ease), box-shadow 0.15s var(--ease);
+  transition: transform 0.15s var(--ease), box-shadow 0.15s var(--ease), background 0.15s var(--ease);
 }
 .page-nav-link[hidden] { display: none; }
 .page-nav-link:hover {
   transform: translateY(-1px);
   box-shadow: var(--shadow-md);
+  background: var(--ink-soft);
 }
 .page-nav-link:focus-visible {
   outline: 2px solid var(--ink);
@@ -700,7 +701,7 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
 .page-nav-arrow {
   font-size: 1.6rem;
   line-height: 1;
-  color: var(--muted);
+  color: var(--muted-2);
   flex-shrink: 0;
   font-family: var(--font-ui);
 }
@@ -717,7 +718,7 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
   font-size: 0.72rem;
   font-weight: 600;
   letter-spacing: 0.08em;
-  color: var(--muted);
+  color: var(--muted-2);
   text-transform: uppercase;
 }
 
@@ -725,7 +726,7 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
   font-family: var(--font-arabic);
   font-weight: 600;
   font-size: 0.95rem;
-  color: var(--ink);
+  color: var(--bg);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
