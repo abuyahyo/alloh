@@ -166,19 +166,19 @@ function cardMarkup(n, i) {
   const eager = i < 3;
 
   return `
-    <article class="name-card" data-id="${n.id}" tabindex="0" role="button" onclick="window.__openName(${n.id})" style="animation-delay: ${delay}ms">
+    <a class="name-card" href="#name-${n.id}" data-id="${n.id}" role="button" onclick="event.preventDefault(); window.__openName(${n.id}); return false;" style="animation-delay: ${delay}ms">
       ${bg ? `<img class="card-bg" src="${bg}" alt="" loading="${eager ? 'eager' : 'lazy'}" decoding="async" fetchpriority="${eager ? 'high' : 'low'}" onerror="this.remove()">` : ''}
       <div class="card-arabic">${escapeHtml(n.default_name)}</div>
       <div class="card-foot">
-        <button class="card-icon-btn card-play${isPlaying ? ' is-playing' : ''}" data-action="play" aria-label="Play" type="button" onclick="event.stopPropagation(); window.__playName(${n.id})">
+        <button class="card-icon-btn card-play${isPlaying ? ' is-playing' : ''}" data-action="play" aria-label="Play" type="button" onclick="event.preventDefault(); event.stopPropagation(); window.__playName(${n.id}); return false;">
           ${isPlaying ? iconPause() : iconPlay()}
         </button>
         <span class="card-translit">${escapeHtml(translit)}</span>
-        <button class="card-icon-btn card-fav${isFav ? ' is-fav' : ''}" data-action="fav" aria-label="Favorite" type="button" onclick="event.stopPropagation(); window.__favName(${n.id})">
+        <button class="card-icon-btn card-fav${isFav ? ' is-fav' : ''}" data-action="fav" aria-label="Favorite" type="button" onclick="event.preventDefault(); event.stopPropagation(); window.__favName(${n.id}); return false;">
           ${iconHeart()}
         </button>
       </div>
-    </article>
+    </a>
   `;
 }
 
@@ -332,11 +332,11 @@ function carouselCardMarkup(n) {
       ${bg ? `<img class="card-bg" src="${bg}" alt="" loading="lazy" decoding="async" onerror="this.remove()">` : ''}
       <div class="card-arabic">${escapeHtml(n.default_name)}</div>
       <div class="card-foot">
-        <button class="card-icon-btn card-play${isPlaying ? ' is-playing' : ''}" data-action="play" aria-label="Play" type="button" onclick="event.stopPropagation(); window.__playName(${n.id})">
+        <button class="card-icon-btn card-play${isPlaying ? ' is-playing' : ''}" data-action="play" aria-label="Play" type="button" onclick="event.preventDefault(); event.stopPropagation(); window.__playName(${n.id}); return false;">
           ${isPlaying ? iconPause() : iconPlay()}
         </button>
         <span class="card-translit">${escapeHtml(translit)}</span>
-        <button class="card-icon-btn card-fav${isFav ? ' is-fav' : ''}" data-action="fav" aria-label="Favorite" type="button" onclick="event.stopPropagation(); window.__favName(${n.id})">
+        <button class="card-icon-btn card-fav${isFav ? ' is-fav' : ''}" data-action="fav" aria-label="Favorite" type="button" onclick="event.preventDefault(); event.stopPropagation(); window.__favName(${n.id}); return false;">
           ${iconHeart()}
         </button>
       </div>
