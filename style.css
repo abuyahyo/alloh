@@ -367,6 +367,7 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
 .card-icon-btn:active { transform: scale(0.92); }
 
 .card-play.is-playing { background: rgba(255, 255, 255, 0.25); }
+.card-play.is-missing { opacity: 0.45; }
 .card-fav.is-fav svg { fill: #ff4d6d; stroke: #ff4d6d; }
 
 /* skeleton */
