@@ -2,9 +2,10 @@ import {
   RTL_LANGS, DEFAULT_LANG,
   $, $$,
   loadJSON, applyDir, buildLangSelect, localized,
-  escapeHtml, shortText, safePath, safeSvgPath, safeColor,
+  escapeHtml, safePath, safeSvgPath, safeColor,
   iconPlay, iconPause, iconHeart,
   showToast, createAudioController, attachImgFade,
+  bindThemeToggle,
 } from './shared.js';
 
 const SEARCH_PLACEHOLDER = {
@@ -19,9 +20,7 @@ const state = {
   translations: new Map(),
   languages: [],
   lang: localStorage.getItem('lang') || DEFAULT_LANG,
-  sort: localStorage.getItem('sort') || 'default',
   favorites: new Set(JSON.parse(localStorage.getItem('favorites') || '[]')),
-  view: localStorage.getItem('view') || 'rows',
 };
 
 const audio = $('#audio');
@@ -34,6 +33,7 @@ const audioCtrl = createAudioController({
 
 async function init() {
   bindGlobalEvents();
+  bindThemeToggle($('#theme-toggle'));
 
   const [names, trans, langs] = await Promise.all([
     loadJSON('json/names.json'),
@@ -55,23 +55,8 @@ async function init() {
 
   buildLangSelect($('#lang'), state.languages, state.lang);
   applyDir(state.lang);
-  applyView();
-  applySort();
   applySearchPlaceholder();
   renderList();
-}
-
-function applyView() {
-  $('#list').dataset.view = state.view;
-  $('#grid-toggle').setAttribute('aria-pressed', state.view === 'grid');
-}
-
-function applySort() {
-  $$('.chip').forEach((c) => {
-    const active = c.dataset.sort === state.sort;
-    c.classList.toggle('is-active', active);
-    c.setAttribute('aria-checked', active ? 'true' : 'false');
-  });
 }
 
 function applySearchPlaceholder() {
@@ -85,30 +70,11 @@ function loc(name) {
 
 function getOrdered(filterText = '') {
   const q = filterText.trim().toLowerCase();
-  let arr = state.names.slice();
-
-  if (state.sort === 'alpha') {
-    arr.sort((a, b) => {
-      const ta = loc(a).name || a.default_name;
-      const tb = loc(b).name || b.default_name;
-      return String(ta).localeCompare(String(tb), state.lang);
-    });
-  } else if (state.sort === 'meaning') {
-    arr.sort((a, b) => {
-      const ma = shortText(loc(a).short_meaning_val);
-      const mb = shortText(loc(b).short_meaning_val);
-      return ma.localeCompare(mb, state.lang);
-    });
-  }
-
-  if (q) {
-    arr = arr.filter((n) => {
-      const t = loc(n);
-      return `${n.default_name} ${t.name || ''}`.toLowerCase().includes(q);
-    });
-  }
-
-  return arr;
+  if (!q) return state.names;
+  return state.names.filter((n) => {
+    const t = loc(n);
+    return `${n.default_name} ${t.name || ''}`.toLowerCase().includes(q);
+  });
 }
 
 function renderList() {
@@ -210,21 +176,6 @@ function bindGlobalEvents() {
   $('#search').addEventListener('input', () => {
     clearTimeout(searchTimer);
     searchTimer = setTimeout(renderList, 120);
-  });
-
-  $$('.chip').forEach((chip) => {
-    chip.addEventListener('click', () => {
-      state.sort = chip.dataset.sort;
-      localStorage.setItem('sort', state.sort);
-      applySort();
-      renderList();
-    });
-  });
-
-  $('#grid-toggle').addEventListener('click', () => {
-    state.view = state.view === 'grid' ? 'rows' : 'grid';
-    localStorage.setItem('view', state.view);
-    applyView();
   });
 
   $('#list').addEventListener('click', onListClick);

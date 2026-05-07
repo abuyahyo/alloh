@@ -17,6 +17,22 @@ export function applyDir(lang) {
   document.documentElement.setAttribute('lang', lang);
 }
 
+/**
+ * Wire the floating theme toggle. The chosen theme is also written to
+ * <html data-theme> by an inline script in <head> before the stylesheet
+ * loads, so initial paint already matches. This handler only flips it
+ * on click and persists the new choice.
+ */
+export function bindThemeToggle(btn) {
+  if (!btn) return;
+  btn.addEventListener('click', () => {
+    const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    if (next === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+    else document.documentElement.removeAttribute('data-theme');
+    try { localStorage.setItem('theme', next); } catch (e) {}
+  });
+}
+
 export function buildLangSelect(selectEl, languages, current) {
   selectEl.innerHTML = languages
     .map((l) => `<option value="${escapeHtml(l.code)}">${escapeHtml(l.name)}</option>`)
