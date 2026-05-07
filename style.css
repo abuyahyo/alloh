@@ -418,9 +418,12 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
   padding: max(0.75rem, env(safe-area-inset-top)) 1.25rem 0.75rem;
   position: sticky;
   top: 0;
-  background: var(--header-bg);
-  backdrop-filter: blur(12px) saturate(140%);
-  -webkit-backdrop-filter: blur(12px) saturate(140%);
+  /* Solid background — iOS Safari has historically dropped backdrop-filter
+     paints on sticky elements at first paint, which made the entire bar
+     and its children render as transparent over the dark page (the bug
+     reported on iPhone). The fully-opaque --bg keeps the bar visible no
+     matter what the renderer decides to do with the filter. */
+  background: var(--bg);
   z-index: 10;
   max-width: var(--content-w);
   margin: 0 auto;
@@ -441,22 +444,25 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
   font-size: 0.85rem;
   letter-spacing: 0.02em;
   color: var(--ink-soft);
+  background: var(--surface-2);
+  box-shadow: var(--shadow-sm);
 }
 [dir="rtl"] .lang-floater.inline select {
   padding: 0 0.95rem 0 1.95rem;
 }
+/* Unicode chevron — avoids data-URI / mask quirks on iOS Safari that were
+   silently breaking the inline lang chrome. */
 .lang-floater.inline::after {
-  content: '';
+  content: '\25BE';
   position: absolute;
   top: 50%;
   inset-inline-end: 0.7rem;
-  width: 12px;
-  height: 12px;
+  font-size: 0.75rem;
+  line-height: 1;
   pointer-events: none;
   transform: translateY(-50%);
-  background: var(--muted);
-  -webkit-mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>") center / contain no-repeat;
-  mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>") center / contain no-repeat;
+  color: var(--muted);
+  font-family: var(--font-ui);
 }
 .bar-btn {
   width: 42px;
@@ -465,13 +471,16 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
   align-items: center;
   justify-content: center;
   color: var(--ink-soft);
-  background: var(--surface);
+  /* surface-2 is darker than --bg in light mode and lighter in dark mode,
+     so the tile reads as a button against the bar in both themes — even
+     before any shadow renders. */
+  background: var(--surface-2);
   border-radius: var(--r-md);
   text-decoration: none;
   box-shadow: var(--shadow-sm);
   transition: background 0.15s var(--ease), color 0.15s var(--ease), transform 0.12s var(--ease);
 }
-.bar-btn:hover { background: var(--surface-2); color: var(--ink); }
+.bar-btn:hover { background: var(--surface); color: var(--ink); }
 .bar-btn:active { transform: scale(0.96); }
 .bar-btn:focus-visible {
   outline: 2px solid var(--ink);
@@ -995,11 +1004,11 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
   width: 42px;
   height: 42px;
   border-radius: var(--r-md);
-  background: var(--surface);
+  background: var(--surface-2);
   color: var(--ink-soft);
   box-shadow: var(--shadow-sm);
 }
-.detail-bar .chrome-btn:hover { background: var(--surface-2); color: var(--ink); }
+.detail-bar .chrome-btn:hover { background: var(--surface); color: var(--ink); }
 
 /* =========================================================================
    Search clear & favorites filter
