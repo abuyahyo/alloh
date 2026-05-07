@@ -83,24 +83,16 @@ input, select { font: inherit; color: inherit; }
 main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
 
 /* =========================================================================
-   Brand header
+   Top bar (just the language picker on the index page)
    ========================================================================= */
 
-.brand-header {
-  position: relative;
-  text-align: center;
-  padding: 3rem 1.25rem 1.75rem;
-  max-width: var(--content-w);
-  margin: 0 auto;
-}
-
-.header-controls {
-  position: absolute;
-  top: 1rem;
-  inset-inline-end: 1rem;
-  display: inline-flex;
+.top-bar {
+  display: flex;
+  justify-content: flex-end;
   align-items: center;
-  gap: 0.5rem;
+  padding: max(0.75rem, env(safe-area-inset-top)) 1.25rem 0.5rem;
+  max-width: var(--content-w);
+  margin: 0 auto 0.5rem;
 }
 
 .lang-floater { position: relative; }
@@ -109,8 +101,6 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
   -webkit-appearance: none;
   border: none;
   background: var(--surface);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
   color: var(--ink-soft);
   font-size: 0.78rem;
   font-weight: 500;
@@ -122,31 +112,6 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
   letter-spacing: 0.04em;
 }
 .lang-floater select:focus { outline: 2px solid var(--ink); outline-offset: 2px; }
-
-.logo-art {
-  font-family: var(--font-quran);
-  font-size: clamp(3.2rem, 11vw, 5rem);
-  color: var(--ink);
-  line-height: 0.95;
-  font-weight: 400;
-  display: inline-flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.05em;
-  letter-spacing: -0.02em;
-  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.5);
-}
-.logo-w1 { transform: translateX(0.25em) translateY(0.05em); }
-.logo-w2 { transform: translateX(-0.15em) translateY(-0.18em); }
-
-.logo-tag {
-  font-family: var(--font-ui);
-  font-size: 0.78rem;
-  font-weight: 600;
-  letter-spacing: 0.32em;
-  color: var(--ink);
-  margin-top: 0.6rem;
-}
 
 /* =========================================================================
    Search
