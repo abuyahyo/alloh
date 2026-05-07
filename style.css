@@ -267,6 +267,9 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
 .cards[data-view="grid"] .card-translit { font-size: 0.85rem; }
 
 .name-card {
+  display: block;
+  text-decoration: none;
+  color: inherit;
   position: relative;
   aspect-ratio: 16 / 9;
   border-radius: var(--r-lg);
