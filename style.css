@@ -416,17 +416,16 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
   justify-content: space-between;
   gap: 0.5rem;
   padding: max(0.75rem, env(safe-area-inset-top)) 1.25rem 0.75rem;
-  position: sticky;
-  top: 0;
-  /* Solid background — iOS Safari has historically dropped backdrop-filter
-     paints on sticky elements at first paint, which made the entire bar
-     and its children render as transparent over the dark page (the bug
-     reported on iPhone). The fully-opaque --bg keeps the bar visible no
-     matter what the renderer decides to do with the filter. */
+  /* Plain in-flow header — sticky+filter combinations have been unreliable
+     on iOS Safari (bar painted as a transparent void on first composite,
+     swallowing the buttons). In-flow sidesteps that whole class of bugs. */
+  position: relative;
   background: var(--bg);
-  z-index: 10;
   max-width: var(--content-w);
   margin: 0 auto;
+  /* min-height ensures the row stays visible even if a child somehow
+     reports zero size (another iOS Safari rendering edge case we've hit). */
+  min-height: 60px;
 }
 .bar-actions {
   display: inline-flex;
@@ -445,6 +444,7 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
   letter-spacing: 0.02em;
   color: var(--ink-soft);
   background: var(--surface-2);
+  border: 1px solid var(--rule);
   box-shadow: var(--shadow-sm);
 }
 [dir="rtl"] .lang-floater.inline select {
@@ -471,10 +471,8 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
   align-items: center;
   justify-content: center;
   color: var(--ink-soft);
-  /* surface-2 is darker than --bg in light mode and lighter in dark mode,
-     so the tile reads as a button against the bar in both themes — even
-     before any shadow renders. */
   background: var(--surface-2);
+  border: 1px solid var(--rule);
   border-radius: var(--r-md);
   text-decoration: none;
   box-shadow: var(--shadow-sm);
@@ -833,7 +831,9 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
 
 .section-toc {
   position: sticky;
-  top: 64px;
+  /* The detail bar is in normal flow now (was sticky), so the TOC chips
+     stick to the top of the viewport directly. */
+  top: 0;
   z-index: 9;
   margin: 0.75rem -1.25rem 1rem;
   padding: 0.5rem 0;
@@ -1006,6 +1006,7 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
   border-radius: var(--r-md);
   background: var(--surface-2);
   color: var(--ink-soft);
+  border: 1px solid var(--rule);
   box-shadow: var(--shadow-sm);
 }
 .detail-bar .chrome-btn:hover { background: var(--surface); color: var(--ink); }
