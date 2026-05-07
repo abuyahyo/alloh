@@ -646,13 +646,19 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
    divided by hairline rules. Solid surface fill + soft shadow rather
    than backdrop-blur — fixed-position + backdrop-filter has the same
    "transparent void" rendering bug on iOS Safari that took the detail
-   bar out of sticky+filter, so this sidesteps it. The --vv-bottom
-   custom property is set from JS on iOS Safari to lift the pill above
-   the dynamic URL bar (which floats over the layout viewport, so a
-   plain bottom:1rem ends up *behind* it on first paint). */
+   bar out of sticky+filter, so this sidesteps it.
+
+   `100lvh - 100dvh` is the magic that keeps the pill above iOS
+   Safari's bottom URL bar: `lvh` is the *large* viewport (URL bar
+   hidden), `dvh` is the *dynamic* viewport (current visible area).
+   Their difference equals the URL bar's current height — adding it
+   to the bottom offset lifts the pill above the URL bar even though
+   `position: fixed` is anchored to the larger layout viewport. On
+   platforms without a dynamic toolbar (Android Chrome, desktop) lvh
+   and dvh are equal so the term collapses to zero. */
 .float-nav {
   position: fixed;
-  bottom: calc(max(1rem, env(safe-area-inset-bottom) + 0.5rem) + var(--vv-bottom, 0px));
+  bottom: calc(max(1rem, env(safe-area-inset-bottom) + 0.5rem) + (100lvh - 100dvh));
   /* Center horizontally without transform: translateX, which has been
      known to interact badly with iOS Safari fixed-position scrolling. */
   left: 0;
