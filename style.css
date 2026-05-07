@@ -662,29 +662,22 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
   transform: translateX(-50%);
   display: flex;
   align-items: stretch;
-  background: var(--surface);
   border-radius: 999px;
   box-shadow: var(--shadow-lg);
   z-index: 50;
   backdrop-filter: blur(12px) saturate(140%);
   -webkit-backdrop-filter: blur(12px) saturate(140%);
   background: rgba(255, 255, 255, 0.92);
-  animation: fabIn 0.45s var(--ease) backwards;
-  animation-delay: 0.15s;
+  opacity: 1;
 }
 
-/* iOS Safari overlays its URL bar on top of position: fixed elements
-   anchored to the viewport bottom, hiding the FAB on a fresh load. Anchor
-   to the dynamic viewport instead so the bar always sits above the URL
-   bar regardless of whether it's expanded or collapsed. */
-@supports (top: 100dvh) {
+/* iOS Safari overlays its bottom URL bar on top of position: fixed
+   elements anchored to the layout viewport. When dynamic viewport
+   units are available, add the URL-bar height (lvh − dvh) to the
+   bottom offset so the bar always sits above the URL bar. */
+@supports (height: 100dvh) {
   .name-fab {
-    top: calc(100dvh - 56px - max(1.25rem, env(safe-area-inset-bottom)));
-    bottom: auto;
-  }
-  @keyframes fabIn {
-    from { opacity: 0; transform: translate(-50%, 8px); }
-    to   { opacity: 1; transform: translate(-50%, 0); }
+    bottom: max(1.25rem, calc(100lvh - 100dvh + env(safe-area-inset-bottom) + 1.25rem));
   }
 }
 
