@@ -141,7 +141,6 @@ function cardMarkup(n, i) {
   const bg = safePath(n.background_image);
   const isFav = state.favorites.has(n.id);
   const isPlaying = state.playingId === n.id;
-  const noAudio = !n.voice || state.missingAudio.has(n.id);
   const delay = Math.min(i * 24, 360);
   const bgStyle = bg ? `background-image: url('${bg}')` : '';
 
@@ -149,7 +148,7 @@ function cardMarkup(n, i) {
     <article class="name-card" data-id="${n.id}" tabindex="0" role="button" style="animation-delay: ${delay}ms; ${bgStyle}">
       <div class="card-arabic">${escapeHtml(n.default_name)}</div>
       <div class="card-foot">
-        <button class="card-icon-btn card-play${isPlaying ? ' is-playing' : ''}${noAudio ? ' is-missing' : ''}" data-action="play" aria-label="Play" type="button">
+        <button class="card-icon-btn card-play${isPlaying ? ' is-playing' : ''}" data-action="play" aria-label="Play" type="button">
           ${isPlaying ? iconPause() : iconPlay()}
         </button>
         <span class="card-translit">${escapeHtml(translit)}</span>
@@ -186,35 +185,70 @@ function audioMissingMsg() { return NO_AUDIO_MSG[state.lang] || NO_AUDIO_MSG.en;
 function markAudioMissing(id) {
   if (id == null) return;
   state.missingAudio.add(id);
-  $$(`.card-play`).forEach((btn) => {
-    const card = btn.closest('[data-id]');
-    if (card && Number(card.dataset.id) === id) btn.classList.add('is-missing');
-  });
 }
 
 async function togglePlay(id) {
   const name = state.names.find((n) => n.id === id);
-  if (!name || !name.voice || state.missingAudio.has(id)) {
-    showToast(audioMissingMsg());
-    return;
-  }
-  if (state.playingId === id && !audio.paused) {
-    audio.pause();
+  if (!name) return;
+
+  if (state.playingId === id) {
+    if (!audio.paused) audio.pause();
+    speechSynthesis.cancel();
     state.playingId = null;
     refreshPlayingUI();
     return;
   }
+
   audio.pause();
+  speechSynthesis.cancel();
+
+  if (!name.voice || state.missingAudio.has(id)) {
+    if (speakName(name)) {
+      state.playingId = id;
+      refreshPlayingUI();
+    } else {
+      showToast(audioMissingMsg());
+    }
+    return;
+  }
+
   audio.src = name.voice;
   state.playingId = id;
   refreshPlayingUI();
   try {
     await audio.play();
   } catch {
-    if (state.playingId === id) state.playingId = null;
     markAudioMissing(id);
+    if (speakName(name)) return;
+    if (state.playingId === id) state.playingId = null;
     refreshPlayingUI();
     showToast(audioMissingMsg());
+  }
+}
+
+function speakName(name) {
+  if (typeof speechSynthesis === 'undefined') return false;
+  try {
+    const u = new SpeechSynthesisUtterance(name.default_name);
+    u.lang = 'ar';
+    u.rate = 0.85;
+    u.pitch = 1;
+    u.onend = () => {
+      if (state.playingId === name.id) {
+        state.playingId = null;
+        refreshPlayingUI();
+      }
+    };
+    u.onerror = () => {
+      if (state.playingId === name.id) {
+        state.playingId = null;
+        refreshPlayingUI();
+      }
+    };
+    speechSynthesis.speak(u);
+    return true;
+  } catch {
+    return false;
   }
 }
 
@@ -295,6 +329,7 @@ function closePanel() {
   panel.setAttribute('aria-hidden', 'true');
   document.body.style.overflow = '';
   state.currentId = null;
+  if (typeof speechSynthesis !== 'undefined') speechSynthesis.cancel();
 }
 
 function buildCarousel() {
@@ -308,14 +343,13 @@ function carouselCardMarkup(n) {
   const bg = safePath(n.background_image);
   const isFav = state.favorites.has(n.id);
   const isPlaying = state.playingId === n.id;
-  const noAudio = !n.voice || state.missingAudio.has(n.id);
   const bgStyle = bg ? `background-image: url('${bg}')` : '';
 
   return `
     <article class="carousel-card" data-id="${n.id}" style="${bgStyle}">
       <div class="card-arabic">${escapeHtml(n.default_name)}</div>
       <div class="card-foot">
-        <button class="card-icon-btn card-play${isPlaying ? ' is-playing' : ''}${noAudio ? ' is-missing' : ''}" data-action="play" aria-label="Play" type="button">
+        <button class="card-icon-btn card-play${isPlaying ? ' is-playing' : ''}" data-action="play" aria-label="Play" type="button">
           ${isPlaying ? iconPause() : iconPlay()}
         </button>
         <span class="card-translit">${escapeHtml(translit)}</span>
