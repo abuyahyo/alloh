@@ -20,6 +20,15 @@
   --shadow-lg: 0 16px 40px rgba(15, 15, 20, 0.12);
   --header-bg: rgba(244, 244, 246, 0.85);
 
+  /* Brand accent — muted manuscript gold. The tones echo the ::selection
+     tint and section-note that the design already used; promoting them to
+     a real token lets active states share one identity. */
+  --accent: #c39a4a;
+  --accent-soft: rgba(195, 154, 74, 0.16);
+  --accent-ring: rgba(195, 154, 74, 0.35);
+  --accent-strong: #a07b30;
+  --accent-ink: #1c1306;
+
   --r-sm: 10px;
   --r-md: 16px;
   --r-lg: 24px;
@@ -50,6 +59,13 @@
   --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.65);
   --header-bg: rgba(12, 12, 15, 0.78);
 
+  /* Brighter gold for dark surfaces so it stays legible. */
+  --accent: #d6ad5a;
+  --accent-soft: rgba(214, 173, 90, 0.18);
+  --accent-ring: rgba(214, 173, 90, 0.4);
+  --accent-strong: #b8923f;
+  --accent-ink: #1c1306;
+
   color-scheme: dark;
 }
 
@@ -69,7 +85,7 @@ body {
 
 [lang="ar"] body, [dir="rtl"] body { font-family: var(--font-arabic-body); }
 
-::selection { background: rgba(212, 175, 110, 0.3); color: var(--ink); }
+::selection { background: var(--accent-soft); color: var(--ink); }
 
 button { font: inherit; color: inherit; background: none; border: none; cursor: pointer; }
 input, select { font: inherit; color: inherit; }
@@ -190,8 +206,10 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
   color: var(--muted);
   flex-shrink: 0;
 }
-.search:focus-within { box-shadow: var(--shadow-lg); }
-.search:focus-within .search-icon { color: var(--ink); }
+.search:focus-within {
+  box-shadow: var(--shadow-md), 0 0 0 3px var(--accent-ring);
+}
+.search:focus-within .search-icon { color: var(--accent-strong); }
 
 /* =========================================================================
    Card list
@@ -350,7 +368,7 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
 .card-icon-btn:active { transform: scale(0.92); }
 
 .card-play.is-playing { background: rgba(255, 255, 255, 0.25); }
-.card-fav.is-fav svg { fill: #ff4d6d; stroke: #ff4d6d; }
+.card-fav.is-fav svg { fill: var(--accent); stroke: var(--accent); }
 
 /* skeleton */
 .name-card.skeleton {
@@ -518,8 +536,9 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
 }
 .lib-tab:hover { color: var(--ink-soft); }
 .lib-tab.is-active {
-  background: var(--surface-2);
-  color: var(--ink);
+  background: var(--accent);
+  color: var(--accent-ink);
+  box-shadow: var(--shadow-sm);
 }
 .lib-tab[hidden] { display: none; }
 .lib-tab:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
@@ -640,7 +659,7 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
 .page-nav-arrow {
   font-size: 1.6rem;
   line-height: 1;
-  color: var(--muted-2);
+  color: var(--accent);
   flex-shrink: 0;
   font-family: var(--font-ui);
 }
@@ -657,7 +676,7 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
   font-size: 0.72rem;
   font-weight: 600;
   letter-spacing: 0.08em;
-  color: var(--muted-2);
+  color: var(--accent);
   text-transform: uppercase;
 }
 
@@ -731,8 +750,9 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
 .toc-chip:hover { color: var(--ink); transform: translateY(-1px); }
 .toc-chip:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 .toc-chip.is-current {
-  background: var(--ink);
-  color: var(--bg);
+  background: var(--accent);
+  color: var(--accent-ink);
+  box-shadow: var(--shadow-sm), 0 0 0 4px var(--accent-soft);
 }
 
 .sections {
@@ -788,12 +808,12 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
 .section-body li + li { margin-top: 0.35rem; }
 
 .section-note {
-  background: rgba(212, 175, 110, 0.18);
+  background: var(--accent-soft);
   color: var(--ink-soft);
   font-size: 0.85rem;
   line-height: 1.5;
   padding: 0.6rem 0.9rem;
-  border-radius: 10px;
+  border-radius: var(--r-sm);
   margin: 0 0 1rem;
   text-align: center;
   font-family: var(--font-ui);
@@ -900,10 +920,10 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
 .favorites-toggle:active { transform: scale(0.96); }
 .favorites-toggle:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 .favorites-toggle.is-active {
-  color: #ff4d6d;
-  background: var(--surface);
+  color: var(--accent);
+  background: var(--accent-soft);
 }
-.favorites-toggle.is-active svg { fill: #ff4d6d; stroke: #ff4d6d; }
+.favorites-toggle.is-active svg { fill: var(--accent); stroke: var(--accent); }
 
 /* =========================================================================
    Audio loading spinner + keyboard hint
