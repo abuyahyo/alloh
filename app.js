@@ -18,6 +18,7 @@ const state = {
   playingId: null,
   missingAudio: new Set(),
   scrollTimer: null,
+  carouselKey: '',
 };
 
 const $ = (s, r = document) => r.querySelector(s);
@@ -56,12 +57,13 @@ async function init() {
   applyView();
   applySort();
   renderList();
+  openFromHash();
 }
 
 function buildLangSelect() {
   const sel = $('#lang');
   sel.innerHTML = state.languages
-    .map((l) => `<option value="${escapeAttr(l.code)}">${escapeHtml(l.name)}</option>`)
+    .map((l) => `<option value="${escapeHtml(l.code)}">${escapeHtml(l.name)}</option>`)
     .join('');
   sel.value = state.lang;
 }
@@ -131,29 +133,7 @@ function renderList() {
     return;
   }
 
-  const html = state.visible.map((n, i) => cardMarkup(n, i)).join('');
-  list.innerHTML = html;
-
-  // Direct listeners per card — iOS Safari sometimes drops bubbled clicks
-  // from <article role=button> elements, so don't rely on delegation alone.
-  for (const card of list.querySelectorAll('.name-card')) {
-    card.addEventListener('click', onCardActivate);
-  }
-}
-
-function onCardActivate(e) {
-  const card = e.currentTarget;
-  if (card.classList.contains('skeleton')) return;
-  const id = Number(card.dataset.id);
-  if (!Number.isFinite(id)) return;
-  const action = e.target.closest('[data-action]');
-  if (action) {
-    e.stopPropagation();
-    if (action.dataset.action === 'play') togglePlay(id);
-    if (action.dataset.action === 'fav') toggleFav(id);
-    return;
-  }
-  openPanel(id);
+  list.innerHTML = state.visible.map((n, i) => cardMarkup(n, i)).join('');
 }
 
 function cardMarkup(n, i) {
@@ -164,21 +144,24 @@ function cardMarkup(n, i) {
   const isPlaying = state.playingId === n.id;
   const delay = Math.min(i * 24, 360);
   const eager = i < 3;
+  const ariaLabel = `${n.default_name}${translit ? ', ' + translit : ''}`;
 
   return `
-    <a class="name-card" href="#name-${n.id}" data-id="${n.id}" role="button" onclick="event.preventDefault(); window.__openName(${n.id}); return false;" style="animation-delay: ${delay}ms">
-      ${bg ? `<img class="card-bg" src="${bg}" alt="" loading="${eager ? 'eager' : 'lazy'}" decoding="async" fetchpriority="${eager ? 'high' : 'low'}" onerror="this.remove()">` : ''}
-      <div class="card-arabic">${escapeHtml(n.default_name)}</div>
+    <article class="name-card" data-id="${n.id}" style="animation-delay: ${delay}ms">
+      <a class="card-link" href="#name-${n.id}" aria-label="${escapeHtml(ariaLabel)}">
+        ${bg ? `<img class="card-bg" src="${escapeHtml(bg)}" alt="" loading="${eager ? 'eager' : 'lazy'}" decoding="async" fetchpriority="${eager ? 'high' : 'low'}" onerror="this.remove()">` : ''}
+        <span class="card-arabic">${escapeHtml(n.default_name)}</span>
+      </a>
       <div class="card-foot">
-        <button class="card-icon-btn card-play${isPlaying ? ' is-playing' : ''}" data-action="play" aria-label="Play" type="button" onclick="event.preventDefault(); event.stopPropagation(); window.__playName(${n.id}); return false;">
+        <button class="card-icon-btn card-play${isPlaying ? ' is-playing' : ''}" data-action="play" aria-label="Play" type="button">
           ${isPlaying ? iconPause() : iconPlay()}
         </button>
         <span class="card-translit">${escapeHtml(translit)}</span>
-        <button class="card-icon-btn card-fav${isFav ? ' is-fav' : ''}" data-action="fav" aria-label="Favorite" type="button" onclick="event.preventDefault(); event.stopPropagation(); window.__favName(${n.id}); return false;">
+        <button class="card-icon-btn card-fav${isFav ? ' is-fav' : ''}" data-action="fav" aria-label="Favorite" type="button">
           ${iconHeart()}
         </button>
       </div>
-    </a>
+    </article>
   `;
 }
 
@@ -211,7 +194,8 @@ function markAudioMissing(id) {
 
 async function togglePlay(id) {
   const name = state.names.find((n) => n.id === id);
-  if (!name || !name.voice || state.missingAudio.has(id)) {
+  const safeVoice = name ? safePath(name.voice) : '';
+  if (!safeVoice || state.missingAudio.has(id)) {
     showToast(audioMissingMsg());
     refreshPlayingUI();
     return;
@@ -223,7 +207,7 @@ async function togglePlay(id) {
     return;
   }
   audio.pause();
-  audio.src = name.voice;
+  audio.src = safeVoice;
   state.playingId = id;
   refreshPlayingUI();
   try {
@@ -251,15 +235,7 @@ audio.addEventListener('error', () => {
 });
 
 function refreshPlayingUI() {
-  $$('.name-card').forEach((card) => {
-    const id = Number(card.dataset.id);
-    const btn = $('.card-play', card);
-    if (!btn) return;
-    const playing = id === state.playingId;
-    btn.classList.toggle('is-playing', playing);
-    btn.innerHTML = playing ? iconPause() : iconPlay();
-  });
-  $$('.carousel-card').forEach((card) => {
+  $$('.name-card, .carousel-card').forEach((card) => {
     const id = Number(card.dataset.id);
     const btn = $('.card-play', card);
     if (!btn) return;
@@ -284,7 +260,7 @@ function toggleFav(id) {
 
 /* ================ detail panel ================ */
 
-async function openPanel(id) {
+function openPanel(id) {
   const idx = state.visible.findIndex((n) => n.id === id);
   if (idx === -1) return;
   state.currentId = id;
@@ -296,6 +272,10 @@ async function openPanel(id) {
   panel.classList.add('open');
   panel.setAttribute('aria-hidden', 'false');
   document.body.style.overflow = 'hidden';
+
+  if (location.hash !== `#name-${id}`) {
+    history.replaceState(null, '', `#name-${id}`);
+  }
 
   const carousel = $('#carousel');
   requestAnimationFrame(() => {
@@ -313,9 +293,13 @@ function closePanel() {
   panel.setAttribute('aria-hidden', 'true');
   document.body.style.overflow = '';
   state.currentId = null;
+  if (location.hash) history.replaceState(null, '', location.pathname + location.search);
 }
 
 function buildCarousel() {
+  const key = `${state.lang}|${state.sort}|${state.visible.map((n) => n.id).join(',')}`;
+  if (key === state.carouselKey) return;
+  state.carouselKey = key;
   const carousel = $('#carousel');
   carousel.innerHTML = state.visible.map((n) => carouselCardMarkup(n)).join('');
 }
@@ -329,14 +313,14 @@ function carouselCardMarkup(n) {
 
   return `
     <article class="carousel-card" data-id="${n.id}">
-      ${bg ? `<img class="card-bg" src="${bg}" alt="" loading="lazy" decoding="async" onerror="this.remove()">` : ''}
+      ${bg ? `<img class="card-bg" src="${escapeHtml(bg)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">` : ''}
       <div class="card-arabic">${escapeHtml(n.default_name)}</div>
       <div class="card-foot">
-        <button class="card-icon-btn card-play${isPlaying ? ' is-playing' : ''}" data-action="play" aria-label="Play" type="button" onclick="event.preventDefault(); event.stopPropagation(); window.__playName(${n.id}); return false;">
+        <button class="card-icon-btn card-play${isPlaying ? ' is-playing' : ''}" data-action="play" aria-label="Play" type="button">
           ${isPlaying ? iconPause() : iconPlay()}
         </button>
         <span class="card-translit">${escapeHtml(translit)}</span>
-        <button class="card-icon-btn card-fav${isFav ? ' is-fav' : ''}" data-action="fav" aria-label="Favorite" type="button" onclick="event.preventDefault(); event.stopPropagation(); window.__favName(${n.id}); return false;">
+        <button class="card-icon-btn card-fav${isFav ? ' is-fav' : ''}" data-action="fav" aria-label="Favorite" type="button">
           ${iconHeart()}
         </button>
       </div>
@@ -369,6 +353,9 @@ function onCarouselScroll() {
     if (id !== state.currentId) {
       state.currentId = id;
       updatePanelMeaning(id);
+      if (location.hash !== `#name-${id}`) {
+        history.replaceState(null, '', `#name-${id}`);
+      }
     }
   }, 80);
 }
@@ -401,6 +388,7 @@ function bindGlobalEvents() {
     state.lang = e.target.value;
     localStorage.setItem('lang', state.lang);
     applyDir();
+    state.carouselKey = '';
     renderList();
     if (state.currentId) {
       buildCarousel();
@@ -411,7 +399,10 @@ function bindGlobalEvents() {
   let searchTimer;
   $('#search').addEventListener('input', () => {
     clearTimeout(searchTimer);
-    searchTimer = setTimeout(renderList, 120);
+    searchTimer = setTimeout(() => {
+      state.carouselKey = '';
+      renderList();
+    }, 120);
   });
 
   $$('.chip').forEach((chip) => {
@@ -419,6 +410,7 @@ function bindGlobalEvents() {
       state.sort = chip.dataset.sort;
       localStorage.setItem('sort', state.sort);
       applySort();
+      state.carouselKey = '';
       renderList();
     });
   });
@@ -427,36 +419,25 @@ function bindGlobalEvents() {
     state.view = state.view === 'grid' ? 'rows' : 'grid';
     localStorage.setItem('view', state.view);
     applyView();
+    renderList();
   });
 
-  const list = $('#list');
-  list.addEventListener('click', (e) => {
-    const card = e.target.closest('.name-card');
-    if (!card || card.classList.contains('skeleton')) return;
-    const id = Number(card.dataset.id);
-    const action = e.target.closest('[data-action]');
-    if (action) {
-      e.stopPropagation();
-      if (action.dataset.action === 'play') togglePlay(id);
-      if (action.dataset.action === 'fav') toggleFav(id);
-      return;
-    }
-    openPanel(id);
-  });
-  list.addEventListener('keydown', (e) => {
+  $('#list').addEventListener('click', onListClick);
+  $('#list').addEventListener('keydown', (e) => {
     if (e.key !== 'Enter' && e.key !== ' ') return;
-    const card = e.target.closest('.name-card');
-    if (!card || card.classList.contains('skeleton')) return;
+    const link = e.target.closest('.card-link');
+    if (!link) return;
     e.preventDefault();
-    openPanel(Number(card.dataset.id));
+    const card = link.closest('.name-card');
+    if (card) openPanel(Number(card.dataset.id));
   });
 
   const carousel = $('#carousel');
   carousel.addEventListener('click', (e) => {
-    const card = e.target.closest('.carousel-card');
-    if (!card) return;
     const action = e.target.closest('[data-action]');
     if (!action) return;
+    const card = action.closest('.carousel-card');
+    if (!card) return;
     e.stopPropagation();
     const id = Number(card.dataset.id);
     if (action.dataset.action === 'play') togglePlay(id);
@@ -468,17 +449,7 @@ function bindGlobalEvents() {
   $('.bar-btn.share', $('#panel')).addEventListener('click', shareCurrent);
 
   $$('.more-btn').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      const act = btn.dataset.act;
-      if (act === 'scholars') {
-        const name = state.names.find((n) => n.id === state.currentId);
-        if (!name) return;
-        const t = localized(name);
-        showLongMeaning(t.meanings_key, t.meanings_val);
-      } else {
-        showToast('Coming soon');
-      }
-    });
+    btn.addEventListener('click', () => onMoreAction(btn.dataset.act));
   });
 
   document.addEventListener('keydown', (e) => {
@@ -493,7 +464,6 @@ function bindGlobalEvents() {
       if (next) {
         const card = $(`#carousel .carousel-card[data-id="${next.id}"]`);
         if (card) {
-          const carousel = $('#carousel');
           carousel.scrollTo({
             left: card.offsetLeft - (carousel.clientWidth - card.clientWidth) / 2,
             behavior: 'smooth',
@@ -502,48 +472,92 @@ function bindGlobalEvents() {
       }
     }
   });
+
+  window.addEventListener('hashchange', openFromHash);
+}
+
+function onListClick(e) {
+  const action = e.target.closest('[data-action]');
+  if (action) {
+    const card = action.closest('.name-card');
+    if (!card) return;
+    e.stopPropagation();
+    const id = Number(card.dataset.id);
+    if (action.dataset.action === 'play') togglePlay(id);
+    if (action.dataset.action === 'fav') toggleFav(id);
+    return;
+  }
+  const link = e.target.closest('.card-link');
+  if (!link) return;
+  e.preventDefault();
+  const card = link.closest('.name-card');
+  if (!card || card.classList.contains('skeleton')) return;
+  openPanel(Number(card.dataset.id));
+}
+
+function openFromHash() {
+  const m = /^#name-(\d+)$/.exec(location.hash);
+  if (!m) return;
+  const id = Number(m[1]);
+  if (state.visible.find((n) => n.id === id)) openPanel(id);
+}
+
+function onMoreAction(act) {
+  const name = state.names.find((n) => n.id === state.currentId);
+  if (!name) return;
+  if (act === 'scholars') {
+    const t = localized(name);
+    if (!t.meanings_val) { showToast('No content'); return; }
+    showLongMeaning(t.meanings_key, t.meanings_val);
+  } else if (act === 'calligraphy') {
+    const path = safePath(name.image);
+    if (!path) { showToast('No image'); return; }
+    showCalligraphy(name.default_name, path);
+  }
 }
 
 /* ================ long-meaning sheet ================ */
 
+function ensureSheet() {
+  let sheet = $('#long-sheet');
+  if (sheet) return sheet;
+  sheet = document.createElement('div');
+  sheet.id = 'long-sheet';
+  sheet.className = 'long-sheet';
+  sheet.innerHTML = `
+    <div class="long-backdrop"></div>
+    <div class="long-card">
+      <button class="long-close" aria-label="Close" type="button">×</button>
+      <h4 class="long-key"></h4>
+      <div class="long-body"></div>
+    </div>
+  `;
+  sheet.querySelector('.long-backdrop').addEventListener('click', () => sheet.classList.remove('open'));
+  sheet.querySelector('.long-close').addEventListener('click', () => sheet.classList.remove('open'));
+  document.body.appendChild(sheet);
+  return sheet;
+}
+
 function showLongMeaning(key, html) {
   if (!html) { showToast('No content'); return; }
-  let sheet = $('#long-sheet');
-  if (!sheet) {
-    sheet = document.createElement('div');
-    sheet.id = 'long-sheet';
-    sheet.className = 'long-sheet';
-    sheet.innerHTML = `
-      <div class="long-backdrop"></div>
-      <div class="long-card">
-        <button class="long-close" aria-label="Close" type="button">×</button>
-        <h4 class="long-key"></h4>
-        <div class="long-body"></div>
-      </div>
-    `;
-    sheet.querySelector('.long-backdrop').addEventListener('click', () => sheet.classList.remove('open'));
-    sheet.querySelector('.long-close').addEventListener('click', () => sheet.classList.remove('open'));
-    document.body.appendChild(sheet);
-    if (!$('#long-sheet-style')) {
-      const s = document.createElement('style');
-      s.id = 'long-sheet-style';
-      s.textContent = `
-        .long-sheet { position: fixed; inset: 0; z-index: 200; display: flex; align-items: flex-end; justify-content: center; pointer-events: none; }
-        .long-sheet.open { pointer-events: auto; }
-        .long-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.45); opacity: 0; transition: opacity .25s ease; }
-        .long-sheet.open .long-backdrop { opacity: 1; }
-        .long-card { position: relative; width: 100%; max-width: 720px; max-height: 80vh; background: var(--surface); border-radius: 24px 24px 0 0; padding: 1.75rem 1.5rem 2rem; transform: translateY(100%); transition: transform .35s var(--ease); overflow-y: auto; box-shadow: 0 -12px 40px rgba(0,0,0,.18); }
-        .long-sheet.open .long-card { transform: translateY(0); }
-        .long-close { position: absolute; top: 0.75rem; inset-inline-end: 0.85rem; width: 32px; height: 32px; border-radius: 50%; background: rgba(0,0,0,0.06); font-size: 1.4rem; line-height: 1; }
-        .long-key { font-family: var(--font-arabic); font-size: 1.05rem; color: var(--ink); margin-bottom: 1rem; text-align: center; font-weight: 700; padding: 0 2rem; }
-        .long-body { font-family: var(--font-arabic); font-size: 1.05rem; line-height: 1.85; color: var(--ink); }
-        .long-body p + p { margin-top: 0.75rem; }
-      `;
-      document.head.appendChild(s);
-    }
-  }
+  const sheet = ensureSheet();
   $('.long-key', sheet).textContent = key || '';
   setSanitizedHTML($('.long-body', sheet), html);
+  requestAnimationFrame(() => sheet.classList.add('open'));
+}
+
+function showCalligraphy(title, src) {
+  const sheet = ensureSheet();
+  $('.long-key', sheet).textContent = title || '';
+  const body = $('.long-body', sheet);
+  body.replaceChildren();
+  const img = document.createElement('img');
+  img.src = src;
+  img.alt = title || '';
+  img.className = 'long-image';
+  img.loading = 'lazy';
+  img.decoding = 'async';
+  body.appendChild(img);
   requestAnimationFrame(() => sheet.classList.add('open'));
 }
 
@@ -596,7 +610,7 @@ function cleanNode(node) {
 
 function safePath(p) {
   if (typeof p !== 'string' || !p) return '';
-  return /^[\w./-]+$/.test(p) ? p : '';
+  return /^(voices|images)\/[\w-]+\.[a-z0-9]+$/i.test(p) ? p : '';
 }
 
 function escapeHtml(s) {
@@ -604,14 +618,6 @@ function escapeHtml(s) {
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
   }[c]));
 }
-
-function escapeAttr(s) {
-  return String(s ?? '').replace(/["'<>&]/g, '');
-}
-
-window.__openName = (id) => openPanel(Number(id));
-window.__playName = (id) => togglePlay(Number(id));
-window.__favName = (id) => toggleFav(Number(id));
 
 init().catch((err) => {
   $('#list').innerHTML = `<p class="empty">${escapeHtml(err.message)}</p>`;
