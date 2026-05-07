@@ -1,5 +1,6 @@
 import {
   DEFAULT_LANG,
+  UI_STRINGS,
   $, $$,
   loadJSON, applyDir, buildLangSelect, localized,
   escapeHtml, shortText, safePath, safeSvgPath, safeColor,
@@ -45,8 +46,10 @@ async function init() {
 
   state.names = names.sort((a, b) => a.display_order - b.display_order);
 
+  // Show a language in the dropdown if it has either name-content
+  // translations or just UI strings (content then falls back to Arabic).
   const transLangs = new Set(trans.map((t) => t.lang));
-  state.languages = langs.filter((l) => transLangs.has(l.code));
+  state.languages = langs.filter((l) => transLangs.has(l.code) || l.code in UI_STRINGS);
 
   for (const t of trans) {
     if (!state.translations.has(t.gods_name_id)) state.translations.set(t.gods_name_id, {});
