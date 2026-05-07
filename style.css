@@ -634,12 +634,14 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
 }
 
 /* =========================================================================
-   Top bar with home button (only chrome on the detail page)
+   Top bar with prev / home / next buttons (only chrome on the detail page)
    ========================================================================= */
 
 .detail-bar {
   display: flex;
   align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
   padding: max(0.75rem, env(safe-area-inset-top)) 1.25rem 0.75rem;
   position: relative;
   background: var(--bg);
@@ -668,79 +670,17 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
   outline: 2px solid var(--ink);
   outline-offset: 2px;
 }
-
-/* =========================================================================
-   Inline prev / next nav at the end of the article
-   ========================================================================= */
-
-.page-nav {
-  display: flex;
-  gap: 0.75rem;
-  margin: 2rem 0 1rem;
-}
-.page-nav[hidden] { display: none; }
-
-.page-nav-link {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  gap: 0.65rem;
-  padding: 1rem 1.1rem;
-  background: var(--surface-2);
-  border: 1px solid var(--rule);
-  border-radius: var(--r-md);
-  box-shadow: var(--shadow-sm);
-  text-decoration: none;
-  color: var(--ink);
-  min-height: 64px;
-  transition: transform 0.15s var(--ease), box-shadow 0.15s var(--ease), background 0.15s var(--ease);
-}
-.page-nav-link[hidden] { display: none; }
-.page-nav-link:hover {
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-md);
-  background: var(--surface);
-}
-.page-nav-link:focus-visible {
-  outline: 2px solid var(--ink);
-  outline-offset: 2px;
+.bar-btn[aria-disabled="true"] {
+  color: var(--muted-2);
+  pointer-events: none;
+  opacity: 0.5;
 }
 
-.page-nav-link.next { justify-content: flex-end; text-align: end; }
-.page-nav-link.prev { justify-content: flex-start; text-align: start; }
-
-.page-nav-arrow {
-  font-size: 1.6rem;
-  line-height: 1;
-  color: var(--accent);
-  flex-shrink: 0;
-  font-family: var(--font-ui);
-}
-
-.page-nav-text {
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
-  min-width: 0;
-}
-
-.page-nav-role {
-  font-family: var(--font-ui);
-  font-size: 0.72rem;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  color: var(--accent);
-  text-transform: uppercase;
-}
-
-.page-nav-name {
-  font-family: var(--font-arabic);
-  font-weight: 600;
-  font-size: 0.95rem;
-  color: var(--ink);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+/* The arrow SVGs are drawn for LTR semantics (prev = ←, next = →).
+   In RTL the meanings invert visually, so flip both icons. */
+[dir="rtl"] #bar-prev .bar-btn-icon,
+[dir="rtl"] #bar-next .bar-btn-icon {
+  transform: scaleX(-1);
 }
 
 .section-title {
