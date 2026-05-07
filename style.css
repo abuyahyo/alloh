@@ -1,32 +1,33 @@
 /* =========================================================================
-   He Is Allah — light, app-style design
+   He Is Allah — dark-only app design
    ========================================================================= */
 
 *, *::before, *::after { box-sizing: border-box; }
 * { margin: 0; padding: 0; }
 
-:root {
-  /* Light theme — pure, paper-like surface for the prose. */
-  --bg: #f4f4f6;
-  --surface: #ffffff;
-  --surface-2: #ebebed;
-  --ink: #0e0e10;
-  --ink-soft: #2c2c2f;
-  --muted: #9a9aa0;
-  --muted-2: #c8c8cc;
-  --rule: #dfdfe3;
-  --shadow-sm: 0 1px 2px rgba(15, 15, 20, 0.04), 0 1px 3px rgba(15, 15, 20, 0.04);
-  --shadow-md: 0 4px 14px rgba(15, 15, 20, 0.07), 0 2px 6px rgba(15, 15, 20, 0.04);
-  --shadow-lg: 0 16px 40px rgba(15, 15, 20, 0.12);
-  --header-bg: rgba(244, 244, 246, 0.85);
+/* Block pinch-zoom and double-tap-zoom on Android Chrome (iOS Safari
+   blocks via the JS gesture handlers in the HTML head). */
+html { touch-action: manipulation; }
 
-  /* Brand accent — muted manuscript gold. The tones echo the ::selection
-     tint and section-note that the design already used; promoting them to
-     a real token lets active states share one identity. */
-  --accent: #c39a4a;
-  --accent-soft: rgba(195, 154, 74, 0.16);
-  --accent-ring: rgba(195, 154, 74, 0.35);
-  --accent-strong: #a07b30;
+:root {
+  --bg: #0c0c0f;
+  --surface: #18181c;
+  --surface-2: #232328;
+  --ink: #f4f4f7;
+  --ink-soft: #d1d1d6;
+  --muted: #6e6e73;
+  --muted-2: #48484a;
+  --rule: #2c2c30;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.45), 0 1px 3px rgba(0, 0, 0, 0.35);
+  --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.55), 0 2px 6px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.65);
+  --header-bg: rgba(12, 12, 15, 0.78);
+
+  /* Brand accent — manuscript gold, tuned for dark surfaces. */
+  --accent: #d6ad5a;
+  --accent-soft: rgba(214, 173, 90, 0.18);
+  --accent-ring: rgba(214, 173, 90, 0.4);
+  --accent-strong: #b8923f;
   --accent-ink: #1c1306;
 
   --r-sm: 10px;
@@ -41,30 +42,6 @@
 
   --content-w: 720px;
   --ease: cubic-bezier(0.32, 0.72, 0.24, 1);
-
-  color-scheme: light;
-}
-
-:root[data-theme="dark"] {
-  --bg: #0c0c0f;
-  --surface: #18181c;
-  --surface-2: #232328;
-  --ink: #f4f4f7;
-  --ink-soft: #d1d1d6;
-  --muted: #6e6e73;
-  --muted-2: #48484a;
-  --rule: #2c2c30;
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.45), 0 1px 3px rgba(0, 0, 0, 0.35);
-  --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.55), 0 2px 6px rgba(0, 0, 0, 0.4);
-  --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.65);
-  --header-bg: rgba(12, 12, 15, 0.78);
-
-  /* Brighter gold for dark surfaces so it stays legible. */
-  --accent: #d6ad5a;
-  --accent-soft: rgba(214, 173, 90, 0.18);
-  --accent-ring: rgba(214, 173, 90, 0.4);
-  --accent-strong: #b8923f;
-  --accent-ink: #1c1306;
 
   color-scheme: dark;
 }
@@ -157,14 +134,10 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
   align-items: center;
   gap: 0.05em;
   letter-spacing: -0.02em;
-  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.4);
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.5);
 }
 .logo-w1 { transform: translateX(0.25em) translateY(0.05em); }
 .logo-w2 { transform: translateX(-0.15em) translateY(-0.18em); }
-
-:root[data-theme="dark"] .logo-art {
-  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.5);
-}
 
 .logo-tag {
   font-family: var(--font-ui);
@@ -545,9 +518,6 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
 }
 .lib-tab:hover {
   color: var(--ink);
-  background: rgba(0, 0, 0, 0.05);
-}
-:root[data-theme="dark"] .lib-tab:hover {
   background: rgba(255, 255, 255, 0.06);
 }
 .lib-tab:active { transform: scale(0.98); }
@@ -694,13 +664,10 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
   background: var(--surface-2);
   border: 1px solid var(--rule);
   border-radius: 999px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18), 0 2px 6px rgba(0, 0, 0, 0.10);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.55), 0 2px 6px rgba(0, 0, 0, 0.4);
   z-index: 50;
   overflow: hidden;
   animation: floatNavIn 0.4s var(--ease) 0.1s backwards;
-}
-:root[data-theme="dark"] .float-nav {
-  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.55), 0 2px 6px rgba(0, 0, 0, 0.4);
 }
 
 @keyframes floatNavIn {
@@ -719,9 +686,8 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
   -webkit-tap-highlight-color: transparent;
   transition: background 0.15s var(--ease), color 0.15s var(--ease);
 }
-.float-nav-btn:hover { background: rgba(0, 0, 0, 0.05); color: var(--ink); }
-:root[data-theme="dark"] .float-nav-btn:hover { background: rgba(255, 255, 255, 0.06); }
-.float-nav-btn:active { background: rgba(0, 0, 0, 0.08); }
+.float-nav-btn:hover { background: rgba(255, 255, 255, 0.06); color: var(--ink); }
+.float-nav-btn:active { background: rgba(255, 255, 255, 0.1); }
 .float-nav-btn:focus-visible {
   outline: 2px solid var(--ink);
   outline-offset: -2px;
@@ -956,30 +922,8 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
 }
 
 /* =========================================================================
-   Inline chrome buttons (theme toggle, search clear, favorites toggle)
+   Inline chrome buttons (search clear, favorites toggle)
    ========================================================================= */
-
-.chrome-btn {
-  width: 40px;
-  height: 40px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--surface);
-  color: var(--ink-soft);
-  border-radius: 999px;
-  box-shadow: var(--shadow-sm);
-  transition: background 0.15s var(--ease), color 0.15s var(--ease), transform 0.12s var(--ease);
-  -webkit-tap-highlight-color: transparent;
-}
-.chrome-btn:hover { color: var(--ink); }
-.chrome-btn:active { transform: scale(0.94); }
-.chrome-btn:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
-
-.theme-toggle .icon-sun,
-.theme-toggle .icon-moon { display: none; }
-:root[data-theme="dark"] .theme-toggle .icon-sun { display: block; }
-:root:not([data-theme="dark"]) .theme-toggle .icon-moon { display: block; }
 
 /* =========================================================================
    Search clear & favorites filter
