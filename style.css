@@ -646,19 +646,10 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
    divided by hairline rules. Solid surface fill + soft shadow rather
    than backdrop-blur — fixed-position + backdrop-filter has the same
    "transparent void" rendering bug on iOS Safari that took the detail
-   bar out of sticky+filter, so this sidesteps it.
-
-   `100lvh - 100dvh` is the magic that keeps the pill above iOS
-   Safari's bottom URL bar: `lvh` is the *large* viewport (URL bar
-   hidden), `dvh` is the *dynamic* viewport (current visible area).
-   Their difference equals the URL bar's current height — adding it
-   to the bottom offset lifts the pill above the URL bar even though
-   `position: fixed` is anchored to the larger layout viewport. On
-   platforms without a dynamic toolbar (Android Chrome, desktop) lvh
-   and dvh are equal so the term collapses to zero. */
+   bar out of sticky+filter, so this sidesteps it. */
 .float-nav {
   position: fixed;
-  bottom: calc(max(1rem, env(safe-area-inset-bottom) + 0.5rem) + (100lvh - 100dvh));
+  bottom: max(1rem, env(safe-area-inset-bottom) + 0.5rem);
   /* Center horizontally without transform: translateX, which has been
      known to interact badly with iOS Safari fixed-position scrolling. */
   left: 0;
@@ -674,6 +665,18 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
   z-index: 50;
   overflow: hidden;
   animation: floatNavIn 0.4s var(--ease) 0.1s backwards;
+}
+
+/* iOS Safari renders fixed-position elements relative to the layout
+   viewport — which extends behind the floating bottom URL bar in
+   portrait — so a plain bottom:1rem lands hidden. lvh/dvh math and the
+   visualViewport API both failed to lift the pill in practice on real
+   devices, so feature-detect iOS Safari (Apple-only -webkit-touch-callout)
+   and add a generous extra offset that clears the URL bar in any state. */
+@supports (-webkit-touch-callout: none) {
+  .float-nav {
+    bottom: max(4.5rem, env(safe-area-inset-bottom) + 4rem);
+  }
 }
 
 @keyframes floatNavIn {
