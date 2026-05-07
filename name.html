@@ -2,12 +2,12 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="description" content="One of the 99 beautiful names of Allah — Arabic, transliteration, audio recitation, calligraphy, and meaning.">
-  <meta name="theme-color" content="#ebebed">
+  <meta name="theme-color" content="#0c0c0f">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="He Is Allah">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
@@ -21,15 +21,22 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri+Quran&family=Amiri:wght@400;700&family=Cairo:wght@600;700&family=Inter:wght@400;500;600&display=swap">
   <script>
-    (function() {
-      try {
-        var t = localStorage.getItem('theme') ||
-          (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-        if (t === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
-      } catch (e) {}
+    document.documentElement.setAttribute('data-theme', 'dark');
+    // Block pinch-zoom and double-tap-zoom across platforms. The viewport
+    // meta covers Android; iOS Safari ignores user-scalable=no for
+    // accessibility but does respect preventDefault() on its non-standard
+    // gesture* events plus a multi-touch touchmove guard.
+    (function () {
+      var stop = function (e) { e.preventDefault(); };
+      document.addEventListener('gesturestart', stop);
+      document.addEventListener('gesturechange', stop);
+      document.addEventListener('gestureend', stop);
+      document.addEventListener('touchmove', function (e) {
+        if (e.touches && e.touches.length > 1) e.preventDefault();
+      }, { passive: false });
     })();
   </script>
-  <link rel="stylesheet" href="style.css?v=2026050874">
+  <link rel="stylesheet" href="style.css?v=2026050875">
 </head>
 <body class="detail-body">
   <a class="skip-link" href="#main">Skip to content</a>
@@ -87,6 +94,6 @@
 
   <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
 
-  <script type="module" src="name.js?v=2026050874"></script>
+  <script type="module" src="name.js?v=2026050875"></script>
 </body>
 </html>

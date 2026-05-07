@@ -11,8 +11,6 @@ export const UI_STRINGS = {
     search: 'البحث',
     clear_search: 'مسح البحث',
     language: 'اللغة',
-    theme_dark: 'الوضع الداكن',
-    theme_light: 'الوضع الفاتح',
     favorites_show: 'إظهار المفضلة فقط',
     favorites_all: 'إظهار الكل',
     favorites_empty: 'لا توجد أسماء في المفضلة',
@@ -48,8 +46,6 @@ export const UI_STRINGS = {
     search: 'Поиск',
     clear_search: 'Очистить поиск',
     language: 'Язык',
-    theme_dark: 'Тёмная тема',
-    theme_light: 'Светлая тема',
     favorites_show: 'Показать только избранное',
     favorites_all: 'Показать всё',
     favorites_empty: 'В избранном пока пусто',
@@ -85,8 +81,6 @@ export const UI_STRINGS = {
     search: 'Search',
     clear_search: 'Clear search',
     language: 'Language',
-    theme_dark: 'Dark mode',
-    theme_light: 'Light mode',
     favorites_show: 'Show favorites only',
     favorites_all: 'Show all',
     favorites_empty: 'No favorites yet',
@@ -136,31 +130,6 @@ export function applyDir(lang) {
   document.documentElement.setAttribute('lang', lang);
   const meta = document.querySelector('meta[name="apple-mobile-web-app-title"]');
   if (meta) meta.setAttribute('content', tFor(lang, 'pwa_title'));
-}
-
-/**
- * Wire the floating theme toggle. The chosen theme is also written to
- * <html data-theme> by an inline script in <head> before the stylesheet
- * loads, so initial paint already matches. This handler flips it on
- * click, persists the new choice, and keeps the aria-label in sync
- * with the action it would perform next.
- */
-export function bindThemeToggle(btn, getLang = () => DEFAULT_LANG) {
-  if (!btn) return () => {};
-  const sync = () => {
-    const dark = document.documentElement.getAttribute('data-theme') === 'dark';
-    btn.setAttribute('aria-label', tFor(getLang(), dark ? 'theme_light' : 'theme_dark'));
-    btn.setAttribute('aria-pressed', dark ? 'true' : 'false');
-  };
-  btn.addEventListener('click', () => {
-    const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-    if (next === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
-    else document.documentElement.removeAttribute('data-theme');
-    try { localStorage.setItem('theme', next); } catch (e) {}
-    sync();
-  });
-  sync();
-  return sync;
 }
 
 export function buildLangSelect(selectEl, languages, current) {

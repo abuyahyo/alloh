@@ -4,8 +4,8 @@ import {
   loadJSON, applyDir, buildLangSelect, localized,
   escapeHtml, shortText, safePath, safeSvgPath, safeColor,
   iconPlay, iconPause, iconLoading, iconHeart,
-  showToast, createAudioController, attachImgFade,
-  bindThemeToggle, tFor,
+  createAudioController, attachImgFade,
+  tFor,
 } from './shared.js';
 
 const state = {
@@ -26,11 +26,8 @@ const audioCtrl = createAudioController({
   onChange: refreshPlayingUI,
 });
 
-let syncThemeLabel = () => {};
-
 async function init() {
   bindGlobalEvents();
-  syncThemeLabel = bindThemeToggle($('#theme-toggle'), () => state.lang);
 
   let names, trans, langs;
   try {
@@ -70,7 +67,6 @@ function applyLangChrome() {
   $('#search-clear').setAttribute('aria-label', tFor(state.lang, 'clear_search'));
   $('#lang').setAttribute('aria-label', tFor(state.lang, 'language'));
   refreshFavoritesToggleLabel();
-  syncThemeLabel();
 }
 
 function refreshFavoritesToggleLabel() {
