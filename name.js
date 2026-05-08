@@ -17,7 +17,6 @@ const ALLOWED_HTML_TAGS = new Set([
 const SECTIONS = [
   { act: 'meanings', valKey: 'meanings_val', keyKey: 'meanings_key' },
   { act: 'evidence', valKey: 'evidence_val', keyKey: 'evidence_key' },
-  { act: 'effects',  valKey: 'effects_val',  keyKey: 'effects_key' },
 ];
 
 function ui(key) {
