@@ -18,9 +18,6 @@ const SECTIONS = [
   { act: 'meanings', valKey: 'meanings_val', keyKey: 'meanings_key' },
   { act: 'evidence', valKey: 'evidence_val', keyKey: 'evidence_key' },
   { act: 'effects',  valKey: 'effects_val',  keyKey: 'effects_key' },
-  { act: 'pray',     valKey: 'pray_val',     keyKey: 'pray_key' },
-  { act: 'mercy',    valKey: 'mercy_val',    keyKey: 'mercy_key' },
-  { act: 'benefits', valKey: 'benefits_val', keyKey: 'benefits_key' },
 ];
 
 function ui(key) {
