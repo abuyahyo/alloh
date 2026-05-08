@@ -31,7 +31,6 @@ const state = {
   favorites: new Set(JSON.parse(localStorage.getItem('favorites') || '[]')),
   currentId: null,
   cards: new Map(),   // gods_name_id -> [{ image, lang }, …]
-  videos: new Map(),  // gods_name_id -> [{ title, video_url, thumbnail_url, lang }, …]
 };
 
 const audio = $('#audio');
@@ -42,7 +41,6 @@ const audioCtrl = createAudioController({
   onChange: refreshPlayingUI,
 });
 
-let tocObserver = null;
 
 async function init() {
   const params = new URLSearchParams(location.search);
@@ -56,14 +54,13 @@ async function init() {
 
   bindEvents();
 
-  let names, trans, langs, cards, videos;
+  let names, trans, langs, cards;
   try {
-    [names, trans, langs, cards, videos] = await Promise.all([
+    [names, trans, langs, cards] = await Promise.all([
       loadJSON('json/names.json'),
       loadJSON('json/name_translations.json'),
       loadJSON('json/languages.json'),
       loadJSON('json/cards.json').catch((e) => { console.warn('cards.json:', e); return []; }),
-      loadJSON('json/videos.json').catch((e) => { console.warn('videos.json:', e); return []; }),
     ]);
   } catch (err) {
     console.error(err);
@@ -87,10 +84,6 @@ async function init() {
   for (const c of cards) {
     if (!state.cards.has(c.gods_name_id)) state.cards.set(c.gods_name_id, []);
     state.cards.get(c.gods_name_id).push(c);
-  }
-  for (const v of videos) {
-    if (!state.videos.has(v.gods_name_id)) state.videos.set(v.gods_name_id, []);
-    state.videos.get(v.gods_name_id).push(v);
   }
 
   if (!state.languages.find((l) => l.code === state.lang)) state.lang = DEFAULT_LANG;
@@ -162,7 +155,7 @@ function render() {
 
   setSanitizedHTML($('#meaning'), t.short_meaning_val);
   renderUiStrings();
-  renderSectionsAndTOC(name);
+  renderSections(name);
   renderLibrary(name);
   renderPageNav(name);
 }
@@ -184,11 +177,10 @@ function renderUiStrings() {
 }
 
 /**
- * Build the (visible) sections and the matching TOC chips. Sections with no
- * content (after Arabic fallback) are skipped entirely so the page only
- * shows what's actually there.
+ * Build the visible sections. Sections with no content (after Arabic
+ * fallback) are skipped entirely so the page only shows what's there.
  */
-function renderSectionsAndTOC(name) {
+function renderSections(name) {
   const t = loc(name);
   const tr = state.translations.get(name.id) || {};
   const tAr = tr.ar || {};
@@ -197,14 +189,7 @@ function renderSectionsAndTOC(name) {
   // an Arabic fallback — surface the ar_only notice on every one of them.
   const langWideFallback = !tr[state.lang] && state.lang !== DEFAULT_LANG;
   const sectionsEl = $('#sections');
-  const tocInner = $('#toc-inner');
-  const tocNav = $('#toc');
-
   sectionsEl.replaceChildren();
-  tocInner.replaceChildren();
-  if (tocObserver) { tocObserver.disconnect(); tocObserver = null; }
-
-  const visible = [];
 
   for (const s of SECTIONS) {
     let html = t[s.valKey];
@@ -218,14 +203,11 @@ function renderSectionsAndTOC(name) {
     if (!hasContent(html)) continue;
 
     // Per-name labels are heterogeneous in the source data — e.g. some
-    // entries carry "وقفات" under effects_key. Show the actual entry label
+    // entries carry their own Arabic key. Show the actual entry label
     // when reading Arabic content; the generic UI label otherwise.
     const showEntryKey = (state.lang === 'ar' || usedFallback)
       && typeof entryKey === 'string' && entryKey.trim().length > 1;
     const headLabel = showEntryKey ? entryKey : ui(s.act);
-    const tocLabel = ui(s.act);
-
-    visible.push({ act: s.act, headLabel, tocLabel });
 
     const section = document.createElement('section');
     section.className = 'section';
@@ -257,45 +239,6 @@ function renderSectionsAndTOC(name) {
 
     sectionsEl.appendChild(section);
   }
-
-  if (visible.length === 0) {
-    tocNav.hidden = true;
-    return;
-  }
-  tocNav.hidden = false;
-
-  // Sticky name pill anchors the chip strip so the user sees which name
-  // they're reading even after the TOC has stuck to the top of the viewport.
-  const namePill = document.createElement('span');
-  namePill.className = 'toc-name-pill';
-  namePill.textContent = name.default_name;
-  tocInner.appendChild(namePill);
-
-  for (const v of visible) {
-    const a = document.createElement('a');
-    a.className = 'toc-chip';
-    a.href = `#sec-${v.act}`;
-    a.dataset.act = v.act;
-    a.textContent = v.tocLabel;
-    tocInner.appendChild(a);
-  }
-
-  // Track which section is in view so the active chip stays in sync.
-  if ('IntersectionObserver' in window) {
-    tocObserver = new IntersectionObserver((entries) => {
-      const onScreen = entries.filter((e) => e.isIntersecting);
-      if (!onScreen.length) return;
-      onScreen.sort((a, b) => b.intersectionRatio - a.intersectionRatio);
-      const act = onScreen[0].target.dataset.act;
-      $$('.toc-chip', tocInner).forEach((c) => {
-        const current = c.dataset.act === act;
-        c.classList.toggle('is-current', current);
-        if (current) c.setAttribute('aria-current', 'location');
-        else c.removeAttribute('aria-current');
-      });
-    }, { rootMargin: '-40% 0px -50% 0px', threshold: [0, 0.25, 0.5, 0.75, 1] });
-    $$('.section', sectionsEl).forEach((s) => tocObserver.observe(s));
-  }
 }
 
 function hasContent(html) {
@@ -308,12 +251,8 @@ function hasContent(html) {
 function renderLibrary(name) {
   const lib = $('#library');
   const cardsPane = $('#lib-cards');
-  const videosPane = $('#lib-videos');
-  const cardsTab = $('.lib-tab[data-tab="cards"]');
-  const videosTab = $('.lib-tab[data-tab="videos"]');
 
   const cards = pickByLang(state.cards.get(name.id) || []);
-  const videos = pickByLang(state.videos.get(name.id) || []);
 
   cardsPane.replaceChildren();
   cards.forEach((c, i) => {
@@ -347,28 +286,7 @@ function renderLibrary(name) {
     cardsPane.appendChild(fig);
   });
 
-  videosPane.replaceChildren();
-  for (const v of videos) {
-    const id = extractYouTubeId(v.video_url);
-    if (!id) continue;
-    videosPane.appendChild(buildVideoCard(v, id));
-  }
-
-  cardsTab.hidden = cardsPane.children.length === 0;
-  videosTab.hidden = videosPane.children.length === 0;
-
-  if (cardsTab.hidden && videosTab.hidden) {
-    lib.hidden = true;
-    return;
-  }
-  lib.hidden = false;
-
-  // If the active tab disappeared (e.g. switched to a name with only videos),
-  // fall back to whichever tab still has content.
-  const active = $('.lib-tab.is-active');
-  if (!active || active.hidden) {
-    selectLibraryTab(cardsTab.hidden ? 'videos' : 'cards');
-  }
+  lib.hidden = cardsPane.children.length === 0;
 }
 
 function pickByLang(items) {
@@ -392,55 +310,6 @@ function suggestedDownloadName(nameRecord, path, index) {
     .replace(/\s+/g, ' ')
     .trim() || 'card';
   return `${base}-${index + 1}.${ext}`;
-}
-
-function extractYouTubeId(url) {
-  if (typeof url !== 'string') return '';
-  const m = url.match(/(?:v=|youtu\.be\/|embed\/|shorts\/)([\w-]{11})/);
-  return m ? m[1] : '';
-}
-
-function buildVideoCard(v, id) {
-  const a = document.createElement('a');
-  a.className = 'lib-video';
-  a.href = v.video_url;
-  a.target = '_blank';
-  a.rel = 'noopener noreferrer';
-  a.setAttribute('aria-label', v.title || 'YouTube video');
-
-  const thumb = document.createElement('img');
-  thumb.className = 'lib-video-thumb';
-  thumb.src = v.thumbnail_url || `https://img.youtube.com/vi/${id}/hqdefault.jpg`;
-  thumb.alt = '';
-  thumb.loading = 'lazy';
-  thumb.decoding = 'async';
-  thumb.addEventListener('error', () => {
-    thumb.src = `https://img.youtube.com/vi/${id}/0.jpg`;
-  }, { once: true });
-
-  const overlay = document.createElement('span');
-  overlay.className = 'lib-video-play';
-  overlay.innerHTML = '<svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>';
-
-  const title = document.createElement('span');
-  title.className = 'lib-video-title';
-  title.textContent = v.title || '';
-
-  a.appendChild(thumb);
-  a.appendChild(overlay);
-  a.appendChild(title);
-  return a;
-}
-
-function selectLibraryTab(tab) {
-  $$('.lib-tab').forEach((b) => {
-    const active = b.dataset.tab === tab;
-    b.classList.toggle('is-active', active);
-    b.setAttribute('aria-selected', active ? 'true' : 'false');
-    b.setAttribute('tabindex', active ? '0' : '-1');
-  });
-  $('#lib-cards').hidden = tab !== 'cards';
-  $('#lib-videos').hidden = tab !== 'videos';
 }
 
 const NAV_LABEL = {
@@ -529,37 +398,9 @@ function bindEvents() {
     if (action.dataset.action === 'fav') toggleFav(state.currentId);
   });
 
-  const tablist = $('#lib-tabs');
-  tablist.addEventListener('click', (e) => {
-    const btn = e.target.closest('.lib-tab');
-    if (btn && !btn.hidden) selectLibraryTab(btn.dataset.tab);
-  });
-  // Standard ARIA tabs keyboard support: arrow keys cycle, Home/End jump to ends.
-  tablist.addEventListener('keydown', (e) => {
-    if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) return;
-    const tabs = $$('.lib-tab', tablist).filter((t) => !t.hidden);
-    if (!tabs.length) return;
-    const rtl = document.documentElement.dir === 'rtl';
-    const currentIdx = tabs.findIndex((t) => t === document.activeElement) ;
-    const i = currentIdx < 0 ? tabs.findIndex((t) => t.classList.contains('is-active')) : currentIdx;
-    let next = i;
-    if (e.key === 'Home') next = 0;
-    else if (e.key === 'End') next = tabs.length - 1;
-    else {
-      const delta = (e.key === 'ArrowRight' ? 1 : -1) * (rtl ? -1 : 1);
-      next = (i + delta + tabs.length) % tabs.length;
-    }
-    e.preventDefault();
-    selectLibraryTab(tabs[next].dataset.tab);
-    tabs[next].focus();
-  });
-
   document.addEventListener('keydown', (e) => {
     if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
     if (e.target && /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
-    // Don't hijack arrow keys when focus is inside the tablist — those are
-    // handled by the tablist's own listener above.
-    if (e.target && e.target.closest && e.target.closest('#lib-tabs')) return;
     const dir = document.documentElement.dir === 'rtl' ? -1 : 1;
     const step = (e.key === 'ArrowRight' ? 1 : -1) * dir;
     const idx = state.names.findIndex((n) => n.id === state.currentId);

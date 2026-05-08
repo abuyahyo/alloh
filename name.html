@@ -36,7 +36,7 @@
       }, { passive: false });
     })();
   </script>
-  <link rel="stylesheet" href="style.css?v=2026050897">
+  <link rel="stylesheet" href="style.css?v=2026050898">
 </head>
 <body class="detail-body">
   <a class="skip-link" href="#main">Skip to content</a>
@@ -67,26 +67,11 @@
     <h3 class="section-title" data-key="short_meaning"><span>المعنى المختصر</span></h3>
     <div class="detail-meaning" id="meaning"></div>
 
-    <nav class="section-toc" id="toc" aria-label="Sections" hidden>
-      <div class="section-toc-inner" id="toc-inner"></div>
-    </nav>
-
     <div class="sections" id="sections"></div>
 
     <section class="library" id="library" hidden>
       <h3 class="library-title" data-key="library"><span>مكتبة المرئيات</span></h3>
-      <div class="library-tabs" role="tablist" id="lib-tabs">
-        <button class="lib-tab is-active" role="tab" data-tab="cards" aria-selected="true" type="button">
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 17l5-5 4 4 3-3 6 6"/></svg>
-          <span data-key="cards">البطاقات</span>
-        </button>
-        <button class="lib-tab" role="tab" data-tab="videos" aria-selected="false" type="button">
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6" width="13" height="12" rx="2"/><path d="M16 10l5-3v10l-5-3z"/></svg>
-          <span data-key="videos">مقاطع فيديو</span>
-        </button>
-      </div>
-      <div class="library-pane" id="lib-cards" role="tabpanel"></div>
-      <div class="library-pane" id="lib-videos" role="tabpanel" hidden></div>
+      <div class="library-pane" id="lib-cards"></div>
     </section>
 
     <p class="kbd-hint" id="kbd-hint" hidden></p>
@@ -96,7 +81,7 @@
 
   <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
 
-  <script type="module" src="name.js?v=2026050897"></script>
+  <script type="module" src="name.js?v=2026050898"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function () {
