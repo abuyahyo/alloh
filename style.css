@@ -449,50 +449,6 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
   border-radius: 2px;
 }
 
-/* iOS-style segmented control: the container acts as a recessed track,
-   the active tab visibly rests on top of it. The track uses surface-2
-   (which is darker than surface in light mode and lighter than surface
-   in dark mode — exactly the "depressed" reading we want in both). */
-.library-tabs {
-  display: flex;
-  gap: 0.4rem;
-  margin-bottom: 1rem;
-  padding: 0.35rem;
-  background: var(--surface-2);
-  border-radius: 999px;
-}
-.lib-tab {
-  flex: 1;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.45rem;
-  padding: 0.55rem 0.85rem;
-  border-radius: 999px;
-  color: var(--muted);
-  font-family: var(--font-arabic);
-  font-size: 0.92rem;
-  font-weight: 600;
-  background: transparent;
-  transition: background 0.15s var(--ease), color 0.15s var(--ease), transform 0.12s var(--ease);
-}
-.lib-tab:hover {
-  color: var(--ink);
-  background: rgba(255, 255, 255, 0.06);
-}
-.lib-tab:active { transform: scale(0.98); }
-.lib-tab.is-active {
-  background: var(--accent);
-  color: var(--accent-ink);
-  box-shadow: var(--shadow-sm);
-}
-.lib-tab.is-active:hover {
-  background: var(--accent);
-  color: var(--accent-ink);
-}
-.lib-tab[hidden] { display: none; }
-.lib-tab:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
-
 .library-pane {
   display: flex;
   flex-direction: column;
@@ -543,59 +499,6 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
 .lib-card-download:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
-}
-
-.lib-video {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  border-radius: var(--r-md);
-  overflow: hidden;
-  background: var(--surface);
-  box-shadow: var(--shadow-sm);
-  text-decoration: none;
-  color: var(--ink);
-  transition: transform 0.15s var(--ease), box-shadow 0.15s var(--ease);
-}
-.lib-video:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
-}
-.lib-video:focus-visible {
-  outline: 2px solid var(--ink);
-  outline-offset: 2px;
-}
-.lib-video-thumb {
-  display: block;
-  width: 100%;
-  height: auto;
-  aspect-ratio: 16 / 9;
-  object-fit: cover;
-  background: var(--surface-2);
-}
-.lib-video-play {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.9);
-  color: #c4302b;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
-  pointer-events: none;
-}
-.lib-video-title {
-  display: block;
-  padding: 0.85rem 1rem 1rem;
-  font-family: var(--font-arabic);
-  font-weight: 600;
-  font-size: 0.95rem;
-  line-height: 1.45;
 }
 
 /* =========================================================================
@@ -708,78 +611,6 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
   height: 2px;
   background: var(--accent);
   border-radius: 2px;
-}
-
-/* =========================================================================
-   Sticky section TOC + inline sections (single-page layout)
-   ========================================================================= */
-
-.section-toc {
-  position: sticky;
-  /* The detail bar is in normal flow now (was sticky), so the TOC chips
-     stick to the top of the viewport directly. */
-  top: 0;
-  z-index: 9;
-  margin: 0.75rem -1.25rem 1rem;
-  padding: 0.5rem 0;
-  background: linear-gradient(180deg, var(--bg) 70%, transparent);
-}
-.section-toc[hidden] { display: none; }
-.section-toc-inner {
-  display: flex;
-  gap: 0.45rem;
-  overflow-x: auto;
-  scrollbar-width: none;
-  padding: 0 1.25rem;
-  scroll-snap-type: x proximity;
-  /* Soft fade at both edges so users can see there's more content to
-     scroll to when the chips overflow. */
-  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 1.25rem, #000 calc(100% - 1.25rem), transparent 100%);
-          mask-image: linear-gradient(90deg, transparent 0, #000 1.25rem, #000 calc(100% - 1.25rem), transparent 100%);
-}
-.section-toc-inner::-webkit-scrollbar { display: none; }
-
-/* The current name sits as the first item in the chip strip and is sticky
-   to the leading edge so it stays visible while the user horizontally
-   scrolls the section chips — keeping the "where am I" context intact when
-   the TOC bar itself is sticky to the top of the viewport. */
-.toc-name-pill {
-  flex-shrink: 0;
-  padding: 0.42rem 0.85rem;
-  border-radius: 999px;
-  background: var(--ink);
-  color: var(--bg);
-  font-family: var(--font-arabic);
-  font-size: 0.95rem;
-  font-weight: 700;
-  white-space: nowrap;
-  position: sticky;
-  inset-inline-start: 1.25rem;
-  z-index: 1;
-  pointer-events: none;
-  box-shadow: var(--shadow-sm);
-}
-
-.toc-chip {
-  flex-shrink: 0;
-  padding: 0.42rem 0.95rem;
-  border-radius: 999px;
-  background: var(--surface-2);
-  color: var(--ink-soft);
-  font-family: var(--font-arabic);
-  font-size: 0.88rem;
-  font-weight: 600;
-  text-decoration: none;
-  white-space: nowrap;
-  scroll-snap-align: start;
-  transition: background 0.15s var(--ease), color 0.15s var(--ease), transform 0.15s var(--ease);
-}
-.toc-chip:hover { color: var(--ink); background: var(--rule); transform: translateY(-1px); }
-.toc-chip:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
-.toc-chip.is-current {
-  background: var(--accent);
-  color: var(--accent-ink);
-  box-shadow: 0 0 0 4px var(--accent-soft);
 }
 
 .sections {
