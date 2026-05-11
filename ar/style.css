@@ -560,9 +560,10 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
   overflow: hidden;
   text-overflow: ellipsis;
   text-align: center;
-  /* Always render the name in its native LTR/RTL Arabic shape, no
-     matter the surrounding UI direction, so ligatures stay correct. */
-  direction: rtl;
+  /* The span carries dir="auto" so the browser picks direction from the
+     content: Arabic script → RTL (correct ligatures), Cyrillic/Latin
+     transliteration → LTR (so "Ал-Бариъ" reads left-to-right in the uz
+     UI). Isolate keeps the nav button's bidi context from leaking. */
   unicode-bidi: isolate;
 }
 
