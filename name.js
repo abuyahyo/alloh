@@ -314,7 +314,7 @@ function suggestedDownloadName(nameRecord, path, index) {
 
 const NAV_LABEL = {
   ar: { prev: 'السابق', next: 'التالي' },
-  ru: { prev: 'Предыдущее', next: 'Следующее' },
+  uz: { prev: 'Олдинги', next: 'Кейинги' },
   en: { prev: 'Previous', next: 'Next' },
 };
 
