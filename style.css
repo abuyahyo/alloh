@@ -552,14 +552,9 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
 
 .bar-btn-name {
   flex: 1;
-  /* Match the body's Amiri (manuscript naskh) so the nav reads as a
-     continuation of the content rather than a separate UI font.
-     Slightly larger and a touch heavier than the body for button-label
-     readability. */
-  font-family: var(--font-arabic-body);
-  font-size: 1.2rem;
-  font-weight: 700;
-  line-height: 1.2;
+  font-family: var(--font-arabic);
+  font-size: 1rem;
+  font-weight: 600;
   color: var(--ink);
   white-space: nowrap;
   overflow: hidden;
