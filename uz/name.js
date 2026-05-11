@@ -242,7 +242,6 @@ function pickByLang(items) {
   if (!items.length) return [];
   const native = items.filter((i) => i.lang === LANG);
   if (native.length) return native;
-  // Cards may only exist in Arabic; surface them anyway.
   return items;
 }
 
