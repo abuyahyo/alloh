@@ -394,21 +394,30 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
   animation: shimmer 1.4s infinite ease;
 }
 
+/* Brief meaning — framed as a manuscript pull-quote: a soft gold-tinted
+   surface with thin gold rails on the inline edges and gentle rounded
+   corners. The constrained max-width keeps line lengths comfortable on
+   wide screens so the eye doesn't fly across the full content column. */
 .detail-meaning {
   margin: 0 auto 2rem;
-  padding: 0 1rem;
+  max-width: 560px;
+  padding: 1.4rem 1.6rem;
   text-align: center;
   font-family: var(--font-ui);
-  font-size: 1.2rem;
+  font-size: 1.05rem;
   line-height: 1.7;
   color: var(--ink);
   font-weight: 400;
+  background: var(--accent-soft);
+  border-inline-start: 3px solid var(--accent);
+  border-inline-end: 3px solid var(--accent);
+  border-radius: var(--r-md);
 }
 [lang="ar"] .detail-meaning,
 [dir="rtl"] .detail-meaning {
   font-family: var(--font-arabic-body);
-  font-size: 1.55rem;
-  line-height: 1.95;
+  font-size: 1.4rem;
+  line-height: 1.9;
 }
 .detail-meaning:empty { display: none; }
 
