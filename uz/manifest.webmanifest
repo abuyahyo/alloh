@@ -1,0 +1,36 @@
+{
+  "name": "У — Аллоҳ",
+  "short_name": "У — Аллоҳ",
+  "description": "Асмоул-Ҳусна — 99 та гўзал исм (ўзбекча)",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0c0c0f",
+  "theme_color": "#0c0c0f",
+  "lang": "uz",
+  "dir": "ltr",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    },
+    {
+      "src": "icons/icon-maskable-512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icons/apple-touch-icon.png",
+      "type": "image/png",
+      "sizes": "180x180"
+    }
+  ]
+}
