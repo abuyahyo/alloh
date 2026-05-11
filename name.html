@@ -36,7 +36,7 @@
       }, { passive: false });
     })();
   </script>
-  <link rel="stylesheet" href="style.css?v=2026051122">
+  <link rel="stylesheet" href="style.css?v=2026051123">
 </head>
 <body class="detail-body">
   <a class="skip-link" href="#main">Skip to content</a>
@@ -64,8 +64,10 @@
   <main id="main" class="detail-main">
     <article class="hero-card" id="hero" aria-busy="true"></article>
 
-    <h3 class="section-title" data-key="short_meaning"><span>المعنى المختصر</span></h3>
-    <div class="detail-meaning" id="meaning"></div>
+    <section class="section">
+      <div class="section-head"><h3 data-key="short_meaning">المعنى المختصر</h3></div>
+      <div class="section-body" id="meaning"></div>
+    </section>
 
     <div class="sections" id="sections"></div>
 
@@ -81,7 +83,7 @@
 
   <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
 
-  <script type="module" src="name.js?v=2026051122"></script>
+  <script type="module" src="name.js?v=2026051123"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function () {
