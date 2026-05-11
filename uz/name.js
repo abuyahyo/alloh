@@ -302,7 +302,9 @@ function fillBarNavLink(el, target, roleLabel, keyShortcut) {
   el.setAttribute('aria-label', fullLabel);
   el.setAttribute('title', fullLabel);
   el.setAttribute('aria-keyshortcuts', keyShortcut);
-  if (nameEl) nameEl.textContent = target.default_name;
+  // Uzbek build: prefer the localised transliteration (e.g. "Ал-Бариъ")
+  // over the Arabic script so the nav matches the page's script.
+  if (nameEl) nameEl.textContent = tr.name || target.default_name;
 }
 
 function refreshPlayingUI() {

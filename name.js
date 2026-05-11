@@ -370,7 +370,11 @@ function fillBarNavLink(el, target, roleLabel, keyShortcut) {
   el.setAttribute('aria-label', fullLabel);
   el.setAttribute('title', fullLabel);
   el.setAttribute('aria-keyshortcuts', keyShortcut);
-  if (nameEl) nameEl.textContent = target.default_name;
+  // In Arabic mode keep the Arabic script (target.default_name).
+  // In every other language fall back to the localised transliteration
+  // (e.g. "Ал-Бариъ" in Uzbek) so the nav reads in the user's script.
+  const navName = state.lang === DEFAULT_LANG ? target.default_name : (tr.name || target.default_name);
+  if (nameEl) nameEl.textContent = navName;
 }
 
 function refreshPlayingUI() {
