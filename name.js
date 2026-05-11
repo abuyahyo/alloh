@@ -14,6 +14,14 @@ const ALLOWED_HTML_TAGS = new Set([
   'UL', 'OL', 'LI', 'BLOCKQUOTE', 'H3', 'H4', 'H5', 'HR',
 ]);
 
+// Per-tag attribute whitelist. The Arabic verse spans carry
+// `class="ar-quote"` and `dir="rtl"` so the bidi algorithm renders the
+// ornate parentheses (﴿ ﴾) on the correct sides — those need to survive
+// sanitisation.
+const ALLOWED_ATTRS_BY_TAG = {
+  SPAN: new Set(['class', 'dir']),
+};
+
 const SECTIONS = [
   { act: 'meanings', valKey: 'meanings_val', keyKey: 'meanings_key' },
   { act: 'evidence', valKey: 'evidence_val', keyKey: 'evidence_key' },
@@ -425,7 +433,12 @@ function cleanNode(node) {
         child.replaceWith(document.createTextNode(child.textContent || ''));
         continue;
       }
-      for (const attr of [...child.attributes]) child.removeAttribute(attr.name);
+      const allowedAttrs = ALLOWED_ATTRS_BY_TAG[child.tagName];
+      for (const attr of [...child.attributes]) {
+        if (!allowedAttrs || !allowedAttrs.has(attr.name)) {
+          child.removeAttribute(attr.name);
+        }
+      }
       cleanNode(child);
     } else if (child.nodeType !== Node.TEXT_NODE) {
       child.remove();
