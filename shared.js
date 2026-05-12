@@ -1,13 +1,11 @@
-/* Shared helpers used by app.js (list page) and name.js (detail page). */
+/* Shared helpers for the single-language (ar) build. */
 
-export const RTL_LANGS = new Set(['ar', 'fa', 'ur']);
 export const DEFAULT_LANG = 'ar';
 
 export const $ = (s, r = document) => r.querySelector(s);
 export const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 
-export const UI_STRINGS = {
-  ar: {
+const UI_STRINGS_DATA = {
     search: 'البحث',
     clear_search: 'مسح البحث',
     language: 'اللغة',
@@ -35,70 +33,12 @@ export const UI_STRINGS = {
     no_audio: 'لا يوجد تسجيل صوتي لهذا الاسم',
     download: 'تنزيل الصورة',
     pwa_title: 'هو الله',
-  },
-  en: {
-    search: 'Search',
-    clear_search: 'Clear search',
-    language: 'Language',
-    favorites_show: 'Show favorites only',
-    favorites_all: 'Show all',
-    favorites_empty: 'No favorites yet',
-    play: 'Play',
-    pause: 'Pause',
-    loading: 'Loading…',
-    favorite: 'Add to favorites',
-    unfavorite: 'Remove from favorites',
-    short_meaning: 'Brief meaning',
-    meanings: 'Scholars’ sayings',
-    evidence: 'Evidence',
-    no_content: 'No content',
-    ar_only: 'This section is available in Arabic only',
-    copied: 'Copied',
-    share: 'Share',
-    share_failed: 'Sharing failed',
-    library: 'Media library',
-    home: 'Home',
-    no_results: 'No results',
-    load_failed: 'Could not load. Please refresh the page.',
-    not_found: 'Name not found',
-    no_audio: 'No audio for this name',
-    download: 'Download image',
-    pwa_title: 'He Is Allah',
-  },
-  uz: {
-    search: 'Қидирув',
-    clear_search: 'Қидирувни тозалаш',
-    language: 'Тил',
-    favorites_show: 'Фақат сараланганларни кўрсатиш',
-    favorites_all: 'Барчасини кўрсатиш',
-    favorites_empty: 'Сараланганлар ҳозирча йўқ',
-    play: 'Тинглаш',
-    pause: 'Тўхтатиш',
-    loading: 'Юкланмоқда…',
-    favorite: 'Сараланганларга қўшиш',
-    unfavorite: 'Сараланганлардан олиб ташлаш',
-    short_meaning: 'Қисқача маъноси',
-    meanings: 'Уламоларнинг сўзлари',
-    evidence: 'Далиллар',
-    no_content: 'Маълумот йўқ',
-    ar_only: 'Бу бўлим фақат араб тилида мавжуд',
-    copied: 'Нусхаланди',
-    share: 'Улашиш',
-    share_failed: 'Улашиб бўлмади',
-    library: 'Медиатека',
-    home: 'Бош саҳифа',
-    no_results: 'Натижа топилмади',
-    load_failed: 'Юклаб бўлмади. Илтимос, саҳифани янгиланг.',
-    not_found: 'Исм топилмади',
-    no_audio: 'Бу исм учун аудио мавжуд эмас',
-    download: 'Расмни юклаб олиш',
-    pwa_title: 'У — Аллоҳ',
-  },
-};
+  };
 
-export function tFor(lang, key) {
-  const set = UI_STRINGS[lang] || UI_STRINGS[DEFAULT_LANG];
-  return set[key] || UI_STRINGS[DEFAULT_LANG][key] || UI_STRINGS.en[key] || '';
+export const UI_STRINGS = { 'ar': UI_STRINGS_DATA };
+
+export function tFor(_lang, key) {
+  return UI_STRINGS_DATA[key] || '';
 }
 
 export async function loadJSON(path) {
@@ -107,29 +47,22 @@ export async function loadJSON(path) {
   return r.json();
 }
 
-export function applyDir(lang) {
-  document.documentElement.setAttribute('dir', RTL_LANGS.has(lang) ? 'rtl' : 'ltr');
-  document.documentElement.setAttribute('lang', lang);
+export function applyDir() {
+  document.documentElement.setAttribute('dir', 'rtl');
+  document.documentElement.setAttribute('lang', 'ar');
   const meta = document.querySelector('meta[name="apple-mobile-web-app-title"]');
-  if (meta) meta.setAttribute('content', tFor(lang, 'pwa_title'));
+  if (meta) meta.setAttribute('content', UI_STRINGS_DATA.pwa_title || '');
 }
 
-export function buildLangSelect(selectEl, languages, current) {
-  selectEl.innerHTML = languages
-    .map((l) => `<option value="${escapeHtml(l.code)}">${escapeHtml(l.name)}</option>`)
-    .join('');
-  selectEl.value = current;
-}
-
-export function localized(translations, name, lang) {
+export function localized(translations, name) {
   const tr = translations.get(name.id) || {};
-  return tr[lang] || tr[DEFAULT_LANG] || {};
+  return tr['ar'] || {};
 }
 
 export function escapeHtml(s) {
   return String(s ?? '').replace(/[&<>"']/g, (c) => ({
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
-  }[c]));
+  })[c]);
 }
 
 export function shortText(html) {
@@ -143,17 +76,14 @@ export function safePath(p) {
   if (typeof p !== 'string' || !p) return '';
   return /^images\/[\w-]+\.(jpe?g|png|webp)$/i.test(p) ? p : '';
 }
-
 export function safeSvgPath(p) {
   if (typeof p !== 'string' || !p) return '';
   return /^images\/[\w-]+\.svg$/i.test(p) ? p : '';
 }
-
 export function safeVoicePath(p) {
   if (typeof p !== 'string' || !p) return '';
   return /^voices\/[\w-]+\.mp3$/i.test(p) ? p : '';
 }
-
 export function safeColor(c) {
   if (typeof c !== 'string') return '';
   return /^#[0-9a-f]{3}([0-9a-f]{3})?$/i.test(c) ? c : '';
@@ -191,22 +121,7 @@ export function showToast(msg, timeout = 2400) {
   }, timeout);
 }
 
-/**
- * Wire an <audio> element to a play/pause toggle keyed by name id.
- * Caller provides:
- *   audio       - <audio> element
- *   getName(id) - returns name record or undefined
- *   getLang()   - current UI language (for the missing-audio toast)
- *   onChange()  - called whenever play state changes; UI repaints itself
- *
- * Returns { toggle(id), isPlaying(id), isLoading(id) }.
- *
- * Notes on the AbortError filter: when the user taps a different name while
- * one is already playing, audio.pause()+audio.src=… aborts the previous
- * play() promise with AbortError. That is normal and must NOT mark the new
- * track as missing.
- */
-export function createAudioController({ audio, getName, getLang, onChange }) {
+export function createAudioController({ audio, getName, onChange }) {
   const missing = new Set();
   let playingId = null;
   let loadingId = null;
@@ -216,20 +131,13 @@ export function createAudioController({ audio, getName, getLang, onChange }) {
     if (playingId === id) playingId = null;
     if (loadingId === id) loadingId = null;
     onChange();
-    showToast(tFor(getLang(), 'no_audio'));
+    showToast(UI_STRINGS_DATA.no_audio || '');
   };
 
   audio.addEventListener('playing', () => {
-    if (loadingId != null) {
-      loadingId = null;
-      onChange();
-    }
+    if (loadingId != null) { loadingId = null; onChange(); }
   });
-  audio.addEventListener('ended', () => {
-    playingId = null;
-    loadingId = null;
-    onChange();
-  });
+  audio.addEventListener('ended', () => { playingId = null; loadingId = null; onChange(); });
   audio.addEventListener('error', () => {
     if (playingId != null) fireMissing(playingId);
     else if (loadingId != null) fireMissing(loadingId);
@@ -239,7 +147,7 @@ export function createAudioController({ audio, getName, getLang, onChange }) {
     const name = getName(id);
     const safeVoice = name ? safeVoicePath(name.voice) : '';
     if (!safeVoice || missing.has(id)) {
-      showToast(tFor(getLang(), 'no_audio'));
+      showToast(UI_STRINGS_DATA.no_audio || '');
       onChange();
       return;
     }
@@ -257,8 +165,6 @@ export function createAudioController({ audio, getName, getLang, onChange }) {
     onChange();
     try {
       await audio.play();
-      // 'playing' event will clear loadingId; if play() resolved before that
-      // (some browsers), clear it here as a fallback.
       if (loadingId === id && !audio.paused) {
         loadingId = null;
         onChange();
@@ -277,11 +183,6 @@ export function createAudioController({ audio, getName, getLang, onChange }) {
   };
 }
 
-/**
- * Wire an <img>'s loaded/errored states without inline event-handler attrs
- * (so a strict CSP can stay enabled). Pair with markup that has the
- * `is-loading` class — it's removed once the image actually paints.
- */
 export function attachImgFade(img) {
   if (!img) return;
   if (img.complete && img.naturalWidth > 0) {

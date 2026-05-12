@@ -1,6 +1,4 @@
 import {
-  DEFAULT_LANG,
-  UI_STRINGS,
   $, $$,
   loadJSON, applyDir, localized,
   escapeHtml, shortText, safePath, safeSvgPath, safeColor,
@@ -9,15 +7,13 @@ import {
   tFor,
 } from './shared.js';
 
+const LANG = 'ar';
+
 const ALLOWED_HTML_TAGS = new Set([
   'P', 'BR', 'SPAN', 'STRONG', 'EM', 'B', 'I', 'U',
   'UL', 'OL', 'LI', 'BLOCKQUOTE', 'H3', 'H4', 'H5', 'HR',
 ]);
 
-// Per-tag attribute whitelist. The Arabic verse spans carry
-// `class="ar-quote"` and `dir="rtl"` so the bidi algorithm renders the
-// ornate parentheses (﴿ ﴾) on the correct sides — those need to survive
-// sanitisation.
 const ALLOWED_ATTRS_BY_TAG = {
   SPAN: new Set(['class', 'dir']),
 };
@@ -28,24 +24,22 @@ const SECTIONS = [
 ];
 
 function ui(key) {
-  return tFor(state.lang, key);
+  return tFor(LANG, key);
 }
 
 const state = {
   names: [],
   translations: new Map(),
-  languages: [],
-  lang: localStorage.getItem('lang') || DEFAULT_LANG,
+  lang: LANG,
   favorites: new Set(JSON.parse(localStorage.getItem('favorites') || '[]')),
   currentId: null,
-  cards: new Map(),   // gods_name_id -> [{ image, lang }, …]
+  cards: new Map(),
 };
 
 const audio = $('#audio');
 const audioCtrl = createAudioController({
   audio,
   getName: (id) => state.names.find((n) => n.id === id),
-  getLang: () => state.lang,
   onChange: refreshPlayingUI,
 });
 
@@ -62,12 +56,11 @@ async function init() {
 
   bindEvents();
 
-  let names, trans, langs, cards;
+  let names, trans, cards;
   try {
-    [names, trans, langs, cards] = await Promise.all([
+    [names, trans, cards] = await Promise.all([
       loadJSON('json/names.json'),
       loadJSON('json/name_translations.json'),
-      loadJSON('json/languages.json'),
       loadJSON('json/cards.json').catch((e) => { console.warn('cards.json:', e); return []; }),
     ]);
   } catch (err) {
@@ -79,35 +72,27 @@ async function init() {
 
   state.names = names.sort((a, b) => a.display_order - b.display_order);
 
-  // Show a language in the dropdown if it has either name-content
-  // translations or just UI strings (content then falls back to Arabic).
-  const transLangs = new Set(trans.map((t) => t.lang));
-  state.languages = langs.filter((l) => transLangs.has(l.code) || l.code in UI_STRINGS);
-
   for (const t of trans) {
     if (!state.translations.has(t.gods_name_id)) state.translations.set(t.gods_name_id, {});
     state.translations.get(t.gods_name_id)[t.lang] = t;
   }
-
   for (const c of cards) {
     if (!state.cards.has(c.gods_name_id)) state.cards.set(c.gods_name_id, []);
     state.cards.get(c.gods_name_id).push(c);
   }
-
-  if (!state.languages.find((l) => l.code === state.lang)) state.lang = DEFAULT_LANG;
 
   applyLangChrome();
   render();
 }
 
 function applyLangChrome() {
-  applyDir(state.lang);
+  applyDir();
   const home = $('#bar-home');
   if (home) home.setAttribute('aria-label', ui('home'));
 }
 
 function loc(name) {
-  return localized(state.translations, name, state.lang);
+  return localized(state.translations, name);
 }
 
 function render() {
@@ -173,8 +158,6 @@ function renderUiStrings() {
     const key = el.dataset.key;
     const text = ui(key);
     if (!text) return;
-    // If the element wraps a single <span> (used by section/library titles
-    // for the pill background), update the span so the styling survives.
     const span = el.querySelector(':scope > span');
     if (span && el.children.length === 1) {
       span.textContent = text;
@@ -184,38 +167,14 @@ function renderUiStrings() {
   });
 }
 
-/**
- * Build the visible sections. Sections with no content (after Arabic
- * fallback) are skipped entirely so the page only shows what's there.
- */
 function renderSections(name) {
   const t = loc(name);
-  const tr = state.translations.get(name.id) || {};
-  const tAr = tr.ar || {};
-  // If the user picked a language we don't have any name content for
-  // (e.g. uz before its translations land), every section is implicitly
-  // an Arabic fallback — surface the ar_only notice on every one of them.
-  const langWideFallback = !tr[state.lang] && state.lang !== DEFAULT_LANG;
   const sectionsEl = $('#sections');
   sectionsEl.replaceChildren();
 
   for (const s of SECTIONS) {
-    let html = t[s.valKey];
-    let entryKey = t[s.keyKey];
-    let usedFallback = langWideFallback;
-    if (!hasContent(html)) {
-      html = tAr[s.valKey];
-      entryKey = tAr[s.keyKey];
-      usedFallback = true;
-    }
+    const html = t[s.valKey];
     if (!hasContent(html)) continue;
-
-    // Per-name labels are heterogeneous in the source data — e.g. some
-    // entries carry their own Arabic key. Show the actual entry label
-    // when reading Arabic content; the generic UI label otherwise.
-    const showEntryKey = (state.lang === 'ar' || usedFallback)
-      && typeof entryKey === 'string' && entryKey.trim().length > 1;
-    const headLabel = showEntryKey ? entryKey : ui(s.act);
 
     const section = document.createElement('section');
     section.className = 'section';
@@ -225,23 +184,12 @@ function renderSections(name) {
     const head = document.createElement('div');
     head.className = 'section-head';
     const h3 = document.createElement('h3');
-    h3.textContent = headLabel;
+    h3.textContent = ui(s.act);
     head.appendChild(h3);
     section.appendChild(head);
 
-    if (usedFallback) {
-      const note = document.createElement('p');
-      note.className = 'section-note';
-      note.textContent = ui('ar_only');
-      section.appendChild(note);
-    }
-
     const body = document.createElement('div');
     body.className = 'section-body';
-    if (usedFallback) {
-      body.setAttribute('dir', 'rtl');
-      body.setAttribute('lang', 'ar');
-    }
     setSanitizedHTML(body, html);
     section.appendChild(body);
 
@@ -253,8 +201,6 @@ function hasContent(html) {
   if (!html) return false;
   return shortText(html).length > 5;
 }
-
-/* ================ visual library (cards + videos) ================ */
 
 function renderLibrary(name) {
   const lib = $('#library');
@@ -273,14 +219,9 @@ function renderLibrary(name) {
     img.alt = '';
     img.loading = 'lazy';
     img.decoding = 'async';
-    // Hide the whole card if the image isn't on disk yet (e.g. backfill
-    // workflow hasn't run for a freshly added entry).
     img.addEventListener('error', () => fig.remove(), { once: true });
     fig.appendChild(img);
 
-    // Overlay download button — uses <a download> so same-origin assets
-    // save directly without a fetch round-trip. The filename suggestion
-    // is the localized name plus an index so multiple cards stay distinct.
     const dl = document.createElement('a');
     dl.className = 'lib-card-download';
     dl.href = safe;
@@ -299,10 +240,9 @@ function renderLibrary(name) {
 
 function pickByLang(items) {
   if (!items.length) return [];
-  const native = items.filter((i) => i.lang === state.lang);
+  const native = items.filter((i) => i.lang === LANG);
   if (native.length) return native;
-  const ar = items.filter((i) => i.lang === DEFAULT_LANG);
-  return ar.length ? ar : items;
+  return items;
 }
 
 function safeCardPath(p) {
@@ -323,25 +263,17 @@ function suggestedDownloadName(nameRecord, path, index) {
 const NAV_LABEL = {
   ar: { prev: 'السابق', next: 'التالي' },
   uz: { prev: 'Олдинги', next: 'Кейинги' },
-  en: { prev: 'Previous', next: 'Next' },
 };
 
-/**
- * Update the prev / next bar buttons' targets and accessible labels.
- * The buttons are static markup in the top bar, sitting next to home;
- * we only swap the href / aria-label / disabled state on each render.
- */
 function renderPageNav(name) {
   const idx = state.names.findIndex((n) => n.id === name.id);
   const prev = state.names[idx - 1];
   const next = state.names[idx + 1];
-  const set = NAV_LABEL[state.lang] || NAV_LABEL.en;
+  const set = NAV_LABEL[LANG] || NAV_LABEL.ar;
   const rtl = document.documentElement.dir === 'rtl';
   fillBarNavLink($('#bar-prev'), prev, set.prev, rtl ? 'ArrowRight' : 'ArrowLeft');
   fillBarNavLink($('#bar-next'), next, set.next, rtl ? 'ArrowLeft' : 'ArrowRight');
 
-  // Subtle, discoverable hint that arrow keys also work. Only shows on
-  // devices that have a fine pointer (i.e. a keyboard is likely available).
   const hint = $('#kbd-hint');
   if (hint) {
     const prevKey = rtl ? '→' : '←';
@@ -370,11 +302,7 @@ function fillBarNavLink(el, target, roleLabel, keyShortcut) {
   el.setAttribute('aria-label', fullLabel);
   el.setAttribute('title', fullLabel);
   el.setAttribute('aria-keyshortcuts', keyShortcut);
-  // In Arabic mode keep the Arabic script (target.default_name).
-  // In every other language fall back to the localised transliteration
-  // (e.g. "Ал-Бариъ" in Uzbek) so the nav reads in the user's script.
-  const navName = state.lang === DEFAULT_LANG ? target.default_name : (tr.name || target.default_name);
-  if (nameEl) nameEl.textContent = navName;
+  if (nameEl) nameEl.textContent = target.default_name;
 }
 
 function refreshPlayingUI() {
