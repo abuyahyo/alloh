@@ -38,7 +38,7 @@ html { touch-action: manipulation; }
   --font-arabic: 'Cairo', 'Amiri', 'Noto Naskh Arabic', system-ui, sans-serif;
   --font-arabic-body: 'Amiri', 'Noto Naskh Arabic', 'Scheherazade New', Georgia, serif;
   --font-quran: 'Amiri Quran', 'Amiri', serif;
-  --font-ui: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-ui: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 
   --content-w: 720px;
   --ease: cubic-bezier(0.32, 0.72, 0.24, 1);
