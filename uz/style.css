@@ -120,7 +120,12 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
 .search-shell {
   max-width: var(--content-w);
   margin: 0 auto;
-  padding: 0 1.25rem;
+  /* The old multi-language top-bar that used to sit above the search box
+     reserved the iOS safe-area top inset; with the picker gone the
+     search bar would otherwise butt up against the status bar / notch.
+     Re-add that reservation here so the first interactive control
+     never overlaps the system UI. */
+  padding: max(0.75rem, env(safe-area-inset-top)) 1.25rem 0;
 }
 
 .search {
