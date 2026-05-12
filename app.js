@@ -211,7 +211,17 @@ function toggleFav(id) {
 
 function bindGlobalEvents() {
   $('#lang').addEventListener('change', (e) => {
-    state.lang = e.target.value;
+    const newLang = e.target.value;
+    if (newLang === state.lang) return;
+    // Each language has its own standalone build at /<lang>/. Navigate
+    // there so the URL reflects the active edition and that build's
+    // service worker controls the page, instead of swapping content in
+    // place on the multi-lang index.
+    if (newLang === 'ar' || newLang === 'uz') {
+      location.assign(`${newLang}/`);
+      return;
+    }
+    state.lang = newLang;
     localStorage.setItem('lang', state.lang);
     applyLangChrome();
     renderList();
