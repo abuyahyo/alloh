@@ -6,5 +6,21 @@
     "color": "#1f2a26",
     "title_val": "",
     "body_val": ""
+  },
+  {
+    "id": 2,
+    "display_order": 2,
+    "image": "images/about-02.jpg",
+    "color": "#161f20",
+    "title_val": "",
+    "body_val": ""
+  },
+  {
+    "id": 3,
+    "display_order": 3,
+    "image": "images/about-03.jpg",
+    "color": "#181b1e",
+    "title_val": "",
+    "body_val": ""
   }
 ]
