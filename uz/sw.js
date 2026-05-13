@@ -12,7 +12,7 @@
  * Bump CACHE on every deploy so old caches are evicted on activate.
  */
 
-const CACHE = 'alloh-v2026051308';
+const CACHE = 'alloh-v2026051309';
 
 self.addEventListener('install', (event) => {
   // A new worker should take over the page on the next navigation rather
