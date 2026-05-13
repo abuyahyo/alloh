@@ -10,8 +10,8 @@
   {
     "id": 2,
     "display_order": 2,
-    "image": "",
-    "color": "",
+    "image": "images/about-02.jpg",
+    "color": "#161f20",
     "title_val": "",
     "body_val": ""
   },
