@@ -69,12 +69,16 @@ together to the same GitHub Pages site.
 - `name.html?id=<gods_name_id>` → `name.js` renders the detail view:
   hero, short meaning, scholars' meanings, evidence, prev/next nav,
   and (Arabic edition only) the visual library.
-- `shared.js` exports DOM helpers, the UI string table for this
-  edition's language, sanitized path validators (`safePath`,
-  `safeSvgPath`, `safeVoicePath`, `safeColor`), inline SVG icons, the
-  toast helper, and `createAudioController` — the single audio element
-  is owned at the page level and the controller tracks `playingId` /
-  `loadingId` for UI sync.
+- `shared.js` exports:
+  - DOM helpers (`$`, `$$`) and `loadJSON`.
+  - The UI string table for this edition's language plus `tFor`.
+  - Path validators (`safePath`, `safeSvgPath`, `safeVoicePath`,
+    `safeColor`) — anything not matching the regex is dropped before
+    use, so untrusted JSON cannot inject arbitrary URLs.
+  - Inline SVG icons and the `showToast` helper.
+  - `createAudioController` — owns the single page-level `<audio>`
+    element and tracks `playingId` / `loadingId` so the play/pause/
+    spinner UI stays in sync.
 - `sw.js` is **network-first for HTML navigations** (so deploys land
   immediately) and **cache-first for everything else** (which is safe
   because non-HTML assets are versioned via `?v=` query strings).
@@ -104,9 +108,11 @@ intentional, not an oversight:
 
 - `/uz/json/` does **not** contain `cards.json`.
 - `/uz/name.html` has no `#library` section markup.
-- `/uz/name.js` does not load `cards.json`, has no `renderLibrary`,
-  `pickByLang`, `safeCardPath`, or `suggestedDownloadName`, and does
-  not import `iconDownload`.
+- `/uz/name.js`:
+  - does not load `cards.json`.
+  - has no `renderLibrary`, `pickByLang`, `safeCardPath`, or
+    `suggestedDownloadName`.
+  - does not import `iconDownload`.
 - `/uz/shared.js` does not export `iconDownload`.
 
 When mirroring a change that touches the library code path, leave the
@@ -189,14 +195,14 @@ changes to either whitelist must be mirrored.
 ## Translation data
 
 - `json/name_translations.json` — 100 records per edition, keyed by
-  `gods_name_id`, each with: `short_meaning_val`, `meanings_val`
+  `gods_name_id`. Each record has `short_meaning_val`, `meanings_val`
   (scholars' explanations), `evidence_val`, `name` (transliteration),
-  and matching `*_key` fields. In the `uz` edition `evidence_val`
-  carries Arabic verses wrapped in `<span dir="rtl" class="ar-quote">`
-  alongside their Uzbek translation; in the `ar` edition the same
-  field is pure Arabic.
-- Audio file path is `voice` on the `names.json` record (validated by
-  `safeVoicePath`), not on the translation record.
+  and matching `*_key` fields.
+- `evidence_val` is bilingual in the `uz` edition only — Arabic verses
+  wrapped in `<span dir="rtl" class="ar-quote">` next to their Uzbek
+  translation. In the `ar` edition the same field is pure Arabic.
+- Audio file path lives on the `names.json` record as `voice`
+  (validated by `safeVoicePath`), not on the translation record.
 - Uzbek transliterations of names follow Tashkent reading conventions
   already established in `/uz/json/name_translations.json` —
   e.g. Мусоввир (#14), Хофиз (#23), Муқоддим (#59).
