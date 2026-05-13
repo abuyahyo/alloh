@@ -6,5 +6,13 @@
     "color": "#1f2a26",
     "title_val": "",
     "body_val": ""
+  },
+  {
+    "id": 2,
+    "display_order": 2,
+    "image": "",
+    "color": "",
+    "title_val": "",
+    "body_val": ""
   }
 ]
