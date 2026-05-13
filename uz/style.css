@@ -485,9 +485,16 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
 
 /* The arrow SVGs are drawn for LTR semantics (prev = ←, next = →).
    In RTL the meanings invert visually, so flip both icons. */
-[dir="rtl"] #bar-prev .bar-btn-icon,
-[dir="rtl"] #bar-next .bar-btn-icon {
+[dir="rtl"] .nav-prev .bar-btn-icon,
+[dir="rtl"] .nav-next .bar-btn-icon {
   transform: scaleX(-1);
+}
+
+/* Bottom navigation bar: same chrome as the top, but anchored at the end
+   of the content so readers don't have to scroll back up to advance. */
+.detail-bar-bottom {
+  padding: 0.75rem 1.25rem max(0.75rem, env(safe-area-inset-bottom));
+  margin-top: 1.5rem;
 }
 
 .sections {

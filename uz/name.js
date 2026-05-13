@@ -81,8 +81,7 @@ async function init() {
 
 function applyLangChrome() {
   applyDir();
-  const home = $('#bar-home');
-  if (home) home.setAttribute('aria-label', ui('home'));
+  $$('.nav-home').forEach((home) => home.setAttribute('aria-label', ui('home')));
 }
 
 function loc(name) {
@@ -206,8 +205,8 @@ function renderPageNav(name) {
   const next = state.names[idx + 1];
   const set = NAV_LABEL[LANG] || NAV_LABEL.ar;
   const rtl = document.documentElement.dir === 'rtl';
-  fillBarNavLink($('#bar-prev'), prev, set.prev, rtl ? 'ArrowRight' : 'ArrowLeft');
-  fillBarNavLink($('#bar-next'), next, set.next, rtl ? 'ArrowLeft' : 'ArrowRight');
+  $$('.nav-prev').forEach((el) => fillBarNavLink(el, prev, set.prev, rtl ? 'ArrowRight' : 'ArrowLeft'));
+  $$('.nav-next').forEach((el) => fillBarNavLink(el, next, set.next, rtl ? 'ArrowLeft' : 'ArrowRight'));
 
   const hint = $('#kbd-hint');
   if (hint) {
