@@ -90,8 +90,19 @@ the wrong sides. Keep `class` and `dir` in this whitelist.
 - Arabic body: Amiri
 - Quranic calligraphy lines: Amiri Quran
 - Theme is dark-only; `<html data-theme="dark">` is set inline in `<head>`.
-- The header bar reserves iOS notch space via
-  `padding-top: max(0.75rem, env(safe-area-inset-top))`.
+- iOS notch space on the detail page is reserved by `.detail-main`
+  via `padding-top: max(0.75rem, env(safe-area-inset-top))`. There
+  is no longer a top header — see the detail-page nav section.
+
+## Detail-page navigation
+
+`name.html` has a single floating dock pinned to the bottom of the
+viewport: `<nav class="detail-bar detail-bar-bottom">` inside `<main>`.
+It carries prev / home / next anchors marked with the `.nav-prev`,
+`.nav-home`, `.nav-next` class hooks. `name.js` populates them via
+`$$('.nav-*').forEach(…)` so adding a second dock copy elsewhere
+"just works." `.detail-body` reserves ~80px + `safe-area-inset-bottom`
+of bottom padding so the last paragraph isn't hidden behind the dock.
 
 ## Workflow
 
