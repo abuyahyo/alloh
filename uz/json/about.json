@@ -18,8 +18,8 @@
   {
     "id": 3,
     "display_order": 3,
-    "image": "",
-    "color": "",
+    "image": "images/about-03.jpg",
+    "color": "#181b1e",
     "title_val": "",
     "body_val": ""
   }
