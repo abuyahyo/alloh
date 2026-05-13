@@ -415,7 +415,9 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
   justify-content: center;
   gap: 0.5rem;
   padding: max(0.75rem, env(safe-area-inset-top)) 1.25rem 0.75rem;
-  position: relative;
+  position: sticky;
+  top: 0;
+  z-index: 10;
   background: var(--bg);
   max-width: var(--content-w);
   margin: 0 auto;
