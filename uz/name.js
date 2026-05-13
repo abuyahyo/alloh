@@ -44,6 +44,8 @@ const audioCtrl = createAudioController({
 
 
 async function init() {
+  applyTextSize(loadTextSize());
+
   const params = new URLSearchParams(location.search);
   const idParam = params.get('id');
   const id = idParam ? Number(idParam) : NaN;
@@ -83,6 +85,48 @@ function applyLangChrome() {
   applyDir();
   const home = $('#bar-home');
   if (home) home.setAttribute('aria-label', ui('home'));
+  applyTextSize(loadTextSize());
+  renderTextSizeControls();
+}
+
+const TEXT_SIZES = ['sm', 'md', 'lg'];
+
+function loadTextSize() {
+  const v = localStorage.getItem('textSize');
+  return TEXT_SIZES.includes(v) ? v : 'md';
+}
+
+function applyTextSize(size) {
+  if (size === 'md') document.documentElement.removeAttribute('data-text-size');
+  else document.documentElement.setAttribute('data-text-size', size);
+}
+
+function renderTextSizeControls() {
+  const root = $('#text-size-controls');
+  if (!root) return;
+  root.setAttribute('aria-label', ui('text_size'));
+  const current = loadTextSize();
+  for (const btn of root.querySelectorAll('.text-size-btn')) {
+    const size = btn.dataset.size;
+    const label = ui('text_size_' + size);
+    btn.setAttribute('aria-label', label);
+    btn.setAttribute('title', label);
+    btn.setAttribute('aria-pressed', size === current ? 'true' : 'false');
+  }
+}
+
+function bindTextSizeControls() {
+  const root = $('#text-size-controls');
+  if (!root) return;
+  root.addEventListener('click', (e) => {
+    const btn = e.target.closest('.text-size-btn');
+    if (!btn) return;
+    const size = btn.dataset.size;
+    if (!TEXT_SIZES.includes(size)) return;
+    localStorage.setItem('textSize', size);
+    applyTextSize(size);
+    renderTextSizeControls();
+  });
 }
 
 function loc(name) {
@@ -267,6 +311,7 @@ function toggleFav(id) {
 }
 
 function bindEvents() {
+  bindTextSizeControls();
   $('#hero').addEventListener('click', (e) => {
     const action = e.target.closest('[data-action]');
     if (!action) return;

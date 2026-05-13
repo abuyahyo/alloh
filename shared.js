@@ -32,6 +32,10 @@ const UI_STRINGS_DATA = {
     not_found: 'الاسم غير موجود',
     no_audio: 'لا يوجد تسجيل صوتي لهذا الاسم',
     download: 'تنزيل الصورة',
+    text_size: 'حجم النص',
+    text_size_sm: 'صغير',
+    text_size_md: 'عادي',
+    text_size_lg: 'كبير',
     pwa_title: 'هو الله',
   };
 
