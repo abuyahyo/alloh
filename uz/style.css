@@ -43,6 +43,8 @@ html { touch-action: manipulation; }
   --content-w: 720px;
   --ease: cubic-bezier(0.32, 0.72, 0.24, 1);
 
+  --text-scale: 1;
+
   color-scheme: dark;
 }
 
@@ -549,7 +551,7 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
 
 .section-body {
   font-family: var(--font-ui);
-  font-size: 1rem;
+  font-size: calc(1rem * var(--text-scale));
   line-height: 1.75;
   color: var(--ink-soft);
   font-weight: 400;
@@ -557,7 +559,7 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
 [lang="ar"] .section-body,
 [dir="rtl"] .section-body {
   font-family: var(--font-arabic-body);
-  font-size: 1.2rem;
+  font-size: calc(1.2rem * var(--text-scale));
   line-height: 2;
 }
 .section-body p + p { margin-top: 0.75rem; }
@@ -693,6 +695,49 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
 @media (pointer: coarse) {
   .kbd-hint { display: none; }
 }
+
+/* =========================================================================
+   Body-text size controls (detail page, three levels)
+   ========================================================================= */
+
+:root[data-text-size="sm"] { --text-scale: 0.9; }
+:root[data-text-size="lg"] { --text-scale: 1.18; }
+
+.text-size-controls {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  margin: 1.5rem 0 0.25rem;
+}
+
+.text-size-btn {
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-2);
+  color: var(--ink-soft);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-md);
+  font-family: var(--font-ui);
+  font-weight: 700;
+  transition: background 0.15s var(--ease), color 0.15s var(--ease), border-color 0.15s var(--ease), transform 0.12s var(--ease);
+}
+.text-size-btn:hover { background: var(--surface); color: var(--ink); }
+.text-size-btn:active { transform: scale(0.96); }
+.text-size-btn:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+.text-size-btn[aria-pressed="true"] {
+  background: var(--surface);
+  color: var(--ink);
+  border-color: var(--ink-soft);
+}
+.text-size-btn[data-size="sm"] { font-size: 0.85rem; }
+.text-size-btn[data-size="md"] { font-size: 1rem; }
+.text-size-btn[data-size="lg"] { font-size: 1.2rem; }
 
 /* =========================================================================
    Larger screens

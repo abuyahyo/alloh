@@ -30,6 +30,10 @@ const UI_STRINGS_DATA = {
     load_failed: 'Юклаб бўлмади. Илтимос, саҳифани янгиланг.',
     not_found: 'Исм топилмади',
     no_audio: 'Бу исм учун аудио мавжуд эмас',
+    text_size: 'Шрифт ўлчами',
+    text_size_sm: 'Кичик',
+    text_size_md: 'Нормал',
+    text_size_lg: 'Катта',
     pwa_title: 'У — Аллоҳ',
   };
 
