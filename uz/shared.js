@@ -25,13 +25,11 @@ const UI_STRINGS_DATA = {
     copied: 'Нусхаланди',
     share: 'Улашиш',
     share_failed: 'Улашиб бўлмади',
-    library: 'Медиатека',
     home: 'Бош саҳифа',
     no_results: 'Натижа топилмади',
     load_failed: 'Юклаб бўлмади. Илтимос, саҳифани янгиланг.',
     not_found: 'Исм топилмади',
     no_audio: 'Бу исм учун аудио мавжуд эмас',
-    download: 'Расмни юклаб олиш',
     pwa_title: 'У — Аллоҳ',
   };
 
@@ -104,10 +102,6 @@ export function iconHeart() {
 export function iconClose() {
   return `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>`;
 }
-export function iconDownload() {
-  return `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v12M6 11l6 6 6-6M5 20h14"/></svg>`;
-}
-
 export function showToast(msg, timeout = 2400) {
   const toast = $('#toast');
   if (!toast) return;
