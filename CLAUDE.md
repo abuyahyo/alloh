@@ -152,11 +152,15 @@ changes to either whitelist must be mirrored.
 
 ## Translation data
 
-- `json/name_translations.json` — 100 records per edition, each with:
-  `meanings_val` (uniform paragraph of scholars' explanations),
-  `evidence_val` (bilingual Arabic verse + translation, Uzbek only),
-  `short_meaning_val`, `name` (transliteration), and `recitation_audio`
-  fields. Records are keyed by `gods_name_id`.
+- `json/name_translations.json` — 100 records per edition, keyed by
+  `gods_name_id`, each with: `short_meaning_val`, `meanings_val`
+  (scholars' explanations), `evidence_val`, `name` (transliteration),
+  and matching `*_key` fields. In the `uz` edition `evidence_val`
+  carries Arabic verses wrapped in `<span dir="rtl" class="ar-quote">`
+  alongside their Uzbek translation; in the `ar` edition the same
+  field is pure Arabic.
+- Audio file path is `voice` on the `names.json` record (validated by
+  `safeVoicePath`), not on the translation record.
 - Uzbek transliterations of names follow Tashkent reading conventions
   already established in `/uz/json/name_translations.json` —
   e.g. Мусоввир (#14), Хофиз (#23), Муқоддим (#59).
