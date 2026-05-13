@@ -123,9 +123,12 @@ function bindTextSizeControls() {
     if (!btn) return;
     const size = btn.dataset.size;
     if (!TEXT_SIZES.includes(size)) return;
+    const anchorTop = btn.getBoundingClientRect().top;
     localStorage.setItem('textSize', size);
     applyTextSize(size);
     renderTextSizeControls();
+    const delta = btn.getBoundingClientRect().top - anchorTop;
+    if (delta) window.scrollBy({ top: delta, left: 0, behavior: 'instant' });
   });
 }
 
