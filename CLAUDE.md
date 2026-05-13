@@ -108,12 +108,21 @@ A single version string lives in **ten places** and must move together
 on every deploy. Use `YYYYMMDDHH` or `YYYYMMDDHHMM` style — pick one
 string and apply it everywhere in one commit.
 
+Service worker cache constants (2):
+
 1. `sw.js` → `const CACHE = 'alloh-v<version>';`
 2. `uz/sw.js` → same constant
-3. `index.html` → `style.css?v=<version>` and `app.js?v=<version>`
-4. `name.html` → `style.css?v=<version>` and `name.js?v=<version>`
-5. `uz/index.html` → both `?v=...` entries
-6. `uz/name.html` → both `?v=...` entries
+
+HTML `?v=` query strings (8):
+
+3. `index.html` → `style.css?v=<version>`
+4. `index.html` → `app.js?v=<version>`
+5. `name.html` → `style.css?v=<version>`
+6. `name.html` → `name.js?v=<version>`
+7. `uz/index.html` → `style.css?v=<version>`
+8. `uz/index.html` → `app.js?v=<version>`
+9. `uz/name.html` → `style.css?v=<version>`
+10. `uz/name.html` → `name.js?v=<version>`
 
 The current deployed version can be found by grepping `?v=` across the
 HTMLs (they should all match). HTML responses are network-first, so the
