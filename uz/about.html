@@ -1,22 +1,19 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="uz" dir="ltr">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <meta name="description" content="الأسماء الحسنى التسعة والتسعون (أسماء الله الحسنى) — العربية، التلاوة الصوتية، الخط، والمعاني.">
+  <meta name="description" content="Аллоҳнинг гўзал исмлари ҳақида — манбалар, тоифалар ва ҳукмлар.">
   <meta name="theme-color" content="#0c0c0f">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="هو الله">
+  <meta name="apple-mobile-web-app-title" content="У — Аллоҳ">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png">
   <link rel="manifest" href="manifest.webmanifest">
-  <meta property="og:title" content="هو الله — Asmaa-ul-Husna">
-  <meta property="og:type" content="article">
-  <meta property="og:image" content="icons/icon-512.png">
-  <title id="page-title">هو الله — Asmaa-ul-Husna</title>
+  <title id="page-title">Исмлар ҳақида — У — Аллоҳ</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri+Quran&family=Amiri:wght@400;700&family=Cairo:wght@600;700&display=swap">
@@ -38,54 +35,38 @@
   <a class="skip-link" href="#main">Skip to content</a>
 
   <header class="detail-bar">
-    <a class="bar-btn bar-btn-named" id="bar-prev" rel="prev" aria-label="Previous">
+    <a class="bar-btn" id="bar-back" href="about.html" rel="prev" aria-label="Орқага" hidden>
       <svg class="bar-btn-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <path d="M19 12H5M12 5l-7 7 7 7"/>
       </svg>
-      <span class="bar-btn-name" dir="auto"></span>
     </a>
-    <a class="bar-btn home" id="bar-home" href="index.html" aria-label="Home">
+    <a class="bar-btn home" id="bar-home" href="index.html" aria-label="Бош саҳифа">
       <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <path d="M4 11.5L12 5l8 6.5V20a1 1 0 0 1-1 1h-4v-6h-6v6H5a1 1 0 0 1-1-1z"/>
       </svg>
     </a>
-    <a class="bar-btn bar-btn-named" id="bar-next" rel="next" aria-label="Next">
-      <span class="bar-btn-name" dir="auto"></span>
-      <svg class="bar-btn-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <path d="M5 12h14M12 5l7 7-7 7"/>
-      </svg>
-    </a>
+    <div class="bar-btn bar-spacer" aria-hidden="true"></div>
   </header>
 
   <main id="main" class="detail-main">
-    <article class="hero-card" id="hero" aria-busy="true"></article>
-
-    <section class="section">
-      <div class="section-head"><h3 data-key="short_meaning"></h3></div>
-      <div class="section-body" id="meaning"></div>
-    </section>
-
-    <div class="sections" id="sections"></div>
-
-    <section class="library" id="library" hidden>
-      <h3 class="library-title" data-key="library"><span></span></h3>
-      <div class="library-pane" id="lib-cards"></div>
-    </section>
-
-    <p class="kbd-hint" id="kbd-hint" hidden></p>
-
-    <div class="text-size-controls" id="text-size-controls" role="group">
-      <button class="text-size-btn" data-size="sm" type="button">A−</button>
-      <button class="text-size-btn" data-size="md" type="button">A</button>
-      <button class="text-size-btn" data-size="lg" type="button">A+</button>
-    </div>
+    <div id="list-view" class="about-list" aria-busy="true"></div>
+    <article id="detail-view" hidden>
+      <div class="hero-card about-hero" id="about-hero" aria-busy="true"></div>
+      <h2 class="about-detail-title" id="about-title"></h2>
+      <section class="section">
+        <div class="section-body" id="about-body"></div>
+      </section>
+      <div class="text-size-controls" id="text-size-controls" role="group">
+        <button class="text-size-btn" data-size="sm" type="button">A−</button>
+        <button class="text-size-btn" data-size="md" type="button">A</button>
+        <button class="text-size-btn" data-size="lg" type="button">A+</button>
+      </div>
+    </article>
   </main>
-
-  <audio id="audio" preload="none"></audio>
 
   <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
 
-  <script type="module" src="name.js?v=2026051400"></script>
+  <script type="module" src="about.js?v=2026051400"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function () {
