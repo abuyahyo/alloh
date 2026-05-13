@@ -2,7 +2,7 @@ import {
   $, $$,
   loadJSON, applyDir, localized,
   escapeHtml, shortText, safePath, safeSvgPath, safeColor,
-  iconPlay, iconPause, iconLoading, iconHeart, iconDownload,
+  iconPlay, iconPause, iconLoading, iconHeart,
   createAudioController, attachImgFade,
   tFor,
 } from './shared.js';
@@ -33,7 +33,6 @@ const state = {
   lang: LANG,
   favorites: new Set(JSON.parse(localStorage.getItem('favorites') || '[]')),
   currentId: null,
-  cards: new Map(),
 };
 
 const audio = $('#audio');
@@ -56,12 +55,11 @@ async function init() {
 
   bindEvents();
 
-  let names, trans, cards;
+  let names, trans;
   try {
-    [names, trans, cards] = await Promise.all([
+    [names, trans] = await Promise.all([
       loadJSON('json/names.json'),
       loadJSON('json/name_translations.json'),
-      loadJSON('json/cards.json').catch((e) => { console.warn('cards.json:', e); return []; }),
     ]);
   } catch (err) {
     console.error(err);
@@ -75,10 +73,6 @@ async function init() {
   for (const t of trans) {
     if (!state.translations.has(t.gods_name_id)) state.translations.set(t.gods_name_id, {});
     state.translations.get(t.gods_name_id)[t.lang] = t;
-  }
-  for (const c of cards) {
-    if (!state.cards.has(c.gods_name_id)) state.cards.set(c.gods_name_id, []);
-    state.cards.get(c.gods_name_id).push(c);
   }
 
   applyLangChrome();
@@ -149,7 +143,6 @@ function render() {
   setSanitizedHTML($('#meaning'), t.short_meaning_val);
   renderUiStrings();
   renderSections(name);
-  renderLibrary(name);
   renderPageNav(name);
 }
 
@@ -200,64 +193,6 @@ function renderSections(name) {
 function hasContent(html) {
   if (!html) return false;
   return shortText(html).length > 5;
-}
-
-function renderLibrary(name) {
-  const lib = $('#library');
-  const cardsPane = $('#lib-cards');
-
-  const cards = pickByLang(state.cards.get(name.id) || []);
-
-  cardsPane.replaceChildren();
-  cards.forEach((c, i) => {
-    const safe = safeCardPath(c.image);
-    if (!safe) return;
-    const fig = document.createElement('figure');
-    fig.className = 'lib-card';
-    const img = document.createElement('img');
-    img.src = safe;
-    img.alt = '';
-    img.loading = 'lazy';
-    img.decoding = 'async';
-    img.addEventListener('error', () => fig.remove(), { once: true });
-    fig.appendChild(img);
-
-    const dl = document.createElement('a');
-    dl.className = 'lib-card-download';
-    dl.href = safe;
-    dl.download = suggestedDownloadName(name, safe, i);
-    const label = ui('download');
-    dl.setAttribute('aria-label', label);
-    dl.setAttribute('title', label);
-    dl.innerHTML = iconDownload();
-    fig.appendChild(dl);
-
-    cardsPane.appendChild(fig);
-  });
-
-  lib.hidden = cardsPane.children.length === 0;
-}
-
-function pickByLang(items) {
-  if (!items.length) return [];
-  const native = items.filter((i) => i.lang === LANG);
-  if (native.length) return native;
-  return items;
-}
-
-function safeCardPath(p) {
-  if (typeof p !== 'string' || !p) return '';
-  return /^(cards|images)\/[\w-]+\.(jpe?g|png|webp)$/i.test(p) ? p : '';
-}
-
-function suggestedDownloadName(nameRecord, path, index) {
-  const ext = (path.match(/\.([a-z0-9]+)$/i)?.[1] || 'jpg').toLowerCase();
-  const tr = loc(nameRecord);
-  const base = (tr.name || nameRecord.default_name)
-    .replace(/[\\/:*?"<>|]/g, '')
-    .replace(/\s+/g, ' ')
-    .trim() || 'card';
-  return `${base}-${index + 1}.${ext}`;
 }
 
 const NAV_LABEL = {
