@@ -2,6 +2,20 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Contents
+
+- [Project](#project)
+- [Local development](#local-development)
+- [Architecture](#architecture)
+- [Mirror rule (with one documented exception)](#mirror-rule-with-one-documented-exception)
+- [Cache busting](#cache-busting)
+- [Sanitizer constraint (do not regress)](#sanitizer-constraint-do-not-regress)
+- [Translation data](#translation-data)
+- [Asset backfill (GitHub Actions)](#asset-backfill-github-actions)
+- [Fonts and styling](#fonts-and-styling)
+- [Git workflow](#git-workflow)
+- [Don'ts](#donts)
+
 ## Project
 
 A Progressive Web App for the 99 Beautiful Names of Allah (Asmaa-ul-Husna).
@@ -48,7 +62,7 @@ together to the same GitHub Pages site.
   icons/, images/, voices/, manifest.webmanifest
 ```
 
-Page wiring:
+### Page wiring
 
 - `index.html` → `app.js` renders the grid of name cards, search,
   favorites toggle, and per-card audio playback.
@@ -65,7 +79,7 @@ Page wiring:
   immediately) and **cache-first for everything else** (which is safe
   because non-HTML assets are versioned via `?v=` query strings).
 
-Data flow (both editions):
+### Data flow (both editions)
 
 1. `app.js` / `name.js` `Promise.all`-loads `json/names.json` and
    `json/name_translations.json` (and `cards.json` for ar only).
@@ -219,7 +233,7 @@ inspect the script on `main` rather than re-fetching media by hand.
 - The header bar reserves iOS notch space via
   `padding-top: max(0.75rem, env(safe-area-inset-top))`.
 
-## Workflow
+## Git workflow
 
 1. Develop on the branch named in the session instructions. Create it
    locally if missing.
