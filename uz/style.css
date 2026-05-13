@@ -361,12 +361,12 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
    Detail page (name.html)
    ========================================================================= */
 
-.detail-body { padding-bottom: env(safe-area-inset-bottom); }
+.detail-body { padding-bottom: calc(env(safe-area-inset-bottom) + 80px); }
 
 .detail-main {
   max-width: var(--content-w);
   margin: 0 auto;
-  padding: 0.5rem 1.25rem calc(env(safe-area-inset-bottom) + 1.5rem);
+  padding: max(0.75rem, env(safe-area-inset-top)) 1.25rem 1.5rem;
 }
 
 .hero-card {
@@ -490,11 +490,26 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
   transform: scaleX(-1);
 }
 
-/* Bottom navigation bar: same chrome as the top, but anchored at the end
-   of the content so readers don't have to scroll back up to advance. */
+/* Floating navigation dock: pinned to the bottom of the viewport so
+   prev / home / next stay within reach while reading. */
 .detail-bar-bottom {
-  padding: 0.75rem 1.25rem max(0.75rem, env(safe-area-inset-bottom));
-  margin-top: 1.5rem;
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: var(--content-w);
+  padding: 0.5rem 1rem max(0.5rem, env(safe-area-inset-bottom));
+  margin: 0;
+  min-height: auto;
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid var(--rule);
+  border-bottom: 0;
+  border-radius: 1rem 1rem 0 0;
+  box-shadow: 0 -6px 24px rgba(0, 0, 0, 0.35);
+  z-index: 10;
 }
 
 .sections {
