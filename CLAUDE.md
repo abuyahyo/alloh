@@ -133,6 +133,19 @@ A partial bump (e.g. `sw.js` without the HTMLs, or one edition without
 the other) leaves users with mismatched assets — don't ship one without
 the other.
 
+To bump all ten in one shot, replace `<OLD>` and `<NEW>` and run:
+
+```sh
+sed -i 's/<OLD>/<NEW>/g' \
+  sw.js uz/sw.js \
+  index.html name.html \
+  uz/index.html uz/name.html
+```
+
+Then verify with
+`grep -RnE 'alloh-v[0-9]+|\?v=[0-9]+' sw.js uz/sw.js *.html uz/*.html`
+— every match should show `<NEW>` and there should be exactly ten.
+
 ## Sanitizer constraint (do not regress)
 
 `name.js` renders sanitized HTML fragments from the translation JSON.
