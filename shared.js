@@ -32,6 +32,8 @@ const UI_STRINGS_DATA = {
     not_found: 'الاسم غير موجود',
     no_audio: 'لا يوجد تسجيل صوتي لهذا الاسم',
     download: 'تنزيل الصورة',
+    about_title: 'عن الأسماء',
+    about_link: 'عن الأسماء',
     text_size: 'حجم النص',
     text_size_sm: 'صغير',
     text_size_md: 'عادي',

@@ -30,6 +30,8 @@ const UI_STRINGS_DATA = {
     load_failed: 'Юклаб бўлмади. Илтимос, саҳифани янгиланг.',
     not_found: 'Исм топилмади',
     no_audio: 'Бу исм учун аудио мавжуд эмас',
+    about_title: 'Исмлар ҳақида',
+    about_link: 'Исмлар ҳақида',
     text_size: 'Шрифт ўлчами',
     text_size_sm: 'Кичик',
     text_size_md: 'Нормал',
