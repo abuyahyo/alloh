@@ -762,15 +762,16 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
 
 .about-card-title {
   position: absolute;
-  bottom: 0.95rem;
+  top: 50%;
   inset-inline-start: 1.1rem;
   inset-inline-end: 1.1rem;
+  transform: translateY(-50%);
   font-family: var(--font-arabic);
   font-weight: 700;
   font-size: 1.25rem;
   line-height: 1.35;
   color: var(--ink);
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.75);
 }
 [dir="rtl"] .about-card-title { text-align: right; }
 
