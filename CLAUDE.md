@@ -10,6 +10,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - [Mirror rule (with one documented exception)](#mirror-rule-with-one-documented-exception)
 - [Cache busting](#cache-busting)
 - [Sanitizer constraint (do not regress)](#sanitizer-constraint-do-not-regress)
+- [Body-text size control](#body-text-size-control)
+- [About-the-names section](#about-the-names-section)
 - [Translation data](#translation-data)
 - [Asset backfill (GitHub Actions)](#asset-backfill-github-actions)
 - [Fonts and styling](#fonts-and-styling)
@@ -52,13 +54,15 @@ together to the same GitHub Pages site.
 
 ```
 /            Arabic edition (lang="ar", dir="rtl")
-  index.html, name.html, app.js, name.js, shared.js, sw.js, style.css
-  json/{names.json, name_translations.json, cards.json}
+  index.html, name.html, about.html
+  app.js, name.js, about.js, shared.js, sw.js, style.css
+  json/{names.json, name_translations.json, cards.json, about.json}
   cards/, icons/, images/, voices/, manifest.webmanifest
 
 /uz/         Uzbek edition (lang="uz", dir="ltr") — a near-mirror
-  index.html, name.html, app.js, name.js, shared.js, sw.js, style.css
-  json/{names.json, name_translations.json}
+  index.html, name.html, about.html
+  app.js, name.js, about.js, shared.js, sw.js, style.css
+  json/{names.json, name_translations.json, about.json}
   icons/, images/, voices/, manifest.webmanifest
 ```
 
@@ -68,7 +72,14 @@ together to the same GitHub Pages site.
   favorites toggle, and per-card audio playback.
 - `name.html?id=<gods_name_id>` → `name.js` renders the detail view:
   hero, short meaning, scholars' meanings, evidence, prev/next nav,
-  and (Arabic edition only) the visual library.
+  the A−/A/A+ size control, and (Arabic edition only) the visual
+  library.
+- `about.html` → `about.js` is one page that handles two views:
+  no query → grid of educational articles (16:9 image cards with
+  the title centered as an overlay); `?id=N` → article detail (no
+  hero image, sanitised title + body + A−/A/A+ size control). A
+  small "about" icon to the left of `.search-shell` on every index
+  page links here.
 - `shared.js` exports:
   - DOM helpers (`$`, `$$`) and `loadJSON`.
   - The UI string table for this edition's language plus `tFor`.
@@ -99,9 +110,9 @@ together to the same GitHub Pages site.
 
 Any CSS, JS, service worker, or HTML-template change made at the root
 must be re-applied under `/uz/` (and vice-versa) unless it is data-only.
-If you change `style.css`, `name.js`, `app.js`, `shared.js`, `sw.js`,
-`index.html`, or `name.html` at the root, mirror the change to `/uz/`
-in the same commit.
+If you change `style.css`, `name.js`, `app.js`, `about.js`, `shared.js`,
+`sw.js`, `index.html`, `name.html`, or `about.html` at the root, mirror
+the change to `/uz/` in the same commit.
 
 **Exception — the Uzbek edition has no visual library.** It is
 intentional, not an oversight:
@@ -124,25 +135,30 @@ translation content between the two trees.
 
 ## Cache busting
 
-A single version string lives in **ten places** and must move together
-on every deploy. Use `YYYYMMDDHH` or `YYYYMMDDHHMM` style — pick one
-string and apply it everywhere in one commit.
+A single version string lives in **fourteen places** and must move
+together on every deploy. Use `YYYYMMDDHH` or `YYYYMMDDHHMM` style —
+pick one string and apply it everywhere in one commit.
 
 Service worker cache constants (2):
 
 1. `sw.js` → `const CACHE = 'alloh-v<version>';`
 2. `uz/sw.js` → same constant
 
-HTML `?v=` query strings (8):
+HTML `?v=` query strings (12, three HTML files × two refs each × two
+editions):
 
 3. `index.html` → `style.css?v=<version>`
 4. `index.html` → `app.js?v=<version>`
 5. `name.html` → `style.css?v=<version>`
 6. `name.html` → `name.js?v=<version>`
-7. `uz/index.html` → `style.css?v=<version>`
-8. `uz/index.html` → `app.js?v=<version>`
-9. `uz/name.html` → `style.css?v=<version>`
-10. `uz/name.html` → `name.js?v=<version>`
+7. `about.html` → `style.css?v=<version>`
+8. `about.html` → `about.js?v=<version>`
+9. `uz/index.html` → `style.css?v=<version>`
+10. `uz/index.html` → `app.js?v=<version>`
+11. `uz/name.html` → `style.css?v=<version>`
+12. `uz/name.html` → `name.js?v=<version>`
+13. `uz/about.html` → `style.css?v=<version>`
+14. `uz/about.html` → `about.js?v=<version>`
 
 The current deployed version can be found by grepping `?v=` across the
 HTMLs (they should all match). HTML responses are network-first, so the
@@ -153,23 +169,25 @@ A partial bump (e.g. `sw.js` without the HTMLs, or one edition without
 the other) leaves users with mismatched assets — don't ship one without
 the other.
 
-To bump all ten in one shot, replace `<OLD>` and `<NEW>` and run:
+To bump all fourteen in one shot, replace `<OLD>` and `<NEW>` and run:
 
 ```sh
 sed -i 's/<OLD>/<NEW>/g' \
   sw.js uz/sw.js \
-  index.html name.html \
-  uz/index.html uz/name.html
+  index.html name.html about.html \
+  uz/index.html uz/name.html uz/about.html
 ```
 
 Then verify with
 `grep -RnE 'alloh-v[0-9]+|\?v=[0-9]+' sw.js uz/sw.js *.html uz/*.html`
-— every match should show `<NEW>` and there should be exactly ten.
+— every match should show `<NEW>` and there should be exactly fourteen.
 
 ## Sanitizer constraint (do not regress)
 
-`name.js` renders sanitized HTML fragments from the translation JSON.
-The sanitizer enforces two whitelists:
+`name.js` and `about.js` render sanitized HTML fragments from the
+translation / about JSON. Both files carry an identical copy of the
+same sanitizer — four copies in total once mirrored to `/uz/`. The
+sanitizer enforces two whitelists:
 
 ```js
 const ALLOWED_HTML_TAGS = new Set([
@@ -189,8 +207,58 @@ Keep `class` and `dir` in this whitelist. Do not broaden the tag set
 or add new attributes without a concrete content need — every addition
 expands the XSS surface for fields that originate in third-party data.
 
-Both editions' `name.js` carry an identical copy of the sanitizer —
-changes to either whitelist must be mirrored.
+All four sanitizer copies (`name.js` and `about.js` in each edition)
+must be kept in lock-step. Changes to either whitelist must land in
+the same commit across the four files.
+
+## Body-text size control
+
+`name.html` and `about.html` ship a three-button toolbar at the
+bottom (`A−` / `A` / `A+`) that scales the body prose.
+
+- The selected level is stored in `localStorage['textSize']` as one
+  of `'sm' | 'md' | 'lg'` and persists across name / article hops.
+- `applyTextSize()` toggles `data-text-size` on the `<html>` element
+  on init *before* content renders (so there's no flash at the
+  default size). CSS reacts via
+  `:root[data-text-size="sm"] { --text-scale: 0.9 }` /
+  `:root[data-text-size="lg"] { --text-scale: 1.18 }`.
+- `.section-body` font-size uses `calc(1rem * var(--text-scale))`
+  for LTR and `calc(1.2rem * var(--text-scale))` for RTL, so both
+  scripts scale by the same factor; `.ar-quote` and lists inherit
+  via em.
+- The click handler records the clicked button's
+  `getBoundingClientRect().top` before applying the new size and
+  then `scrollBy({ behavior: 'instant' })` by the delta so the
+  tapped button stays under the user's finger — without this the
+  page appears to jump as the document height changes.
+
+The control lives in both `name.js` and `about.js`, mirrored across
+editions; treat it like the sanitizer when you change anything.
+
+## About-the-names section
+
+The two `about.html` pages serve educational articles alongside the
+99-name catalog.
+
+- Data lives in `json/about.json` per edition. Each record has
+  `id`, `display_order`, `image` (path in `images/`), `color`
+  (pre-image card tint, fed through `safeColor`), `title_val`, and
+  `body_val` (sanitized HTML, same whitelist as `name.js`).
+- One HTML serves both list and detail views: `about.html` with no
+  query renders a 16:9 grid of cards (title centered as an
+  overlay); `about.html?id=N` renders a detail view with only title
+  + body + A−/A/A+ size control — **no hero image** on the detail
+  page.
+- The card factory drops records with an empty `title_val`, so a
+  half-translated article in `uz/json/about.json` is invisible on
+  the uz list until its title lands. Use this to stage translation
+  work without breaking the page.
+- `images/about-NN.jpg` files are 16:9, JPEG q=82, optimized via
+  Pillow. They are **not** versioned via `?v=` — when swapping an
+  image at the same filename, bump the cache version (the SW will
+  drop its copy on activate, though the browser's HTTP cache may
+  still serve the old image for one visit on hard-refresh).
 
 ## Translation data
 
@@ -261,4 +329,9 @@ inspect the script on `main` rather than re-fetching media by hand.
 - Don't bump `sw.js` without bumping the HTML `?v=` queries in the same
   commit (and vice-versa) — partial bumps cause stale-asset mismatches.
 - Don't re-introduce the visual library or `cards.json` to `/uz/`.
+- Don't forget the about-page entries when bumping the cache —
+  the surface is fourteen places, not ten.
+- Don't put a hero image back on the About-article detail view
+  (the list view keeps its 16:9 image cards; the detail is
+  intentionally text-only).
 - Don't push to `main` directly.
