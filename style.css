@@ -864,8 +864,6 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
 }
 [dir="rtl"] .about-card-title { text-align: right; }
 
-.about-hero { aspect-ratio: 16 / 9; }
-
 .about-detail-title {
   font-family: var(--font-arabic);
   font-weight: 700;
