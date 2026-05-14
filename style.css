@@ -15,8 +15,8 @@ html { touch-action: manipulation; }
   --surface-2: #232328;
   --ink: #f4f4f7;
   --ink-soft: #d1d1d6;
-  --muted: #6e6e73;
-  --muted-2: #48484a;
+  --muted: #a0a0a5;
+  --muted-2: #8e8e93;
   --rule: #2c2c30;
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.45), 0 1px 3px rgba(0, 0, 0, 0.35);
   --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.55), 0 2px 6px rgba(0, 0, 0, 0.4);
@@ -71,7 +71,7 @@ input, select { font: inherit; color: inherit; }
 
 .skip-link {
   position: absolute;
-  left: -9999px;
+  inset-inline-start: -9999px;
   top: 8px;
   padding: 0.5rem 0.85rem;
   background: var(--ink);
@@ -80,7 +80,7 @@ input, select { font: inherit; color: inherit; }
   z-index: 1000;
   text-decoration: none;
 }
-.skip-link:focus { left: 12px; }
+.skip-link:focus { inset-inline-start: 12px; }
 
 main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
 
