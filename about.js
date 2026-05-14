@@ -98,16 +98,6 @@ function renderDetail(id) {
   $('#detail-view').hidden = false;
   $('#bar-back').hidden = false;
 
-  const heroEl = $('#about-hero');
-  heroEl.removeAttribute('aria-busy');
-  const img = safePath(article.image);
-  const tint = safeColor(article.color);
-  if (tint) heroEl.style.backgroundColor = tint;
-  if (img) {
-    heroEl.innerHTML = `<img class="card-bg is-loading" src="${escapeHtml(img)}" alt="" loading="eager" decoding="async" fetchpriority="high">`;
-    attachImgFade(heroEl.querySelector('img'));
-  }
-
   $('#about-title').textContent = article.title_val || '';
   document.title = `${article.title_val || ''} | ${ui('pwa_title')}`;
   setSanitizedHTML($('#about-body'), article.body_val);
