@@ -231,6 +231,7 @@ function renderSections(name) {
     const body = document.createElement('div');
     body.className = 'section-body';
     setSanitizedHTML(body, html);
+    attachApproxToggles(body);
     section.appendChild(body);
 
     sectionsEl.appendChild(section);
@@ -341,6 +342,26 @@ function setSanitizedHTML(el, html) {
   tmpl.innerHTML = String(html);
   cleanNode(tmpl.content);
   el.appendChild(tmpl.content);
+}
+
+function attachApproxToggles(root) {
+  for (const toggle of root.querySelectorAll('.approx-toggle')) {
+    const note = toggle.nextElementSibling;
+    if (!note || !note.classList.contains('approx-note')) continue;
+    toggle.setAttribute('role', 'button');
+    toggle.setAttribute('tabindex', '0');
+    toggle.setAttribute('aria-expanded', 'false');
+    const activate = (e) => {
+      e.preventDefault();
+      const open = toggle.getAttribute('aria-expanded') === 'true';
+      toggle.setAttribute('aria-expanded', open ? 'false' : 'true');
+      note.classList.toggle('is-open', !open);
+    };
+    toggle.addEventListener('click', activate);
+    toggle.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') activate(e);
+    });
+  }
 }
 
 function cleanNode(node) {
