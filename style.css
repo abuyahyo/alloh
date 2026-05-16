@@ -709,7 +709,7 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
   font-size: calc(0.92rem * var(--text-scale, 1));
   line-height: 1.55;
   color: var(--ink-soft);
-  background: var(--accent-soft);
+  background: rgba(255, 255, 255, 0.04);
   border-inline-start: 2px solid var(--accent);
   border-radius: var(--r-sm);
 }
