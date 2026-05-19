@@ -321,14 +321,6 @@ function renderPageNav(name) {
   const rtl = document.documentElement.dir === 'rtl';
   fillBarNavLink($('#bar-prev'), prev, set.prev, rtl ? 'ArrowRight' : 'ArrowLeft');
   fillBarNavLink($('#bar-next'), next, set.next, rtl ? 'ArrowLeft' : 'ArrowRight');
-
-  const hint = $('#kbd-hint');
-  if (hint) {
-    const prevKey = rtl ? '→' : '←';
-    const nextKey = rtl ? '←' : '→';
-    hint.textContent = `${prevKey} ${set.prev}  ·  ${nextKey} ${set.next}`;
-    hint.hidden = !prev && !next;
-  }
 }
 
 function fillBarNavLink(el, target, roleLabel, keyShortcut) {
