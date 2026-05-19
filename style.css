@@ -879,20 +879,6 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
 }
 .card-play.is-loading { background: rgba(255, 255, 255, 0.18); }
 
-.kbd-hint {
-  text-align: center;
-  font-family: var(--font-ui);
-  font-size: 0.78rem;
-  color: var(--muted);
-  margin: 0.75rem 0 0;
-  letter-spacing: 0.02em;
-}
-.kbd-hint[hidden] { display: none; }
-/* Coarse-pointer (touch) devices typically don't have a keyboard handy. */
-@media (pointer: coarse) {
-  .kbd-hint { display: none; }
-}
-
 /* =========================================================================
    About-the-names page (about.html)
    ========================================================================= */
