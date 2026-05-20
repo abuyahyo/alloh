@@ -87,7 +87,20 @@
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function () {
-        navigator.serviceWorker.register('sw.js').catch(function () {});
+        navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then(function (reg) {
+          setInterval(function () { reg.update(); }, 60 * 60 * 1000);
+        }).catch(function () {});
+        // Auto-reload when a fresh SW takes over from an older one. Skip the
+        // first-install transition (controller goes from null → present),
+        // which would otherwise reload the page right after the first visit.
+        var hadController = !!navigator.serviceWorker.controller;
+        var refreshing = false;
+        navigator.serviceWorker.addEventListener('controllerchange', function () {
+          if (!hadController) { hadController = true; return; }
+          if (refreshing) return;
+          refreshing = true;
+          window.location.reload();
+        });
       });
     }
   </script>
