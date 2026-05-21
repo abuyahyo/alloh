@@ -40,52 +40,15 @@ async function init() {
 
   applyLangChrome();
   renderTodaysName();
-  scheduleTodaysNameRotation();
-  startCountdownTicker();
   renderList();
 }
 
-/* Tick the "next swap in" badge every second. The badge text is
-   computed from the wall clock, so the displayed countdown is
-   always accurate within ~1s regardless of when the interval fires
-   (background-tab throttling, page-load timing). */
-function startCountdownTicker() {
-  setInterval(updateCountdownText, 1000);
-}
-
-function updateCountdownText() {
-  const el = document.getElementById('todays-name-countdown');
-  if (!el) return;
-  const remaining = 60 - Math.floor((Date.now() % 60000) / 1000);
-  el.textContent = `0:${String(remaining).padStart(2, '0')}`;
-}
-
-/* Re-render the spotlight on every wall-clock minute boundary so the
-   visible name lines up with `pickTodaysName`'s minute index. A
-   single setTimeout aligns with the next :00 boundary, then a
-   setInterval takes over. `visibilitychange` triggers an extra
-   re-render when the tab regains focus, since background tabs throttle
-   timers and the spotlight could be a few minutes stale on return. */
-function scheduleTodaysNameRotation() {
-  const tick = () => renderTodaysName();
-  const msUntilNextMinute = 60000 - (Date.now() % 60000) + 50;
-  setTimeout(() => {
-    tick();
-    setInterval(tick, 60000);
-  }, msUntilNextMinute);
-  document.addEventListener('visibilitychange', () => {
-    if (!document.hidden) { tick(); updateCountdownText(); }
-  });
-}
-
-/* Deterministic spotlight pick that rotates every wall-clock minute.
-   `floor(Date.now() / 60_000) mod array length` — same minute, same
-   name for every visitor, regardless of timezone. The full set cycles
-   through every ~100 minutes. */
+/* Random pick on every fresh page load — no timer, no rotation. The
+   spotlight is a serendipity surface: refresh the page to discover a
+   different name. */
 function pickTodaysName(names) {
   if (!names.length) return null;
-  const minute = Math.floor(Date.now() / 60000);
-  return names[((minute % names.length) + names.length) % names.length];
+  return names[Math.floor(Math.random() * names.length)];
 }
 
 function renderTodaysName() {
@@ -106,17 +69,13 @@ function renderTodaysName() {
     : escapeHtml(name.default_name);
 
   el.innerHTML = `
-    <span id="todays-name-label" class="todays-name-label">
-      ${escapeHtml(label)}
-      <span class="todays-name-countdown" id="todays-name-countdown" aria-hidden="true"></span>
-    </span>
+    <span id="todays-name-label" class="todays-name-label">${escapeHtml(label)}</span>
     <a class="featured-card" href="name.html?id=${name.id}" aria-label="${escapeHtml(ariaLabel)}" style="${cardStyle}">
       ${bg ? `<img class="card-bg is-loading" src="${escapeHtml(bg)}" alt="" loading="eager" decoding="async" fetchpriority="high">` : ''}
       <span class="card-arabic">${calligraphyHtml}</span>
       ${translit ? `<span class="featured-card-translit">${escapeHtml(translit)}</span>` : ''}
     </a>
   `;
-  updateCountdownText();
   el.hidden = false;
 
   const bgImg = el.querySelector('img.card-bg.is-loading');
