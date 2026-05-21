@@ -2,8 +2,9 @@ import {
   $, $$,
   loadJSON, applyDir, localized,
   escapeHtml, shortText, safePath, safeSvgPath, safeColor,
-  iconPlay, iconPause, iconLoading, iconHeart,
+  iconPlay, iconPause, iconLoading, iconHeart, iconShare,
   createAudioController, attachImgFade,
+  showToast,
   tFor,
 } from './shared.js';
 
@@ -165,9 +166,13 @@ function render() {
   const favLabel = ui(isFav ? 'unfavorite' : 'favorite');
   const playIcon = loading ? iconLoading() : (playing ? iconPause() : iconPlay());
 
+  const shareLabel = ui('share');
   hero.removeAttribute('aria-busy');
   hero.innerHTML = `
     ${bg ? `<img class="card-bg is-loading" src="${escapeHtml(bg)}" alt="" loading="eager" decoding="async" fetchpriority="high">` : ''}
+    <button type="button" class="hero-share" data-action="share" aria-label="${escapeHtml(shareLabel)}" title="${escapeHtml(shareLabel)}">
+      ${iconShare()}
+    </button>
     <span class="card-arabic">${calligraphyHtml}</span>
     <div class="card-foot">
       <button class="card-icon-btn card-play${playing ? ' is-playing' : ''}${loading ? ' is-loading' : ''}" data-action="play" aria-label="${escapeHtml(playLabel)}" type="button">
@@ -314,6 +319,17 @@ function bindEvents() {
     e.preventDefault();
     if (action.dataset.action === 'play') audioCtrl.toggle(state.currentId);
     if (action.dataset.action === 'fav') toggleFav(state.currentId);
+    if (action.dataset.action === 'share') shareCurrent();
+  });
+
+  /* Quranic / hadith excerpts in evidence and scholars' meanings are
+     wrapped in `<span class="ar-quote">` by the sanitiser. Tapping one
+     copies its plain text so the user can paste a verse into a chat
+     without selecting it character-by-character on mobile. */
+  $('#sections').addEventListener('click', (e) => {
+    const quote = e.target.closest('.ar-quote');
+    if (!quote) return;
+    copyToClipboard((quote.textContent || '').trim());
   });
 
   document.addEventListener('keydown', (e) => {
@@ -325,6 +341,53 @@ function bindEvents() {
     const next = state.names[idx + step];
     if (next) location.assign(`name.html?id=${next.id}`);
   });
+}
+
+/* Share the current name via the native share sheet on mobile; on
+   desktop browsers without `navigator.share` (or when the user cancels)
+   fall back to copying the URL so the action always does *something*
+   meaningful. */
+async function shareCurrent() {
+  const name = state.names.find((n) => n.id === state.currentId);
+  if (!name) return;
+  const t = loc(name);
+  const title = `${name.default_name}${t.name ? ' — ' + t.name : ''}`;
+  const summary = shortText(t.short_meaning_val);
+  const url = location.href;
+  const data = { title, text: summary || title, url };
+  if (navigator.share) {
+    try {
+      await navigator.share(data);
+      return;
+    } catch (err) {
+      if (err && err.name === 'AbortError') return;
+      /* fall through to clipboard fallback */
+    }
+  }
+  copyToClipboard(url);
+}
+
+async function copyToClipboard(text) {
+  if (!text) return;
+  const toastMsg = ui('copied');
+  try {
+    await navigator.clipboard.writeText(text);
+    showToast(toastMsg);
+    return;
+  } catch (_) { /* fall through */ }
+  /* Fallback for browsers without the async Clipboard API or when the
+     page is served over an insecure origin (clipboard.writeText is
+     gated behind https + user-activation). */
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.setAttribute('readonly', '');
+  ta.style.position = 'fixed';
+  ta.style.opacity = '0';
+  ta.style.left = '-9999px';
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand('copy'); showToast(toastMsg); } catch (_) {}
+  ta.remove();
 }
 
 function setSanitizedHTML(el, html) {
