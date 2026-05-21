@@ -39,7 +39,7 @@ const UI_STRINGS_DATA = {
     text_size_md: 'عادي',
     text_size_lg: 'كبير',
     todays_name: 'اسم اليوم',
-    pwa_title: 'هو الله',
+    pwa_title: 'الله',
   };
 
 export const UI_STRINGS = { 'ar': UI_STRINGS_DATA };
