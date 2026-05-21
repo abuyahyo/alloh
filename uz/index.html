@@ -33,7 +33,7 @@
       }, { passive: false });
     })();
   </script>
-  <link rel="stylesheet" href="style.css?v=2026052002">
+  <link rel="stylesheet" href="style.css?v=2026052003">
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to content</a>
@@ -65,6 +65,7 @@
   </div>
 
   <main id="main">
+    <section id="todays-name" class="todays-name" aria-labelledby="todays-name-label" hidden></section>
     <div id="list" class="cards" aria-busy="true">
       <article class="name-card skeleton" aria-hidden="true"></article>
       <article class="name-card skeleton" aria-hidden="true"></article>
@@ -76,7 +77,7 @@
 
   <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
 
-  <script type="module" src="app.js?v=2026052002"></script>
+  <script type="module" src="app.js?v=2026052003"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function () {

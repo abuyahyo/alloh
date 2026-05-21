@@ -236,6 +236,152 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
   margin-top: 1.5rem;
 }
 
+/* =========================================================================
+   Today's-name spotlight — a single featured card above the full grid
+   that surfaces a deterministically-rotated daily name. Hidden via JS
+   when the search field is non-empty or the favourites filter is on.
+   ========================================================================= */
+
+.todays-name {
+  margin-top: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+.todays-name[hidden] { display: none; }
+.todays-name.is-hidden { display: none; }
+
+.todays-name-label {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.8rem;
+  font-family: var(--font-ui);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--accent);
+  background: var(--accent-soft);
+  backdrop-filter: blur(14px) saturate(180%);
+  -webkit-backdrop-filter: blur(14px) saturate(180%);
+  border: 1px solid var(--accent-ring);
+  border-radius: 999px;
+  text-transform: uppercase;
+}
+[lang="ar"] .todays-name-label,
+[dir="rtl"] .todays-name-label {
+  font-family: var(--font-arabic);
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 0.85rem;
+}
+
+.featured-card {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 11;
+  border-radius: var(--r-xl);
+  overflow: hidden;
+  background-color: var(--surface-2);
+  box-shadow: var(--glass-shadow-lg);
+  isolation: isolate;
+  text-decoration: none;
+  color: inherit;
+  border: 1px solid var(--accent-ring);
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.18s var(--ease), box-shadow 0.18s var(--ease);
+}
+.featured-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 28px 70px rgba(0, 0, 0, 0.55), 0 8px 20px rgba(0, 0, 0, 0.35);
+}
+.featured-card:focus-visible {
+  outline: 3px solid var(--ink);
+  outline-offset: 2px;
+}
+.featured-card .card-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+  transition: opacity 0.45s var(--ease);
+}
+.featured-card .card-bg.is-loading { opacity: 0; }
+.featured-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  /* Targeted darkening behind the calligraphy + a stronger bottom
+     gradient that anchors the translit pill, matching the regular
+     card treatment but slightly heavier so the larger surface still
+     keeps the white calligraphy crisp on bright photos. */
+  background:
+    radial-gradient(ellipse 60% 50% at 50% 46%, rgba(0, 0, 0, 0.38) 0%, rgba(0, 0, 0, 0) 72%),
+    linear-gradient(180deg, rgba(0, 0, 0, 0.12) 0%, rgba(0, 0, 0, 0.55) 100%);
+  z-index: 1;
+  pointer-events: none;
+}
+.featured-card .card-arabic {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-quran);
+  font-size: clamp(4rem, 13vw, 6.5rem);
+  color: #ffffff;
+  text-shadow:
+    0 0 18px rgba(0, 0, 0, 0.6),
+    0 2px 12px rgba(0, 0, 0, 0.5);
+  line-height: 1;
+  font-weight: 400;
+  padding: 0.5rem 1rem 2.25rem;
+  text-align: center;
+  pointer-events: none;
+}
+.featured-card .card-arabic-svg {
+  display: block;
+  width: auto;
+  max-width: 56%;
+  max-height: 70%;
+  object-fit: contain;
+  filter:
+    brightness(0)
+    invert(1)
+    drop-shadow(0 0 18px rgba(0, 0, 0, 0.6))
+    drop-shadow(0 2px 12px rgba(0, 0, 0, 0.5));
+}
+.featured-card-translit {
+  position: absolute;
+  left: 50%;
+  bottom: 0.85rem;
+  transform: translateX(-50%);
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.5rem 1.1rem;
+  background: rgba(0, 0, 0, 0.32);
+  backdrop-filter: blur(22px) saturate(180%);
+  -webkit-backdrop-filter: blur(22px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.25),
+    0 6px 18px rgba(0, 0, 0, 0.35);
+  color: #ffffff;
+  font-family: var(--font-ui);
+  font-weight: 600;
+  font-size: 1.05rem;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
 .name-card {
   position: relative;
   aspect-ratio: 16 / 9;

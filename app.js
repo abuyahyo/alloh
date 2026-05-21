@@ -47,7 +47,63 @@ async function init() {
   }
 
   applyLangChrome();
+  renderTodaysName();
   renderList();
+}
+
+/* Deterministic "name of the day": floor(local-midnight epoch / 86400000)
+   mod array length. Same name surfaces for every visitor on the same
+   local calendar day; rotates through the full set every ~100 days. */
+function pickTodaysName(names) {
+  if (!names.length) return null;
+  const d = new Date();
+  const localMidnight = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+  const day = Math.floor(localMidnight / 86400000);
+  return names[((day % names.length) + names.length) % names.length];
+}
+
+function renderTodaysName() {
+  const el = $('#todays-name');
+  if (!el) return;
+  const name = pickTodaysName(state.names);
+  if (!name) return;
+  const t = loc(name);
+  const translit = t.name || '';
+  const bg = safePath(name.background_image);
+  const calligraphy = safeSvgPath(name.image);
+  const tint = safeColor(name.color);
+  const label = tFor(LANG, 'todays_name');
+  const ariaLabel = `${label}: ${name.default_name}${translit ? ', ' + translit : ''}`;
+  const cardStyle = tint ? `background-color: ${tint}` : '';
+  const calligraphyHtml = calligraphy
+    ? `<img class="card-arabic-svg" src="${escapeHtml(calligraphy)}" alt="${escapeHtml(name.default_name)}" loading="eager" decoding="async" fetchpriority="high" data-fallback="${escapeHtml(name.default_name)}">`
+    : escapeHtml(name.default_name);
+
+  el.innerHTML = `
+    <span id="todays-name-label" class="todays-name-label">${escapeHtml(label)}</span>
+    <a class="featured-card" href="name.html?id=${name.id}" aria-label="${escapeHtml(ariaLabel)}" style="${cardStyle}">
+      ${bg ? `<img class="card-bg is-loading" src="${escapeHtml(bg)}" alt="" loading="eager" decoding="async" fetchpriority="high">` : ''}
+      <span class="card-arabic">${calligraphyHtml}</span>
+      ${translit ? `<span class="featured-card-translit">${escapeHtml(translit)}</span>` : ''}
+    </a>
+  `;
+  el.hidden = false;
+
+  const bgImg = el.querySelector('img.card-bg.is-loading');
+  if (bgImg) attachImgFade(bgImg);
+  const svgImg = el.querySelector('img.card-arabic-svg');
+  if (svgImg) attachCalligraphyFallback(svgImg);
+  updateTodaysNameVisibility();
+}
+
+/* The daily card is a discovery surface, not a search result. Hide it
+   when the user is searching or filtering favourites so the visible
+   list doesn't get pushed below the fold. */
+function updateTodaysNameVisibility() {
+  const el = $('#todays-name');
+  if (!el || el.hidden) return;
+  const isSearching = !!$('#search').value.trim();
+  el.classList.toggle('is-hidden', isSearching || state.favoritesOnly);
 }
 
 function applyLangChrome() {
@@ -202,12 +258,14 @@ function bindGlobalEvents() {
   };
   search.addEventListener('input', () => {
     updateClearVisible();
+    updateTodaysNameVisibility();
     clearTimeout(searchTimer);
     searchTimer = setTimeout(renderList, 120);
   });
   clearBtn.addEventListener('click', () => {
     search.value = '';
     updateClearVisible();
+    updateTodaysNameVisibility();
     search.focus();
     renderList();
   });
@@ -217,6 +275,7 @@ function bindGlobalEvents() {
     state.favoritesOnly = !state.favoritesOnly;
     localStorage.setItem('favoritesOnly', state.favoritesOnly ? '1' : '0');
     refreshFavoritesToggleLabel();
+    updateTodaysNameVisibility();
     renderList();
   });
 
