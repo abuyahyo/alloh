@@ -437,7 +437,15 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
 .detail-main {
   max-width: var(--content-w);
   margin: 0 auto;
-  padding: 0.5rem 1.25rem calc(env(safe-area-inset-bottom) + 1.5rem);
+  /* The navigation pill now floats at the bottom of the viewport so the
+     top of the page has no chrome to handle the iOS status-bar / notch
+     — reserve it here. Bottom padding clears the floating pill (44px
+     height + 0.85rem offset + breathing room) so the size-controls and
+     last paragraph never slide underneath it. */
+  padding:
+    calc(env(safe-area-inset-top) + 0.75rem)
+    1.25rem
+    calc(env(safe-area-inset-bottom) + 5.5rem);
 }
 
 .hero-card {
@@ -481,22 +489,36 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
    ========================================================================= */
 
 .detail-bar {
+  position: fixed;
+  bottom: max(0.85rem, env(safe-area-inset-bottom));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 50;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  padding: max(0.75rem, env(safe-area-inset-top)) 1.25rem 0.75rem;
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  background: rgba(10, 10, 14, 0.45);
-  backdrop-filter: blur(26px) saturate(180%);
-  -webkit-backdrop-filter: blur(26px) saturate(180%);
-  border-bottom: 1px solid var(--glass-edge);
-  box-shadow: inset 0 1px 0 var(--glass-sheen-soft);
-  max-width: var(--content-w);
-  margin: 0 auto;
-  min-height: 60px;
+  gap: 0.3rem;
+  padding: 0.35rem;
+  width: min(calc(100% - 1.5rem), var(--content-w));
+  background: var(--glass-panel-strong);
+  backdrop-filter: blur(30px) saturate(180%);
+  -webkit-backdrop-filter: blur(30px) saturate(180%);
+  border: 1px solid var(--glass-edge);
+  border-radius: 999px;
+  box-shadow:
+    var(--glass-shadow-lg),
+    inset 0 1px 0 var(--glass-sheen),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.25);
+  isolation: isolate;
+}
+.detail-bar::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--glass-specular);
+  pointer-events: none;
+  z-index: -1;
 }
 
 .bar-btn {
@@ -506,31 +528,14 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
   align-items: center;
   justify-content: center;
   color: var(--ink-soft);
-  background: var(--glass-chip);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  border: 1px solid var(--glass-edge);
+  background: transparent;
+  border: none;
   border-radius: 999px;
   text-decoration: none;
-  box-shadow:
-    var(--shadow-sm),
-    inset 0 1px 0 var(--glass-sheen),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.2);
-  isolation: isolate;
-  transition: background 0.15s var(--ease), color 0.15s var(--ease), border-color 0.15s var(--ease), transform 0.12s var(--ease);
-}
-.bar-btn::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: var(--glass-specular);
-  pointer-events: none;
-  z-index: -1;
+  transition: background 0.15s var(--ease), color 0.15s var(--ease), transform 0.12s var(--ease);
 }
 .bar-btn:hover {
-  background: var(--glass-chip-strong);
-  border-color: var(--glass-edge-strong);
+  background: rgba(255, 255, 255, 0.07);
   color: var(--ink);
 }
 .bar-btn:active { transform: scale(0.96); }
@@ -544,10 +549,12 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
   opacity: 0.5;
 }
 
-/* Home tile: circular icon-only. */
+/* Home tile: circular icon-only, slightly emphasised so it reads as the
+   anchor between the two named arrows. */
 .bar-btn.home {
   width: 44px;
   flex: 0 0 44px;
+  color: var(--ink);
 }
 
 /* Prev / next tiles: take the leftover row width and show the
