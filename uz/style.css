@@ -502,6 +502,43 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
 }
 .hero-card .card-arabic-svg { max-width: 50%; max-height: 72%; }
 
+/* Glass translit pill — centred at the bottom of each grid card.
+   Index cards are link-only now (no inline play / favourite controls);
+   this is the single bottom affordance that names the card. The same
+   recipe carries over to the hero card on the detail page, which keeps
+   `.card-foot` markup with play + favourite icons. */
+.card-pill {
+  position: absolute;
+  left: 50%;
+  bottom: 0.7rem;
+  transform: translateX(-50%);
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.45rem 1.1rem;
+  background: rgba(0, 0, 0, 0.32);
+  backdrop-filter: blur(22px) saturate(180%);
+  -webkit-backdrop-filter: blur(22px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.25),
+    0 6px 18px rgba(0, 0, 0, 0.35);
+  color: #ffffff;
+  font-family: var(--font-ui);
+  font-weight: 600;
+  font-size: 1.05rem;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: calc(100% - 1.5rem);
+  pointer-events: none;
+}
+
+/* Hero card on the detail page still uses .card-foot with play /
+   favourite icon buttons flanking the translit — keep the old recipe. */
 .card-foot {
   position: absolute;
   left: 0.6rem;
@@ -563,7 +600,10 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
   cursor: default;
   box-shadow: var(--shadow-sm);
 }
-.name-card.skeleton::before, .name-card.skeleton .card-arabic, .name-card.skeleton .card-foot { display: none; }
+.name-card.skeleton::before,
+.name-card.skeleton .card-arabic,
+.name-card.skeleton .card-pill,
+.name-card.skeleton .card-foot { display: none; }
 @keyframes shimmer { from { background-position: 220% 0; } to { background-position: -220% 0; } }
 
 .empty {
