@@ -36,6 +36,7 @@ const UI_STRINGS_DATA = {
     text_size_sm: 'Кичик',
     text_size_md: 'Нормал',
     text_size_lg: 'Катта',
+    todays_name: 'Бугунги исм',
     pwa_title: 'У — Аллоҳ',
   };
 
