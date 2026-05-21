@@ -439,7 +439,7 @@ async function shareCurrent() {
 
   let file = null;
   try {
-    file = await composeShareCard(name, t, summary);
+    file = await composeShareCard(name, t, summary, url);
   } catch (err) {
     console.warn('share card compose failed:', err);
   } finally {
@@ -448,13 +448,11 @@ async function shareCurrent() {
 
   if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
     try {
-      /* Don't pass `url` together with `files` — Telegram (and a few
-         other share targets) will prefer the URL field and drop the
-         image. Fold the link into the caption text instead so the
-         recipient sees the image as the primary content with the
-         link beneath it. */
-      const caption = summary ? `${summary}\n${url}` : url;
-      await navigator.share({ files: [file], title, text: caption });
+      /* The URL is baked into the image itself (footer line), so
+         leave both the `url` field and any URL inside `text` out of
+         the share payload. Otherwise Telegram and friends will fall
+         back to the link preview and drop the image. */
+      await navigator.share({ files: [file], title, text: summary || title });
       return;
     } catch (err) {
       if (err && err.name === 'AbortError') return;
@@ -482,7 +480,7 @@ async function shareCurrent() {
      • transliterated name (large bold)
      • short meaning (multi-line, wrapped, RTL on the Arabic edition).
    Returns a `File` ready for `navigator.share`. */
-async function composeShareCard(name, t, summary) {
+async function composeShareCard(name, t, summary, url) {
   const W = 1080, H = 1350;
   const canvas = document.createElement('canvas');
   canvas.width = W; canvas.height = H;
@@ -575,6 +573,21 @@ async function composeShareCard(name, t, summary) {
     const drawn = lines.slice(0, max);
     const startY = H * 0.70;
     drawn.forEach((line, i) => ctx.fillText(line, W / 2, startY + i * lineHeight));
+  }
+
+  /* URL footer baked into the image — strips the protocol so the
+     line reads cleaner. Recipients copy it from the rendered card
+     itself (caption now stays text-only). */
+  if (url) {
+    ctx.direction = 'ltr';
+    const displayUrl = url.replace(/^https?:\/\//, '').replace(/\/$/, '');
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.72)';
+    ctx.font = '400 26px system-ui, sans-serif';
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.6)';
+    ctx.shadowBlur = 12;
+    ctx.fillText(displayUrl, W / 2, H - 50);
+    ctx.shadowColor = 'transparent';
+    ctx.shadowBlur = 0;
   }
 
   const blob = await new Promise((resolve, reject) => {
