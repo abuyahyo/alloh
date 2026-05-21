@@ -681,6 +681,12 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
 }
 .hero-card .card-arabic {
   font-size: clamp(4rem, 12vw, 6rem);
+  /* The hero card no longer carries an inline foot bar (the toolbar
+     moved to a sibling element below the card), so the asymmetric
+     bottom padding that nudged the grid-card calligraphy above its
+     foot pill is wrong here — even up the padding so the SVG sits
+     dead-centre on the photo. */
+  padding: 1rem;
 }
 .hero-card[aria-busy="true"] {
   background: linear-gradient(100deg, var(--surface-2) 0%, var(--rule) 50%, var(--surface-2) 100%);
