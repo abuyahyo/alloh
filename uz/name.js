@@ -174,7 +174,10 @@ function render() {
       ${iconShare()}
     </button>
     <span class="card-arabic">${calligraphyHtml}</span>
-    <div class="card-foot">
+  `;
+  const toolbar = $('#hero-toolbar');
+  if (toolbar) {
+    toolbar.innerHTML = `
       <button class="card-icon-btn card-play${playing ? ' is-playing' : ''}${loading ? ' is-loading' : ''}" data-action="play" aria-label="${escapeHtml(playLabel)}" type="button">
         ${playIcon}
       </button>
@@ -182,8 +185,9 @@ function render() {
       <button class="card-icon-btn card-fav${isFav ? ' is-fav' : ''}" data-action="fav" aria-label="${escapeHtml(favLabel)}" aria-pressed="${isFav ? 'true' : 'false'}" type="button">
         ${iconHeart()}
       </button>
-    </div>
-  `;
+    `;
+    toolbar.hidden = false;
+  }
   attachImgFade(hero.querySelector('img.card-bg.is-loading'));
   const calligraphyImg = hero.querySelector('img.card-arabic-svg');
   if (calligraphyImg) {
@@ -288,7 +292,7 @@ function fillBarNavLink(el, target, roleLabel, keyShortcut) {
 }
 
 function refreshPlayingUI() {
-  const btn = $('.card-play', $('#hero'));
+  const btn = $('.card-play', $('#hero-toolbar'));
   if (!btn) return;
   const playing = audioCtrl.isPlaying(state.currentId);
   const loading = audioCtrl.isLoading(state.currentId);
@@ -303,7 +307,7 @@ function toggleFav(id) {
   else state.favorites.add(id);
   localStorage.setItem('favorites', JSON.stringify([...state.favorites]));
   const isFav = state.favorites.has(id);
-  const btn = $('.card-fav', $('#hero'));
+  const btn = $('.card-fav', $('#hero-toolbar'));
   if (btn) {
     btn.classList.toggle('is-fav', isFav);
     btn.setAttribute('aria-pressed', isFav ? 'true' : 'false');
@@ -313,13 +317,21 @@ function toggleFav(id) {
 
 function bindEvents() {
   bindTextSizeControls();
+  /* Share button still lives inside the hero card; play / favourite
+     now live in the sibling `.hero-toolbar` below it. One handler per
+     element keeps the action set local to where the buttons render. */
   $('#hero').addEventListener('click', (e) => {
+    const action = e.target.closest('[data-action]');
+    if (!action) return;
+    e.preventDefault();
+    if (action.dataset.action === 'share') shareCurrent();
+  });
+  $('#hero-toolbar').addEventListener('click', (e) => {
     const action = e.target.closest('[data-action]');
     if (!action) return;
     e.preventDefault();
     if (action.dataset.action === 'play') audioCtrl.toggle(state.currentId);
     if (action.dataset.action === 'fav') toggleFav(state.currentId);
-    if (action.dataset.action === 'share') shareCurrent();
   });
 
   /* Quranic / hadith excerpts in evidence and scholars' meanings are
