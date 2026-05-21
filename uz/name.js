@@ -385,7 +385,13 @@ async function shareCurrent() {
 
   if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
     try {
-      await navigator.share({ files: [file], title, text: summary || title, url });
+      /* Don't pass `url` together with `files` — Telegram (and a few
+         other share targets) will prefer the URL field and drop the
+         image. Fold the link into the caption text instead so the
+         recipient sees the image as the primary content with the
+         link beneath it. */
+      const caption = summary ? `${summary}\n${url}` : url;
+      await navigator.share({ files: [file], title, text: caption });
       return;
     } catch (err) {
       if (err && err.name === 'AbortError') return;
