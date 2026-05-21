@@ -553,31 +553,35 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
   pointer-events: none;
 }
 
-/* Hero card on the detail page still uses .card-foot with play /
-   favourite icon buttons flanking the translit — keep the old recipe. */
-.card-foot {
-  position: absolute;
-  left: 0.6rem;
-  right: 0.6rem;
-  bottom: 0.6rem;
+/* Hero toolbar: the play / translit / favourite pill on the detail
+   page. Used to live inside the hero card as a floating `.card-foot`;
+   now sits as a sibling block right below the card so it doesn't
+   crop the calligraphy or float over the image. Same glass recipe
+   as the other liquid surfaces. */
+.hero-toolbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 0.6rem;
   padding: 0.55rem 0.85rem;
-  background: rgba(0, 0, 0, 0.28);
-  backdrop-filter: blur(22px) saturate(180%);
-  -webkit-backdrop-filter: blur(22px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: var(--glass-panel-strong);
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  border: 1px solid var(--glass-edge);
   border-radius: 999px;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.18),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.25),
-    0 6px 18px rgba(0, 0, 0, 0.35);
-  color: #ffffff;
-  z-index: 3;
+    var(--glass-shadow),
+    inset 0 1px 0 var(--glass-sheen),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.25);
+  color: var(--ink);
+  margin-bottom: 1.6rem;
+  isolation: isolate;
 }
-.card-foot .card-translit { pointer-events: none; }
+.hero-toolbar[hidden] { display: none; }
+.hero-toolbar .card-translit { pointer-events: none; color: var(--ink); }
+.hero-toolbar .card-icon-btn { color: var(--ink-soft); }
+.hero-toolbar .card-icon-btn:hover { background: rgba(255, 255, 255, 0.08); color: var(--ink); }
+.hero-toolbar .card-play.is-playing { background: var(--accent-soft); color: var(--accent); }
 
 .card-translit {
   flex: 1;
@@ -618,8 +622,7 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
 }
 .name-card.skeleton::before,
 .name-card.skeleton .card-arabic,
-.name-card.skeleton .card-pill,
-.name-card.skeleton .card-foot { display: none; }
+.name-card.skeleton .card-pill { display: none; }
 @keyframes shimmer { from { background-position: 220% 0; } to { background-position: -220% 0; } }
 
 .empty {
@@ -659,7 +662,7 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
   background-color: var(--surface-2);
   box-shadow: var(--shadow-md);
   isolation: isolate;
-  margin-bottom: 1.75rem;
+  margin-bottom: 0.85rem;
 }
 .hero-card::before {
   content: '';
