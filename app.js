@@ -41,7 +41,23 @@ async function init() {
   applyLangChrome();
   renderTodaysName();
   scheduleTodaysNameRotation();
+  startCountdownTicker();
   renderList();
+}
+
+/* Tick the "next swap in" badge every second. The badge text is
+   computed from the wall clock, so the displayed countdown is
+   always accurate within ~1s regardless of when the interval fires
+   (background-tab throttling, page-load timing). */
+function startCountdownTicker() {
+  setInterval(updateCountdownText, 1000);
+}
+
+function updateCountdownText() {
+  const el = document.getElementById('todays-name-countdown');
+  if (!el) return;
+  const remaining = 60 - Math.floor((Date.now() % 60000) / 1000);
+  el.textContent = `0:${String(remaining).padStart(2, '0')}`;
 }
 
 /* Re-render the spotlight on every wall-clock minute boundary so the
@@ -58,7 +74,7 @@ function scheduleTodaysNameRotation() {
     setInterval(tick, 60000);
   }, msUntilNextMinute);
   document.addEventListener('visibilitychange', () => {
-    if (!document.hidden) tick();
+    if (!document.hidden) { tick(); updateCountdownText(); }
   });
 }
 
@@ -90,13 +106,17 @@ function renderTodaysName() {
     : escapeHtml(name.default_name);
 
   el.innerHTML = `
-    <span id="todays-name-label" class="todays-name-label">${escapeHtml(label)}</span>
+    <span id="todays-name-label" class="todays-name-label">
+      ${escapeHtml(label)}
+      <span class="todays-name-countdown" id="todays-name-countdown" aria-hidden="true"></span>
+    </span>
     <a class="featured-card" href="name.html?id=${name.id}" aria-label="${escapeHtml(ariaLabel)}" style="${cardStyle}">
       ${bg ? `<img class="card-bg is-loading" src="${escapeHtml(bg)}" alt="" loading="eager" decoding="async" fetchpriority="high">` : ''}
       <span class="card-arabic">${calligraphyHtml}</span>
       ${translit ? `<span class="featured-card-translit">${escapeHtml(translit)}</span>` : ''}
     </a>
   `;
+  updateCountdownText();
   el.hidden = false;
 
   const bgImg = el.querySelector('img.card-bg.is-loading');
