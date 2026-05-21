@@ -277,6 +277,30 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
   font-size: 0.85rem;
 }
 
+/* Countdown chip inside the label — shows "0:42" rolling down to
+   "0:00" on each wall-clock-minute boundary, then resets. Tabular
+   numerals keep the digits the same width so the chip width doesn't
+   shimmer as the seconds change. */
+.todays-name-countdown {
+  font-family: var(--font-ui);
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+  font-size: 0.95em;
+  letter-spacing: 0;
+  opacity: 0.85;
+  /* unicode-bidi: isolate so the colon-separated digits read LTR
+     even inside the Arabic .todays-name-label flow. */
+  unicode-bidi: isolate;
+}
+.todays-name-countdown::before {
+  content: "·";
+  display: inline-block;
+  margin-inline-end: 0.4em;
+  opacity: 0.55;
+}
+.todays-name-countdown:empty,
+.todays-name-countdown:empty::before { display: none; }
+
 .featured-card {
   position: relative;
   display: block;
