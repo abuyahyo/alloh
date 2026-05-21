@@ -766,6 +766,20 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
   outline: 2px solid var(--ink);
   outline-offset: 2px;
 }
+/* `is-loading` flips on while the share card is being composed on a
+   canvas. A soft pulse signals "working" without spinning a separate
+   icon — the share glyph itself dims and brightens. */
+.hero-share.is-loading {
+  pointer-events: none;
+  animation: heroSharePulse 1s ease-in-out infinite;
+}
+@keyframes heroSharePulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.55; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-share.is-loading { animation: none; opacity: 0.7; }
+}
 
 /* The short meaning now renders inside a normal .section card just like
    the scholars / evidence sections below, so no dedicated rules are
