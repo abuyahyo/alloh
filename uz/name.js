@@ -49,20 +49,17 @@ async function init() {
 
   const params = new URLSearchParams(location.search);
   const idParam = params.get('id');
-  const id = idParam ? Number(idParam) : NaN;
-  if (!Number.isFinite(id) || id <= 0) {
-    location.replace('index.html');
-    return;
-  }
-  state.currentId = id;
+  const slugParam = params.get('slug');
+  let id = idParam ? Number(idParam) : NaN;
 
   bindEvents();
 
-  let names, trans;
+  let names, trans, slugs;
   try {
-    [names, trans] = await Promise.all([
+    [names, trans, slugs] = await Promise.all([
       loadJSON('json/names.json'),
       loadJSON('json/name_translations.json'),
+      loadJSON('json/slugs.json').catch((e) => { console.warn('slugs.json:', e); return {}; }),
     ]);
   } catch (err) {
     console.error(err);
@@ -72,14 +69,55 @@ async function init() {
   }
 
   state.names = names.sort((a, b) => a.display_order - b.display_order);
+  state.slugs = slugs || {};
 
   for (const t of trans) {
     if (!state.translations.has(t.gods_name_id)) state.translations.set(t.gods_name_id, {});
     state.translations.get(t.gods_name_id)[t.lang] = t;
   }
 
+  /* Resolve `?slug=X` to an id by reverse-lookup once the slug map is
+     loaded. Slug routing only kicks in when the id wasn't already
+     known via `?id=N` — keeps the legacy URL form working. */
+  if ((!Number.isFinite(id) || id <= 0) && slugParam) {
+    const wanted = slugParam.toLowerCase();
+    for (const nid in state.slugs) {
+      if (state.slugs[nid] === wanted) { id = Number(nid); break; }
+    }
+  }
+  if (!Number.isFinite(id) || id <= 0) {
+    location.replace('index.html');
+    return;
+  }
+  state.currentId = id;
+
   applyLangChrome();
   render();
+  updateUrlToSlug(state.currentId);
+}
+
+/* Replace the visible URL with the canonical slug form so every page
+   load — whether it came in via `?id=N`, `?slug=X`, or the 404
+   bounce — ends up showing `/alloh/uz/<slug>` in the address bar. We
+   prefer the path the 404 saved (preserves any pre-bounce query
+   string) and fall back to building it from the loaded slug map. */
+function updateUrlToSlug(id) {
+  let target = null;
+  try {
+    const stored = sessionStorage.getItem('alloh:slugPath');
+    if (stored) {
+      sessionStorage.removeItem('alloh:slugPath');
+      target = stored;
+    }
+  } catch (_) {}
+  if (!target) {
+    const slug = state.slugs[id];
+    if (!slug) return;
+    target = location.pathname.replace(/[^/]*$/, '') + slug;
+  }
+  if (target !== location.pathname + location.search) {
+    history.replaceState(null, '', target);
+  }
 }
 
 function applyLangChrome() {
