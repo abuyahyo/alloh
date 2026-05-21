@@ -436,6 +436,22 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
   border-radius: var(--r-lg);
 }
 
+/* Tilt effect: when the cursor moves over a grid card or the today's-
+   name spotlight, JS sets `--tilt-x` / `--tilt-y` and adds the
+   `is-tilting` class. The card tracks the cursor with a subtle
+   3D rotation, then settles back when the cursor leaves. Limited to
+   devices with real hover so touchscreens (where tap means
+   "navigate") aren't affected; respects reduced-motion. */
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .name-card.is-tilting,
+  .featured-card.is-tilting {
+    transform: perspective(900px)
+               rotateX(var(--tilt-x, 0deg))
+               rotateY(var(--tilt-y, 0deg));
+    transition: transform 0.06s linear, box-shadow 0.18s var(--ease);
+  }
+}
+
 @keyframes cardIn {
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
@@ -662,6 +678,41 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
   background: linear-gradient(100deg, var(--surface-2) 0%, var(--rule) 50%, var(--surface-2) 100%);
   background-size: 220% 100%;
   animation: shimmer 1.4s infinite ease;
+}
+
+/* Hero shine: a slanted highlight that sweeps across the hero card
+   every ~9 seconds, suggesting light catching a glass surface. The
+   pseudo-element sits above the radial-scrim ::before (z-index 1) but
+   below the calligraphy (z-index 2), so the silhouette stays
+   untouched. mix-blend-mode: overlay screens the bright band into
+   whatever sits under it — works against both bright bg photos and
+   the darker scrim near the centre. Suppressed entirely for users
+   who prefer reduced motion. */
+@media (prefers-reduced-motion: no-preference) {
+  .hero-card::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 55%;
+    background: linear-gradient(
+      105deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.22) 50%,
+      transparent 100%
+    );
+    transform: skewX(-15deg) translateX(-200%);
+    animation: heroShine 9s ease-in-out infinite;
+    z-index: 1;
+    pointer-events: none;
+    mix-blend-mode: overlay;
+  }
+  @keyframes heroShine {
+    0%   { transform: skewX(-15deg) translateX(-200%); }
+    35%  { transform: skewX(-15deg) translateX(280%); }
+    100% { transform: skewX(-15deg) translateX(280%); }
+  }
 }
 
 /* Share action floats at the top-trailing corner of the hero card so it
