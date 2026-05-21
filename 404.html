@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0c0c0f">
+  <title>…</title>
+  <style>
+    html { background: #0a0a0d; color: #f4f4f7; color-scheme: dark; }
+    body { margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center; font: 16px system-ui, -apple-system, sans-serif; }
+  </style>
+</head>
+<body>
+  <!--
+    Single-page-app fallback for slug URLs on GitHub Pages.
+
+    GitHub Pages serves THIS file (status 404) for any unknown path
+    inside /alloh/. We parse the URL, detect:
+      * which edition (ar at the root, uz under /alloh/uz/…)
+      * the slug segment (last non-empty path part)
+    …then bounce to the edition's `name.html?slug=<slug>` where the
+    main JS resolves the slug → id from `json/slugs.json` and
+    `history.replaceState`s the URL back to its clean slug form so
+    the user never sees the bouncing query string.
+
+    For genuinely unknown URLs (no slug segment), fall through to the
+    edition's index.
+  -->
+  <script>
+    (function () {
+      // The repo lives at /alloh/ — strip that prefix before routing.
+      var BASE = '/alloh/';
+      var path = location.pathname;
+      if (path.indexOf(BASE) !== 0) {
+        location.replace(BASE);
+        return;
+      }
+      var rest = path.slice(BASE.length);
+      var parts = rest.split('/').filter(function (p) { return p.length; });
+
+      var lang = 'ar';
+      var editionBase = BASE;
+      if (parts[0] === 'uz') {
+        lang = 'uz';
+        editionBase = BASE + 'uz/';
+        parts.shift();
+      }
+
+      // Last segment that doesn't look like a real file is treated as a slug.
+      // (Anything containing a `.` is left alone — those are real 404s.)
+      var slug = '';
+      while (parts.length) {
+        var last = parts.pop();
+        if (last && last.indexOf('.') === -1) { slug = last; break; }
+      }
+
+      if (slug) {
+        // Save the canonical URL so name.js can replaceState back to it.
+        try { sessionStorage.setItem('alloh:slugPath', path + location.search + location.hash); } catch (_) {}
+        location.replace(editionBase + 'name.html?slug=' + encodeURIComponent(slug.toLowerCase()));
+      } else {
+        location.replace(editionBase);
+      }
+    })();
+  </script>
+</body>
+</html>
