@@ -40,18 +40,36 @@ async function init() {
 
   applyLangChrome();
   renderTodaysName();
+  scheduleTodaysNameRotation();
   renderList();
 }
 
-/* Deterministic "name of the day": floor(local-midnight epoch / 86400000)
-   mod array length. Same name surfaces for every visitor on the same
-   local calendar day; rotates through the full set every ~100 days. */
+/* Re-render the spotlight on every wall-clock minute boundary so the
+   visible name lines up with `pickTodaysName`'s minute index. A
+   single setTimeout aligns with the next :00 boundary, then a
+   setInterval takes over. `visibilitychange` triggers an extra
+   re-render when the tab regains focus, since background tabs throttle
+   timers and the spotlight could be a few minutes stale on return. */
+function scheduleTodaysNameRotation() {
+  const tick = () => renderTodaysName();
+  const msUntilNextMinute = 60000 - (Date.now() % 60000) + 50;
+  setTimeout(() => {
+    tick();
+    setInterval(tick, 60000);
+  }, msUntilNextMinute);
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) tick();
+  });
+}
+
+/* Deterministic spotlight pick that rotates every wall-clock minute.
+   `floor(Date.now() / 60_000) mod array length` — same minute, same
+   name for every visitor, regardless of timezone. The full set cycles
+   through every ~100 minutes. */
 function pickTodaysName(names) {
   if (!names.length) return null;
-  const d = new Date();
-  const localMidnight = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
-  const day = Math.floor(localMidnight / 86400000);
-  return names[((day % names.length) + names.length) % names.length];
+  const minute = Math.floor(Date.now() / 60000);
+  return names[((minute % names.length) + names.length) % names.length];
 }
 
 function renderTodaysName() {
