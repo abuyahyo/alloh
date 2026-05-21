@@ -659,6 +659,11 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
   aspect-ratio: 16 / 10;
   border-radius: var(--r-lg);
   overflow: hidden;
+  /* `clip-path` enforces the rounded clip on top of `overflow: hidden`.
+     WebKit sometimes lets animated pseudo-elements (notably the hero
+     shine) leak past `overflow` clipping at the corners; the inset
+     clip-path closes that escape hatch. */
+  clip-path: inset(0 round var(--r-lg));
   background-color: var(--surface-2);
   box-shadow: var(--shadow-md);
   isolation: isolate;
@@ -692,6 +697,12 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
    the darker scrim near the centre. Suppressed entirely for users
    who prefer reduced motion. */
 @media (prefers-reduced-motion: no-preference) {
+  /* `mix-blend-mode` used to live here, but iOS WebKit intermittently
+     leaks the blended layer past the parent's `overflow: hidden` round
+     corners, showing a thin square edge at one of the corners during
+     the sweep. The plain alpha gradient below produces an almost
+     identical bright-band effect on the dark hero photo without that
+     compositor bug. */
   .hero-card::after {
     content: '';
     position: absolute;
@@ -702,14 +713,13 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
     background: linear-gradient(
       105deg,
       transparent 0%,
-      rgba(255, 255, 255, 0.22) 50%,
+      rgba(255, 255, 255, 0.18) 50%,
       transparent 100%
     );
     transform: skewX(-15deg) translateX(-200%);
     animation: heroShine 9s ease-in-out infinite;
     z-index: 1;
     pointer-events: none;
-    mix-blend-mode: overlay;
   }
   @keyframes heroShine {
     0%   { transform: skewX(-15deg) translateX(-200%); }
