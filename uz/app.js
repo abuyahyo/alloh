@@ -85,6 +85,7 @@ function renderTodaysName() {
   if (bgImg) attachImgFade(bgImg);
   const svgImg = el.querySelector('img.card-arabic-svg');
   if (svgImg) attachCalligraphyFallback(svgImg);
+  attachCardTilt(el.querySelector('.featured-card'));
   updateTodaysNameVisibility();
 }
 
@@ -157,6 +158,42 @@ function renderList() {
   for (const img of list.querySelectorAll('img.card-arabic-svg')) {
     attachCalligraphyFallback(img);
   }
+  for (const card of list.querySelectorAll('.name-card')) {
+    attachCardTilt(card);
+  }
+}
+
+/* Subtle 3D tilt on hover. Two gates: skip on touchscreens (where
+   pointermove only fires during drag, and tap means "navigate") and
+   on reduced-motion. The CSS rule that consumes --tilt-x / --tilt-y
+   has the same gates so the effect stays consistent if the JS runs
+   before media-query state stabilises. */
+const SUPPORTS_TILT = window.matchMedia('(hover: hover)').matches
+                   && !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function attachCardTilt(card) {
+  if (!card || !SUPPORTS_TILT) return;
+  let raf = 0;
+  card.addEventListener('pointerenter', () => card.classList.add('is-tilting'));
+  card.addEventListener('pointermove', (e) => {
+    if (raf) cancelAnimationFrame(raf);
+    raf = requestAnimationFrame(() => {
+      const r = card.getBoundingClientRect();
+      if (!r.width || !r.height) return;
+      const x = (e.clientX - r.left) / r.width - 0.5;
+      const y = (e.clientY - r.top) / r.height - 0.5;
+      card.style.setProperty('--tilt-y', `${(x * 7).toFixed(2)}deg`);
+      card.style.setProperty('--tilt-x', `${(-y * 5).toFixed(2)}deg`);
+    });
+  });
+  const reset = () => {
+    if (raf) { cancelAnimationFrame(raf); raf = 0; }
+    card.classList.remove('is-tilting');
+    card.style.removeProperty('--tilt-x');
+    card.style.removeProperty('--tilt-y');
+  };
+  card.addEventListener('pointerleave', reset);
+  card.addEventListener('pointercancel', reset);
 }
 
 function attachCalligraphyFallback(img) {
