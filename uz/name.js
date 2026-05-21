@@ -355,10 +355,14 @@ function bindEvents() {
   });
 }
 
-/* Share the current name via the native share sheet on mobile; on
-   desktop browsers without `navigator.share` (or when the user cancels)
-   fall back to copying the URL so the action always does *something*
-   meaningful. */
+/* Share the current name. The preferred path composes a portrait
+   1080×1350 PNG card on a canvas (bg photo + scrim + white calligraphy
+   silhouette + transliteration + short meaning) and shares it as a
+   file via `navigator.share({ files })`. When that's not available —
+   desktop browsers without the share API, iOS < 15, or when the
+   composer fails — fall back to text/URL share, then to plain
+   clipboard copy. The share button gets `is-loading` while the
+   image is composing so the user sees something is happening. */
 async function shareCurrent() {
   const name = state.names.find((n) => n.id === state.currentId);
   if (!name) return;
@@ -366,17 +370,176 @@ async function shareCurrent() {
   const title = `${name.default_name}${t.name ? ' — ' + t.name : ''}`;
   const summary = shortText(t.short_meaning_val);
   const url = location.href;
-  const data = { title, text: summary || title, url };
-  if (navigator.share) {
+
+  const btn = $('.hero-share');
+  if (btn) btn.classList.add('is-loading');
+
+  let file = null;
+  try {
+    file = await composeShareCard(name, t, summary);
+  } catch (err) {
+    console.warn('share card compose failed:', err);
+  } finally {
+    if (btn) btn.classList.remove('is-loading');
+  }
+
+  if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
     try {
-      await navigator.share(data);
+      await navigator.share({ files: [file], title, text: summary || title, url });
       return;
     } catch (err) {
       if (err && err.name === 'AbortError') return;
-      /* fall through to clipboard fallback */
+      /* fall through */
+    }
+  }
+  if (navigator.share) {
+    try {
+      await navigator.share({ title, text: summary || title, url });
+      return;
+    } catch (err) {
+      if (err && err.name === 'AbortError') return;
     }
   }
   copyToClipboard(url);
+}
+
+/* Compose a portrait share card on a 1080×1350 canvas:
+     • bg photo (cover-fit)
+     • bottom-weighted dark scrim so the text stays legible on any photo
+     • calligraphy SVG drawn through a tmp canvas + `source-in` white
+       fill so it ends up as a clean white silhouette regardless of the
+       SVG's source colour (mirrors the on-page `brightness(0) invert(1)`
+       filter)
+     • transliterated name (large bold)
+     • short meaning (multi-line, wrapped, RTL on the Arabic edition).
+   Returns a `File` ready for `navigator.share`. */
+async function composeShareCard(name, t, summary) {
+  const W = 1080, H = 1350;
+  const canvas = document.createElement('canvas');
+  canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext('2d');
+
+  /* Background photo, cover-fit. Fallback solid colour matches `--bg`
+     so a missing image still produces a readable card. */
+  const bgPath = safePath(name.background_image);
+  if (bgPath) {
+    try {
+      const bg = await loadImage(bgPath);
+      const scale = Math.max(W / bg.width, H / bg.height);
+      const dw = bg.width * scale, dh = bg.height * scale;
+      ctx.drawImage(bg, (W - dw) / 2, (H - dh) / 2, dw, dh);
+    } catch (_) {
+      ctx.fillStyle = '#0a0a0d';
+      ctx.fillRect(0, 0, W, H);
+    }
+  } else {
+    ctx.fillStyle = '#0a0a0d';
+    ctx.fillRect(0, 0, W, H);
+  }
+
+  /* Bottom-weighted scrim so the text on the lower half stays legible
+     and the calligraphy in the upper half keeps the photo's mood. */
+  const grad = ctx.createLinearGradient(0, 0, 0, H);
+  grad.addColorStop(0, 'rgba(0, 0, 0, 0.20)');
+  grad.addColorStop(0.45, 'rgba(0, 0, 0, 0.50)');
+  grad.addColorStop(1, 'rgba(0, 0, 0, 0.85)');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, W, H);
+
+  /* Calligraphy: draw the SVG into a tmp canvas, then re-fill with
+     white using `source-in` so opaque regions become a clean white
+     silhouette. */
+  const svgPath = safeSvgPath(name.image);
+  if (svgPath) {
+    try {
+      const svg = await loadImage(svgPath);
+      const sw = svg.naturalWidth || 1000;
+      const sh = svg.naturalHeight || 400;
+      const tmp = document.createElement('canvas');
+      tmp.width = sw; tmp.height = sh;
+      const tctx = tmp.getContext('2d');
+      tctx.drawImage(svg, 0, 0, sw, sh);
+      tctx.globalCompositeOperation = 'source-in';
+      tctx.fillStyle = '#ffffff';
+      tctx.fillRect(0, 0, sw, sh);
+
+      const maxW = W * 0.66, maxH = H * 0.28;
+      const aspect = sw / sh;
+      let dw = maxW, dh = dw / aspect;
+      if (dh > maxH) { dh = maxH; dw = dh * aspect; }
+      const dx = (W - dw) / 2;
+      const dy = H * 0.16;
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.55)';
+      ctx.shadowBlur = 32;
+      ctx.shadowOffsetY = 6;
+      ctx.drawImage(tmp, dx, dy, dw, dh);
+      ctx.shadowColor = 'transparent';
+      ctx.shadowBlur = 0;
+      ctx.shadowOffsetY = 0;
+    } catch (_) { /* fall through — skip the calligraphy */ }
+  }
+
+  /* Transliteration. RTL edition reads its own way naturally; canvas
+     `direction` lets the shaper match the page. */
+  const isRTL = LANG === 'ar';
+  ctx.direction = isRTL ? 'rtl' : 'ltr';
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#ffffff';
+  const translit = t.name || name.default_name;
+  if (translit) {
+    ctx.font = `700 64px ${isRTL ? '"Cairo", "Amiri"' : 'system-ui'}, sans-serif`;
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.55)';
+    ctx.shadowBlur = 16;
+    ctx.fillText(translit, W / 2, H * 0.62);
+    ctx.shadowColor = 'transparent';
+    ctx.shadowBlur = 0;
+  }
+
+  /* Short meaning, wrapped. Five-line cap protects the layout from
+     unusually long entries. */
+  if (summary) {
+    ctx.fillStyle = '#e6e6ea';
+    ctx.font = `400 38px ${isRTL ? '"Amiri", serif' : 'system-ui, sans-serif'}`;
+    const lines = wrapCanvasText(ctx, summary, W * 0.82);
+    const max = 5;
+    const lineHeight = 54;
+    const drawn = lines.slice(0, max);
+    const startY = H * 0.70;
+    drawn.forEach((line, i) => ctx.fillText(line, W / 2, startY + i * lineHeight));
+  }
+
+  const blob = await new Promise((resolve, reject) => {
+    canvas.toBlob((b) => b ? resolve(b) : reject(new Error('toBlob null')), 'image/png');
+  });
+  const filename = `${(t.name || name.default_name).replace(/[\\/:*?"<>|]/g, '').replace(/\s+/g, '-').trim() || 'name'}.png`;
+  return new File([blob], filename, { type: 'image/png' });
+}
+
+function loadImage(src) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => resolve(img);
+    img.onerror = (e) => reject(e);
+    img.src = src;
+  });
+}
+
+function wrapCanvasText(ctx, text, maxWidth) {
+  const words = String(text).split(/\s+/);
+  const lines = [];
+  let current = '';
+  for (const word of words) {
+    const test = current ? current + ' ' + word : word;
+    if (ctx.measureText(test).width <= maxWidth) {
+      current = test;
+    } else {
+      if (current) lines.push(current);
+      current = word;
+    }
+  }
+  if (current) lines.push(current);
+  return lines;
 }
 
 async function copyToClipboard(text) {
