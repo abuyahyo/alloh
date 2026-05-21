@@ -624,6 +624,39 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
   animation: shimmer 1.4s infinite ease;
 }
 
+/* Share action floats at the top-trailing corner of the hero card so it
+   stays out of the central calligraphy and the bottom translit pill.
+   Glass pill styling matches the library download chip. */
+.hero-share {
+  position: absolute;
+  top: 0.6rem;
+  inset-inline-end: 0.6rem;
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.32);
+  backdrop-filter: blur(18px) saturate(180%);
+  -webkit-backdrop-filter: blur(18px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+  border-radius: 50%;
+  box-shadow:
+    0 6px 18px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.25);
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.15s var(--ease), transform 0.12s var(--ease);
+  z-index: 3;
+}
+.hero-share:hover { background: rgba(0, 0, 0, 0.5); }
+.hero-share:active { transform: scale(0.94); }
+.hero-share:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
 /* The short meaning now renders inside a normal .section card just like
    the scholars / evidence sections below, so no dedicated rules are
    needed here — only the empty-state guard for the body slot. */
@@ -837,6 +870,24 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
   color: var(--ink);
   font-weight: 500;
   margin-bottom: 0.2rem;
+  /* Tap-to-copy affordance: the click handler in name.js writes the
+     plain text to the clipboard, so the cursor + faint hover wash
+     signal that the verse is actionable. The transition is fast so
+     the surface doesn't feel "sticky" when the user is just reading. */
+  cursor: pointer;
+  padding: 0.1em 0.25em;
+  margin-inline: -0.25em;
+  border-radius: var(--r-sm);
+  transition: background 0.15s var(--ease);
+  -webkit-tap-highlight-color: transparent;
+}
+.section-body .ar-quote:hover,
+.section-body .ar-quote:focus-visible {
+  background: rgba(255, 255, 255, 0.05);
+  outline: none;
+}
+.section-body .ar-quote:active {
+  background: var(--accent-soft);
 }
 .section-body blockquote {
   margin: 0.6rem 0;
