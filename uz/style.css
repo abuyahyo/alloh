@@ -88,11 +88,11 @@ body {
      is what sells the liquid-glass effect. Values are kept low-alpha so
      body prose remains comfortably legible. */
   background:
-    radial-gradient(ellipse 70% 55% at 10% -5%, rgba(214, 173, 90, 0.16), transparent 60%),
-    radial-gradient(ellipse 65% 50% at 100% 28%, rgba(110, 92, 200, 0.14), transparent 65%),
-    radial-gradient(ellipse 80% 60% at 50% 105%, rgba(214, 173, 90, 0.10), transparent 70%),
-    radial-gradient(ellipse 55% 45% at 85% 80%, rgba(60, 140, 170, 0.10), transparent 70%),
-    radial-gradient(ellipse 50% 40% at 15% 60%, rgba(180, 70, 130, 0.08), transparent 70%),
+    radial-gradient(ellipse 70% 55% at 10% -5%, rgba(214, 173, 90, 0.12), transparent 60%),
+    radial-gradient(ellipse 65% 50% at 100% 28%, rgba(110, 92, 200, 0.09), transparent 65%),
+    radial-gradient(ellipse 80% 60% at 50% 105%, rgba(214, 173, 90, 0.07), transparent 70%),
+    radial-gradient(ellipse 55% 45% at 85% 80%, rgba(60, 140, 170, 0.07), transparent 70%),
+    radial-gradient(ellipse 50% 40% at 15% 60%, rgba(180, 70, 130, 0.05), transparent 70%),
     var(--bg);
   background-attachment: fixed;
   color: var(--ink);
@@ -667,7 +667,11 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
   background-color: var(--surface-2);
   box-shadow: var(--shadow-md);
   isolation: isolate;
-  margin-bottom: 0.85rem;
+  /* Margin tightened from 0.85rem so the ambient body mesh in the gap
+     between the hero card and the toolbar below doesn't show through
+     as a faint coloured pixel slice. The toolbar's own glass surface
+     gives the two enough visual separation without extra mesh space. */
+  margin-bottom: 0.4rem;
 }
 .hero-card::before {
   content: '';
