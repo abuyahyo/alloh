@@ -486,11 +486,11 @@ async function shareCurrent() {
 
   if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
     try {
-      /* The URL is baked into the image itself (footer line), so
-         leave both the `url` field and any URL inside `text` out of
-         the share payload. Otherwise Telegram and friends will fall
-         back to the link preview and drop the image. */
-      await navigator.share({ files: [file], title, text: summary || title });
+      /* Files-only payload — no title, text, or url. The user asked
+         for "только картинка"; the URL is already baked into the
+         image footer, so the rendered card carries all the context
+         the recipient needs. */
+      await navigator.share({ files: [file] });
       return;
     } catch (err) {
       if (err && err.name === 'AbortError') return;
