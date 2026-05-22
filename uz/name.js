@@ -86,7 +86,7 @@ async function init() {
     }
   }
   if (!Number.isFinite(id) || id <= 0) {
-    location.replace('index.html');
+    location.replace('./');
     return;
   }
   state.currentId = id;
