@@ -13,7 +13,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - [Body-text size control](#body-text-size-control)
 - [About-the-names section](#about-the-names-section)
 - [Translation data](#translation-data)
-- [Asset backfill (GitHub Actions)](#asset-backfill-github-actions)
 - [Fonts and styling](#fonts-and-styling)
 - [Git workflow](#git-workflow)
 - [Don'ts](#donts)
@@ -277,24 +276,6 @@ The two `about.html` pages serve educational articles alongside the
 - When editing translations, never add evidence that isn't already
   in the source file — the user's standing rule is
   "далилни фақат файлдан ол".
-
-## Asset backfill (GitHub Actions)
-
-Three workflows in `.github/workflows/` keep media in sync with the
-upstream `app.isokoon.com` API. They run on `main`, on push to the
-relevant data file, and on a daily cron:
-
-- `fetch-voices.yml` → runs `scripts/fetch-missing-voices.mjs`,
-  triggered by changes to `json/names.json`.
-- `fetch-images.yml` → runs `scripts/fetch-missing-images.mjs`,
-  triggered by changes to `json/names.json`.
-- `fetch-cards.yml` → runs `scripts/fetch-missing-cards.mjs`,
-  triggered by changes to `json/cards.json`.
-
-These scripts live in `scripts/` on `main` (they may not be present on
-every feature branch). Each job commits any newly downloaded files
-back to `main` via `github-actions[bot]`. If a workflow goes red,
-inspect the script on `main` rather than re-fetching media by hand.
 
 ## Fonts and styling
 
