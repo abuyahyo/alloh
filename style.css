@@ -943,6 +943,12 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
   outline: 2px solid var(--ink);
   outline-offset: 2px;
 }
+/* Restore the UA `[hidden]` semantic — the explicit `display:
+   inline-flex` above would otherwise win the cascade against the
+   UA stylesheet's `[hidden] { display: none }`. Without this rule
+   the about-page back arrow keeps showing on the list view, where
+   about.js sets `#bar-back.hidden = true` to hide it. */
+.bar-btn[hidden] { display: none; }
 .bar-btn[aria-disabled="true"] {
   color: var(--muted-2);
   pointer-events: none;
