@@ -196,7 +196,7 @@ function render() {
   const isFav = state.favorites.has(name.id);
   const tint = safeColor(name.color);
 
-  document.title = `${name.default_name}${translit ? ' — ' + translit : ''} | ${ui('pwa_title')}`;
+  document.title = `${name.default_name} | ${ui('pwa_title')}`;
   if (tint) hero.style.backgroundColor = tint;
 
   const calligraphy = safeSvgPath(name.image);
@@ -225,7 +225,6 @@ function render() {
       <button class="card-icon-btn card-play${playing ? ' is-playing' : ''}${loading ? ' is-loading' : ''}" data-action="play" aria-label="${escapeHtml(playLabel)}" type="button">
         ${playIcon}
       </button>
-      <span class="card-translit">${escapeHtml(translit)}</span>
       <button class="card-icon-btn card-fav${isFav ? ' is-fav' : ''}" data-action="fav" aria-label="${escapeHtml(favLabel)}" aria-pressed="${isFav ? 'true' : 'false'}" type="button">
         ${iconHeart()}
       </button>
@@ -584,32 +583,21 @@ async function composeShareCard(name, t, summary, url) {
     } catch (_) { /* fall through — skip the calligraphy */ }
   }
 
-  /* Transliteration. RTL edition reads its own way naturally; canvas
-     `direction` lets the shaper match the page. */
-  const isRTL = LANG === 'ar';
-  ctx.direction = isRTL ? 'rtl' : 'ltr';
+  /* Arabic edition: no transliteration line — the calligraphy is the
+     name. Short meaning slides up into the space that the translit
+     previously occupied so the card doesn't have an awkward gap. */
+  const isRTL = true;
+  ctx.direction = 'rtl';
   ctx.textAlign = 'center';
-  ctx.fillStyle = '#ffffff';
-  const translit = t.name || name.default_name;
-  if (translit) {
-    ctx.font = `700 64px ${isRTL ? '"Cairo", "Amiri"' : 'system-ui'}, sans-serif`;
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.55)';
-    ctx.shadowBlur = 16;
-    ctx.fillText(translit, W / 2, H * 0.62);
-    ctx.shadowColor = 'transparent';
-    ctx.shadowBlur = 0;
-  }
 
-  /* Short meaning, wrapped. Five-line cap protects the layout from
-     unusually long entries. */
   if (summary) {
     ctx.fillStyle = '#e6e6ea';
-    ctx.font = `400 38px ${isRTL ? '"Amiri", serif' : 'system-ui, sans-serif'}`;
+    ctx.font = `400 40px "Amiri", serif`;
     const lines = wrapCanvasText(ctx, summary, W * 0.82);
     const max = 5;
-    const lineHeight = 54;
+    const lineHeight = 58;
     const drawn = lines.slice(0, max);
-    const startY = H * 0.70;
+    const startY = H * 0.60;
     drawn.forEach((line, i) => ctx.fillText(line, W / 2, startY + i * lineHeight));
   }
 

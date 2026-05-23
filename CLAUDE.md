@@ -129,6 +129,26 @@ When mirroring a change that touches the library code path, leave the
 Uzbek side without the library. Do not re-add `cards.json` to `/uz/`
 or re-introduce the library section there.
 
+**Exception — the Arabic edition omits the Latin transliteration.**
+Arabic readers see the calligraphy itself as the name, so the Latin
+`t.name` field (`"Allāh"`, `"Ar-Rahmān"`, …) doesn't render in the
+ar UI at all:
+
+- `app.js` (ar) skips the `.card-pill` on grid cards and the
+  `.featured-card-translit` on the today's-name spotlight.
+- `name.js` (ar) omits the `.card-translit` `<span>` in the hero
+  toolbar (play + favourite buttons stay), drops the `' — translit'`
+  suffix from `document.title`, and the share card composer doesn't
+  paint a translit line — `summary` slides up to where the translit
+  used to sit.
+- ARIA labels built from `n.default_name` no longer append the
+  Latin form.
+
+When mirroring a change to `/uz/`, keep the translit on the uz side
+— Cyrillic transliterations are the primary label there. Don't
+add `.card-pill` back to ar grid cards or paint the translit on the
+ar share card.
+
 Data files (`json/*.json`) are otherwise per-language — do NOT mirror
 translation content between the two trees.
 

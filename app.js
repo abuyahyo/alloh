@@ -62,7 +62,7 @@ function renderTodaysName() {
   const calligraphy = safeSvgPath(name.image);
   const tint = safeColor(name.color);
   const label = tFor(LANG, 'todays_name');
-  const ariaLabel = `${label}: ${name.default_name}${translit ? ', ' + translit : ''}`;
+  const ariaLabel = `${label}: ${name.default_name}`;
   const cardStyle = tint ? `background-color: ${tint}` : '';
   const calligraphyHtml = calligraphy
     ? `<img class="card-arabic-svg" src="${escapeHtml(calligraphy)}" alt="${escapeHtml(name.default_name)}" loading="eager" decoding="async" fetchpriority="high" data-fallback="${escapeHtml(name.default_name)}">`
@@ -73,7 +73,6 @@ function renderTodaysName() {
     <a class="featured-card" href="name.html?id=${name.id}" aria-label="${escapeHtml(ariaLabel)}" style="${cardStyle}">
       ${bg ? `<img class="card-bg is-loading" src="${escapeHtml(bg)}" alt="" loading="eager" decoding="async" fetchpriority="high">` : ''}
       <span class="card-arabic">${calligraphyHtml}</span>
-      ${translit ? `<span class="featured-card-translit">${escapeHtml(translit)}</span>` : ''}
     </a>
   `;
   el.hidden = false;
@@ -207,7 +206,7 @@ function cardMarkup(n, i) {
   const calligraphy = safeSvgPath(n.image);
   const delay = Math.min(i * 24, 360);
   const eager = i < 3;
-  const ariaLabel = `${n.default_name}${translit ? ', ' + translit : ''}`;
+  const ariaLabel = `${n.default_name}`;
   const tint = safeColor(n.color);
   const cardStyle = `animation-delay: ${delay}ms${tint ? `; background-color: ${tint}` : ''}`;
   const calligraphyHtml = calligraphy
@@ -219,7 +218,6 @@ function cardMarkup(n, i) {
       <a class="card-link" href="name.html?id=${n.id}" aria-label="${escapeHtml(ariaLabel)}">
         ${bg ? `<img class="card-bg is-loading" src="${escapeHtml(bg)}" alt="" loading="${eager ? 'eager' : 'lazy'}" decoding="async" fetchpriority="${eager ? 'high' : 'low'}">` : ''}
         <span class="card-arabic">${calligraphyHtml}</span>
-        ${translit ? `<span class="card-pill">${escapeHtml(translit)}</span>` : ''}
       </a>
     </article>
   `;
