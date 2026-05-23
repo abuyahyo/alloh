@@ -1297,11 +1297,6 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
   color: var(--ink);
 }
 
-.bar-spacer {
-  visibility: hidden;
-  pointer-events: none;
-}
-
 /* =========================================================================
    Body-text size controls (detail page, three levels)
    ========================================================================= */
