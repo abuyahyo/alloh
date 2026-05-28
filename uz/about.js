@@ -240,10 +240,16 @@ const BOTTOM_Y = CARD_H - 150;
 const BLOCK_GAP = 30;
 
 function blockFont(type) {
+  /* Match the on-page body font per edition: the ar `.section-body`
+     uses Amiri (serif), the uz one uses the system UI sans-serif
+     (`--font-ui`). Headings stay Cairo to mirror the title font. */
+  const bodyFamily = LANG === 'ar'
+    ? '"Amiri", serif'
+    : 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
   if (type === 'heading') return { font: '700 46px "Cairo", sans-serif', lh: 62, indent: 0, color: '#d6ad5a' };
-  if (type === 'bullet')  return { font: '400 38px "Amiri", serif', lh: 56, indent: 46, color: '#e6e6ea' };
-  if (type === 'quote')   return { font: 'italic 400 38px "Amiri", serif', lh: 56, indent: 36, color: '#f4f4f7' };
-  return { font: '400 38px "Amiri", serif', lh: 56, indent: 0, color: '#e6e6ea' };
+  if (type === 'bullet')  return { font: `400 38px ${bodyFamily}`, lh: 56, indent: 46, color: '#e6e6ea' };
+  if (type === 'quote')   return { font: `italic 400 38px ${bodyFamily}`, lh: 56, indent: 36, color: '#f4f4f7' };
+  return { font: `400 38px ${bodyFamily}`, lh: 56, indent: 0, color: '#e6e6ea' };
 }
 
 /* Wrap each block to the content width, then pack the wrapped lines
