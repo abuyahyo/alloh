@@ -292,8 +292,8 @@ def runs_to_markup(runs):
 def build_styles():
     ss = StyleSheet1()
     ss.add(ParagraphStyle(
-        "Body", fontName=F_BODY, fontSize=10.5, leading=16.5,
-        textColor=INK, alignment=TA_JUSTIFY, spaceAfter=7,
+        "Body", fontName=F_BODY, fontSize=10.5, leading=17,
+        textColor=INK, alignment=TA_LEFT, spaceAfter=7,
     ))
     ss.add(ParagraphStyle(
         "Bullet", parent=ss["Body"], leftIndent=14, bulletIndent=2,
@@ -315,8 +315,8 @@ def build_styles():
         textColor=ACCENT, spaceBefore=4, spaceAfter=12,
     ))
     ss.add(ParagraphStyle(
-        "NameTitle", fontName=F_HEAD, fontSize=16, leading=20,
-        textColor=ACCENT, alignment=TA_CENTER, spaceBefore=7, spaceAfter=9,
+        "NameTitle", fontName=F_HEAD, fontSize=18, leading=22,
+        textColor=ACCENT, alignment=TA_CENTER, spaceBefore=8, spaceAfter=3,
     ))
     ss.add(ParagraphStyle(
         "Verse", fontName=F_AR, fontSize=17, leading=29,
@@ -498,6 +498,37 @@ class CardBox(Flowable):
             y -= self.ITEM_GAP
 
 
+class SectionHead(Flowable):
+    """Bo'lim sarlavhasi: chap tilla belgi + sarlavha + ostida nozik chiziq."""
+
+    SB = 13          # tepa bo'shliq
+    FS = 12.5        # shrift o'lchami
+    RULE_GAP = 6
+    SA = 5           # past bo'shliq
+    RULE = HexColor("#e2cfa6")
+
+    def __init__(self, text):
+        super().__init__()
+        self.text = text
+
+    def wrap(self, availW, availH):
+        self.width = availW
+        self.height = self.SB + self.FS + self.RULE_GAP + self.SA
+        return availW, self.height
+
+    def draw(self):
+        c = self.canv
+        w = self.width
+        base = self.SA + self.RULE_GAP        # matn baseline
+        c.setFillColor(ACCENT)
+        c.rect(0, base, 3, self.FS * 0.82, stroke=0, fill=1)   # chap belgi
+        c.setFont(F_HEAD, self.FS)
+        c.drawString(10, base, self.text)
+        c.setStrokeColor(self.RULE)
+        c.setLineWidth(0.8)
+        c.line(0, self.SA, w, self.SA)        # ostidagi nozik chiziq
+
+
 # --------------------------------------------------------------------------- #
 #  Hujjat shabloni (TOC + outline + footer)
 # --------------------------------------------------------------------------- #
@@ -634,21 +665,24 @@ def build_story(names, trans, about, styles, content_w):
         banner = Banner(content_w, bg, svg, cyr)
         head.append(tagged(banner, 0, label, key))
         head.append(Paragraph(_esc(cyr.upper()), styles["NameTitle"]))
-        # qisqa maъно — banner bilan birga (yetim qolmasin)
+        head.append(HRule(width=2.4 * cm, color=ACCENT, center=True, pad=8))
+        # qisqa maъно — sarlavha bilan, banner bilan birga (yetim qolmasin)
         short = render_fragment(rec.get("short_meaning_val", ""), styles, content_w)
-        head.extend(short[:1])
+        if short:
+            head.append(SectionHead("Қисқача маъноси"))
+            head.extend(short[:1])
         story.append(KeepTogether(head))
         for fl in short[1:]:
             story.append(fl)
 
         meanings = render_fragment(rec.get("meanings_val", ""), styles, content_w)
         if meanings:
-            story.append(Paragraph("Уламоларнинг сўзлари", styles["Section"]))
+            story.append(SectionHead("Уламоларнинг сўзлари"))
             story.extend(meanings)
 
         evidence = render_fragment(rec.get("evidence_val", ""), styles, content_w)
         if evidence:
-            story.append(Paragraph("Далиллар", styles["Section"]))
+            story.append(SectionHead("Далиллар"))
             story.extend(evidence)
 
         story.append(Spacer(1, 0.5 * cm))
