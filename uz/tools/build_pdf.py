@@ -48,6 +48,7 @@ from reportlab.platypus import (
 )
 from reportlab.platypus.tableofcontents import TableOfContents
 from reportlab.pdfgen import canvas
+from svglib.svglib import svg2rlg
 
 # --------------------------------------------------------------------------- #
 #  Yoʻllar
@@ -73,7 +74,7 @@ CARD = HexColor("#f3ead4")      # oyat kartasi foni (iliq krem)
 # --------------------------------------------------------------------------- #
 #  Shriftlar
 # --------------------------------------------------------------------------- #
-F_BODY = "Body"            # Noto Serif — Kirill body
+F_BODY = "Body"            # Noto Sans — Kirill body (saytdagi sans ko'rinishi)
 F_BODY_B = "Body-B"
 F_BODY_I = "Body-I"
 F_HEAD = "Head"            # Noto Sans Bold — sarlavhalar
@@ -84,9 +85,9 @@ F_AR_B = "Arabic-B"
 
 def register_fonts():
     reg = pdfmetrics.registerFont
-    reg(TTFont(F_BODY, os.path.join(FONT_DIR, "NotoSerif-Regular.ttf")))
-    reg(TTFont(F_BODY_B, os.path.join(FONT_DIR, "NotoSerif-Bold.ttf")))
-    reg(TTFont(F_BODY_I, os.path.join(FONT_DIR, "NotoSerif-Italic.ttf")))
+    reg(TTFont(F_BODY, os.path.join(FONT_DIR, "NotoSans-Regular.ttf")))
+    reg(TTFont(F_BODY_B, os.path.join(FONT_DIR, "NotoSans-Bold.ttf")))
+    reg(TTFont(F_BODY_I, os.path.join(FONT_DIR, "NotoSans-Italic.ttf")))
     reg(TTFont(F_HEAD, os.path.join(FONT_DIR, "NotoSans-Bold.ttf")))
     reg(TTFont(F_HEAD_R, os.path.join(FONT_DIR, "NotoSans-Regular.ttf")))
     reg(TTFont(F_AR, os.path.join(FONT_DIR, "Amiri-Regular.ttf")))
@@ -114,6 +115,41 @@ def shape_arabic(text):
     """Arabcha matnni vizual tartibga (reshape + bidi) keltirish."""
     reshaped = arabic_reshaper.reshape(text)
     return get_display(reshaped)
+
+
+def _recolor(node, color):
+    """rlg daraxtidagi barcha shakllar rangini almashtirish."""
+    for c in getattr(node, "contents", []) or []:
+        _recolor(c, color)
+    if getattr(node, "fillColor", None) is not None:
+        node.fillColor = color
+    if getattr(node, "strokeColor", None) is not None:
+        node.strokeColor = color
+
+
+def load_calligraphy(path, color, max_w, max_h):
+    """SVG xattotlikни qayta ranglab, max o'lchamga sig'dirilgan vektor
+    Drawing va uning (kenglik, balandlik)ini qaytaradi."""
+    from reportlab.graphics.shapes import Drawing, Group
+    d = svg2rlg(path)
+    x1, y1, x2, y2 = d.getBounds()
+    bw, bh = (x2 - x1) or d.width, (y2 - y1) or d.height
+    if color is not None:
+        _recolor(d, color)
+    s = min(max_w / bw, max_h / bh)
+    g = Group(d)
+    g.translate(-x1, -y1)
+    out = Drawing(bw * s, bh * s)
+    out.add(g)
+    out.scale(s, s)
+    out.hAlign = "CENTER"
+    return out, bw * s, bh * s
+
+
+def svg_flowable(path, target_w, color=None):
+    """SVG xattotlikni markazlashgan vektor flowable sifatida qaytaradi."""
+    out, _, _ = load_calligraphy(path, color, target_w, target_w)
+    return out
 
 
 def _esc(s):
@@ -235,6 +271,10 @@ class FragmentParser(HTMLParser):
         self._flush()
         return self.blocks
 
+    def feed_close(self, html_str):
+        self.feed(html_str)
+        return self.close()
+
 
 def runs_to_markup(runs):
     parts = []
@@ -279,9 +319,13 @@ def build_styles():
         textColor=ACCENT, alignment=TA_CENTER, spaceBefore=7, spaceAfter=9,
     ))
     ss.add(ParagraphStyle(
-        "Quote", fontName=F_AR, fontSize=17, leading=30,
-        textColor=QURAN, alignment=TA_CENTER, spaceBefore=4, spaceAfter=8,
+        "Verse", fontName=F_AR, fontSize=17, leading=29,
+        textColor=QURAN, alignment=TA_CENTER, spaceBefore=0, spaceAfter=0,
         wordWrap=None,
+    ))
+    ss.add(ParagraphStyle(
+        "VerseTrans", fontName=F_BODY, fontSize=9.8, leading=15,
+        textColor=INK, alignment=TA_CENTER, spaceBefore=0, spaceAfter=0,
     ))
     ss.add(ParagraphStyle(
         "TocH", fontName=F_HEAD, fontSize=20, leading=26,
@@ -334,12 +378,12 @@ def prepare_banner_image(path, target_w_px, target_h_px):
 
 
 class Banner(Flowable):
-    def __init__(self, width, image_path, arabic_name, cyr_name):
+    def __init__(self, width, photo_path, svg_path, cyr_name):
         super().__init__()
         self.width = width
         self.height = BANNER_H
-        self.image_path = image_path
-        self.arabic = shape_arabic(arabic_name) if arabic_name else ""
+        self.image_path = photo_path
+        self.svg_path = svg_path
         self.cyr = cyr_name or ""
         self._buf = None
 
@@ -366,16 +410,17 @@ class Banner(Flowable):
                     preserveAspectRatio=False, mask=None)
         c.restoreState()
 
-        # arabcha xattotlik (markazда, teparoq)
-        size = 38
-        while size > 18 and pdfmetrics.stringWidth(self.arabic, F_AR, size) > w * 0.82:
-            size -= 1
-        y = h / 2 - size * 0.36                  # vizual markaz tuzatishи
-        c.setFont(F_AR, size)
-        c.setFillColor(HexColor("#000000"))      # nozik soya
-        c.drawCentredString(w / 2 + 0.8, y - 0.8, self.arabic)
-        c.setFillColor(HexColor("#ffffff"))
-        c.drawCentredString(w / 2, y, self.arabic)
+        # repodagi SVG xattotlik — oq rangda, markazда (o'qilishi uchun soya)
+        from reportlab.graphics import renderPDF
+        max_w, max_h = w * 0.50, h * 0.62
+        shadow, _, _ = load_calligraphy(self.svg_path, HexColor("#000000"),
+                                        max_w, max_h)
+        light, dw, dh = load_calligraphy(self.svg_path, HexColor("#ffffff"),
+                                         max_w, max_h)
+        x = (w - dw) / 2
+        y = (h - dh) / 2
+        renderPDF.draw(shadow, c, x + 0.8, y - 0.8)
+        renderPDF.draw(light, c, x, y)
 
 
 class HRule(Flowable):
@@ -403,43 +448,54 @@ class HRule(Flowable):
         c.line(x0, self.height / 2, x0 + self.seg, self.height / 2)
 
 
-class VerseCard(Flowable):
-    """Qurʼon/hadis оyatini krem panel + tilla chap-chiziqli kartaга oladi."""
+class CardBox(Flowable):
+    """Bir nechta flowableни bitta krem panel + tilla chap-chiziqli kartaга
+    vertikal joylaydi (oyat + tarjima bir butun bo'lib turishi uchun)."""
 
     PAD_X = 14
-    PAD_Y = 9
+    PAD_Y = 10
     GAP_TOP = 4
-    GAP_BOTTOM = 8
+    GAP_BOTTOM = 9
     BAR_W = 3
+    ITEM_GAP = 5
 
-    def __init__(self, inner):
+    def __init__(self, items):
         super().__init__()
-        self.inner = inner          # markazlashgan Amiri Paragraph (оyat)
-        self._iw = self._ih = 0
+        self.items = items
+        self._iw = 0
+        self._heights = []
 
     def wrap(self, availW, availH):
         self.width = availW
         self._iw = availW - 2 * self.PAD_X - self.BAR_W
-        _, self._ih = self.inner.wrap(self._iw, availH)
-        self.height = self._ih + 2 * self.PAD_Y + self.GAP_TOP + self.GAP_BOTTOM
+        self._heights = []
+        for f in self.items:
+            _, h = f.wrap(self._iw, availH)
+            self._heights.append(h)
+        inner = sum(self._heights) + self.ITEM_GAP * (len(self.items) - 1)
+        self._panel_h = inner + 2 * self.PAD_Y
+        self.height = self._panel_h + self.GAP_TOP + self.GAP_BOTTOM
         return availW, self.height
 
     def draw(self):
         c = self.canv
         w = self.width
-        panel_h = self._ih + 2 * self.PAD_Y
+        ph = self._panel_h
         y0 = self.GAP_BOTTOM
         c.saveState()
-        # krem panel
         c.setFillColor(CARD)
-        c.roundRect(0, y0, w, panel_h, 6, stroke=0, fill=1)
-        # tilla chap chizigʻi
-        c.setFillColor(ACCENT)
-        c.roundRect(0, y0, self.BAR_W + 4, panel_h, 6, stroke=0, fill=1)
+        c.roundRect(0, y0, w, ph, 6, stroke=0, fill=1)
+        c.setFillColor(ACCENT)                       # tilla chap chizigʻi
+        c.roundRect(0, y0, self.BAR_W + 4, ph, 6, stroke=0, fill=1)
         c.setFillColor(CARD)
-        c.rect(self.BAR_W, y0, 6, panel_h, stroke=0, fill=1)
+        c.rect(self.BAR_W, y0, 6, ph, stroke=0, fill=1)
         c.restoreState()
-        self.inner.drawOn(c, self.BAR_W + self.PAD_X, y0 + self.PAD_Y)
+        x = self.BAR_W + self.PAD_X
+        y = y0 + ph - self.PAD_Y
+        for f, h in zip(self.items, self._heights):
+            y -= h
+            f.drawOn(c, x, y)
+            y -= self.ITEM_GAP
 
 
 # --------------------------------------------------------------------------- #
@@ -459,15 +515,19 @@ class Book(BaseDocTemplate):
         ])
 
     def _blank(self, c, doc):
-        pass
+        # muqova: havola faqat shu yerda
+        c.saveState()
+        c.setFont(F_BODY, 9)
+        c.setFillColor(MUTED)
+        c.drawCentredString(A4[0] / 2, 1.4 * cm, SITE_URL)
+        c.restoreState()
 
     def _footer(self, c, doc):
+        # boshqa betlarda faqat sahifa raqami (havolasiz)
         c.saveState()
         c.setFont(F_HEAD_R, 8)
         c.setFillColor(MUTED)
-        c.drawCentredString(A4[0] / 2, 1.0 * cm, str(doc.page))
-        c.setFont(F_BODY, 7.5)
-        c.drawCentredString(A4[0] / 2, 0.62 * cm, SITE_URL)
+        c.drawCentredString(A4[0] / 2, 0.85 * cm, str(doc.page))
         c.restoreState()
 
     def afterFlowable(self, flowable):
@@ -501,14 +561,26 @@ def load_data():
 
 
 def render_fragment(html_str, styles, content_w):
-    """HTML fragmentni Platypus flowable roʻyxatiga aylantiradi."""
-    blocks = FragmentParser()
-    blocks.feed(html_str or "")
+    """HTML fragmentni Platypus flowable roʻyxatiga aylantiradi.
+
+    Har bir dalil oyati o'zining tarjimasi bilan BITTA kartaga joylanadi
+    (oyat tepada, tarjima pastida — umumiy fon + chap tilla chiziq), shunda
+    arabcha matn va uning tarjimasi bir butun ko'rinadi.
+    """
+    blocks = FragmentParser().feed_close(html_str or "")
     out = []
-    for b in blocks.close():
+    i, n = 0, len(blocks)
+    while i < n:
+        b = blocks[i]
         if b.kind == "quote":
             txt = shape_arabic("".join(r[0] for r in b.runs))
-            out.append(VerseCard(Paragraph(_esc(txt), styles["Quote"])))
+            items = [Paragraph(_esc(txt), styles["Verse"])]
+            # to'g'ridan-to'g'ri keyingi matn — shu oyatning tarjimasi
+            if i + 1 < n and blocks[i + 1].kind in ("p", "li"):
+                items.append(Paragraph(runs_to_markup(blocks[i + 1].runs),
+                                       styles["VerseTrans"]))
+                i += 1
+            out.append(CardBox(items))
         elif b.kind == "h":
             out.append(Paragraph(runs_to_markup(b.runs), styles["Intro4"]))
         elif b.kind == "li":
@@ -516,6 +588,7 @@ def render_fragment(html_str, styles, content_w):
                                  bulletText="•"))
         else:
             out.append(Paragraph(runs_to_markup(b.runs), styles["Body"]))
+        i += 1
     return out
 
 
@@ -523,33 +596,16 @@ def build_story(names, trans, about, styles, content_w):
     story = []
 
     # ---- Muqova ----
-    story.append(Spacer(1, 5.5 * cm))
-    story.append(Paragraph(_esc(shape_arabic("الله")),
-                           ParagraphStyle("cov", fontName=F_AR, fontSize=92,
-                                          leading=100, alignment=TA_CENTER,
-                                          textColor=ACCENT)))
-    story.append(Spacer(1, 1.0 * cm))
+    alloh_svg = os.path.join(UZ_ROOT, names[0]["image"])
+    story.append(Spacer(1, 5.0 * cm))
+    story.append(svg_flowable(alloh_svg, 5.0 * cm, color=ACCENT))
+    story.append(Spacer(1, 0.9 * cm))
     story.append(HRule(width=6 * cm, color=ACCENT, center=True))
     story.append(Spacer(1, 0.5 * cm))
     story.append(Paragraph("Аллоҳнинг гўзал исмлари",
                            ParagraphStyle("covt", fontName=F_HEAD, fontSize=30,
                                           leading=36, alignment=TA_CENTER,
                                           textColor=INK)))
-    story.append(Spacer(1, 0.3 * cm))
-    story.append(Paragraph("Асмоул-Ҳусна — 99 та исм ва уларнинг маънолари",
-                           ParagraphStyle("covs", fontName=F_BODY_I, fontSize=13,
-                                          leading=18, alignment=TA_CENTER,
-                                          textColor=MUTED)))
-    story.append(PageBreak())
-
-    # ---- Мундарижа ----
-    toc = TableOfContents()
-    toc.levelStyles = [styles["Toc0"]]
-    toc.dotsMinLevel = 0
-    story.append(Paragraph("Мундарижа", styles["TocH"]))
-    story.append(HRule(color=ACCENT))
-    story.append(Spacer(1, 0.4 * cm))
-    story.append(toc)
     story.append(PageBreak())
 
     # ---- Kirish maqolalari (about) ----
@@ -569,13 +625,13 @@ def build_story(names, trans, about, styles, content_w):
     for idx, n in enumerate(names, start=1):
         rec = trans.get(n["id"], {})
         cyr = (rec.get("name") or "").strip()
-        arabic = n.get("default_name", "")
         bg = os.path.join(UZ_ROOT, n.get("background_image", ""))
+        svg = os.path.join(UZ_ROOT, n.get("image", ""))
         key = "name-%s" % n["id"]
         label = "%d. %s" % (idx, cyr)
 
         head = []
-        banner = Banner(content_w, bg, arabic, cyr)
+        banner = Banner(content_w, bg, svg, cyr)
         head.append(tagged(banner, 0, label, key))
         head.append(Paragraph(_esc(cyr.upper()), styles["NameTitle"]))
         # qisqa maъно — banner bilan birga (yetim qolmasin)
@@ -618,6 +674,16 @@ def build_story(names, trans, about, styles, content_w):
         "Манба ва аудио: %s<br/>Нашр санаси: %s" % (SITE_URL, today),
         ParagraphStyle("colc", fontName=F_BODY, fontSize=9.5, leading=15,
                        alignment=TA_CENTER, textColor=MUTED)))
+
+    # ---- Мундарижа (kitob oxirida) ----
+    story.append(PageBreak())
+    toc = TableOfContents()
+    toc.levelStyles = [styles["Toc0"]]
+    toc.dotsMinLevel = 0
+    story.append(Paragraph("Мундарижа", styles["TocH"]))
+    story.append(HRule(color=ACCENT))
+    story.append(Spacer(1, 0.4 * cm))
+    story.append(toc)
     return story
 
 
