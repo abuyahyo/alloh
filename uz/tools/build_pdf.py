@@ -68,6 +68,7 @@ INK = HexColor("#241f1a")       # asosiy matn
 ACCENT = HexColor("#9a6b2f")    # tilla-jigarrang urgʻu (sarlavhalar, chiziqlar)
 MUTED = HexColor("#8a8170")     # ikkinchi darajali (footer, manba)
 QURAN = HexColor("#3a2e1f")     # arabcha oyat rangi
+CARD = HexColor("#f3ead4")      # oyat kartasi foni (iliq krem)
 
 # --------------------------------------------------------------------------- #
 #  Shriftlar
@@ -396,6 +397,45 @@ class HRule(Flowable):
         c.line(x0, self.height / 2, x0 + self.seg, self.height / 2)
 
 
+class VerseCard(Flowable):
+    """Qurʼon/hadis оyatini krem panel + tilla chap-chiziqli kartaга oladi."""
+
+    PAD_X = 14
+    PAD_Y = 9
+    GAP_TOP = 4
+    GAP_BOTTOM = 8
+    BAR_W = 3
+
+    def __init__(self, inner):
+        super().__init__()
+        self.inner = inner          # markazlashgan Amiri Paragraph (оyat)
+        self._iw = self._ih = 0
+
+    def wrap(self, availW, availH):
+        self.width = availW
+        self._iw = availW - 2 * self.PAD_X - self.BAR_W
+        _, self._ih = self.inner.wrap(self._iw, availH)
+        self.height = self._ih + 2 * self.PAD_Y + self.GAP_TOP + self.GAP_BOTTOM
+        return availW, self.height
+
+    def draw(self):
+        c = self.canv
+        w = self.width
+        panel_h = self._ih + 2 * self.PAD_Y
+        y0 = self.GAP_BOTTOM
+        c.saveState()
+        # krem panel
+        c.setFillColor(CARD)
+        c.roundRect(0, y0, w, panel_h, 6, stroke=0, fill=1)
+        # tilla chap chizigʻi
+        c.setFillColor(ACCENT)
+        c.roundRect(0, y0, self.BAR_W + 4, panel_h, 6, stroke=0, fill=1)
+        c.setFillColor(CARD)
+        c.rect(self.BAR_W, y0, 6, panel_h, stroke=0, fill=1)
+        c.restoreState()
+        self.inner.drawOn(c, self.BAR_W + self.PAD_X, y0 + self.PAD_Y)
+
+
 # --------------------------------------------------------------------------- #
 #  Hujjat shabloni (TOC + outline + footer)
 # --------------------------------------------------------------------------- #
@@ -462,7 +502,7 @@ def render_fragment(html_str, styles, content_w):
     for b in blocks.close():
         if b.kind == "quote":
             txt = shape_arabic("".join(r[0] for r in b.runs))
-            out.append(Paragraph(_esc(txt), styles["Quote"]))
+            out.append(VerseCard(Paragraph(_esc(txt), styles["Quote"])))
         elif b.kind == "h":
             out.append(Paragraph(runs_to_markup(b.runs), styles["Intro4"]))
         elif b.kind == "li":
