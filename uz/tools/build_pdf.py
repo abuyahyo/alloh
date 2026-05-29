@@ -340,88 +340,6 @@ def build_styles():
     return ss
 
 
-# --------------------------------------------------------------------------- #
-#  Hero banner flowable (rasm + arabcha xattotlik + Kirill ism)
-# --------------------------------------------------------------------------- #
-BANNER_H = 4.4 * cm
-
-
-def prepare_banner_image(path, target_w_px, target_h_px):
-    """Rasmni banner nisbatiga qirqib, ixchamlаб, qоронгʻilashtirilган JPEG qaytaradi."""
-    img = Image.open(path).convert("RGB")
-    iw, ih = img.size
-    tr = target_w_px / target_h_px
-    ir = iw / ih
-    if ir > tr:                     # juda keng → yon tomonini qirqamiz
-        nw = int(ih * tr)
-        x = (iw - nw) // 2
-        img = img.crop((x, 0, x + nw, ih))
-    else:                           # juda baland → tepa/pastini qirqamiz
-        nh = int(iw / tr)
-        y = (ih - nh) // 2
-        img = img.crop((0, y, iw, y + nh))
-    img = img.resize((target_w_px, target_h_px), Image.LANCZOS)
-
-    # matn oʻqilishi uchun pastdan tepaga qоrongʻi gradient (scrim)
-    grad = Image.new("L", (1, target_h_px), 0)
-    for y in range(target_h_px):
-        t = y / max(1, target_h_px - 1)        # 0=tepa, 1=pasti
-        grad.putpixel((0, y), int(150 * (t ** 1.4) + 35))
-    grad = grad.resize((target_w_px, target_h_px))
-    dark = Image.new("RGB", img.size, (0, 0, 0))
-    img = Image.composite(dark, img, grad)
-
-    buf = io.BytesIO()
-    img.save(buf, format="JPEG", quality=82, optimize=True)
-    buf.seek(0)
-    return buf
-
-
-class Banner(Flowable):
-    def __init__(self, width, photo_path, svg_path, cyr_name):
-        super().__init__()
-        self.width = width
-        self.height = BANNER_H
-        self.image_path = photo_path
-        self.svg_path = svg_path
-        self.cyr = cyr_name or ""
-        self._buf = None
-
-    def wrap(self, availW, availH):
-        self.width = availW
-        return availW, self.height
-
-    def draw(self):
-        c = self.canv
-        w, h = self.width, self.height
-        dpi = 150
-        px_w = max(1, int(w / 72 * dpi))
-        px_h = max(1, int(h / 72 * dpi))
-        if self._buf is None:
-            self._buf = prepare_banner_image(self.image_path, px_w, px_h)
-        from reportlab.lib.utils import ImageReader
-        c.saveState()
-        # yumaloq burchakli klип
-        p = c.beginPath()
-        r = 8
-        p.roundRect(0, 0, w, h, r)
-        c.clipPath(p, stroke=0)
-        c.drawImage(ImageReader(self._buf), 0, 0, width=w, height=h,
-                    preserveAspectRatio=False, mask=None)
-        c.restoreState()
-
-        # repodagi SVG xattotlik — oq rangda, markazда (o'qilishi uchun soya)
-        from reportlab.graphics import renderPDF
-        max_w, max_h = w * 0.50, h * 0.62
-        shadow, _, _ = load_calligraphy(self.svg_path, HexColor("#000000"),
-                                        max_w, max_h)
-        light, dw, dh = load_calligraphy(self.svg_path, HexColor("#ffffff"),
-                                         max_w, max_h)
-        x = (w - dw) / 2
-        y = (h - dh) / 2
-        renderPDF.draw(shadow, c, x + 0.8, y - 0.8)
-        renderPDF.draw(light, c, x, y)
-
 
 class HRule(Flowable):
     def __init__(self, width=None, color=ACCENT, thickness=0.8, pad=4,
@@ -449,40 +367,45 @@ class HRule(Flowable):
 
 
 class EvidenceItem(Flowable):
-    """Saytdagidek belgili (bullet) dalil: • + oyat (markazда) + tagida tarjima.
-    Quti yo'q — yengil ro'yxat ko'rinishi."""
+    """Dalil: • belgi + chapда arabcha oyat (bitta qatorda), TAGIDA tarjima.
+    Uzun oyatlar uchun o'lcham avto-moslanadi."""
 
-    BULLET_W = 15
-    GAP = 3
-    SA = 9
+    BULLET_W = 14
+    GAP = 4             # oyat va tarjima orasi
+    SA = 9              # past bo'shliq
+    AR_MAX = 15.0
+    AR_MIN = 9.0
 
-    def __init__(self, arabic, trans):
+    def __init__(self, arabic_text, trans):
         super().__init__()
-        self.arabic = arabic
+        self.atext = arabic_text
         self.trans = trans
 
     def wrap(self, availW, availH):
         self.width = availW
         iw = availW - self.BULLET_W
-        _, self.h1 = self.arabic.wrap(iw, availH)
-        self.h2 = 0
-        if self.trans is not None:
-            _, self.h2 = self.trans.wrap(iw, availH)
-        body = self.h1 + (self.GAP + self.h2 if self.trans else 0)
-        self.height = body + self.SA
+        s = self.AR_MAX
+        while s > self.AR_MIN and pdfmetrics.stringWidth(self.atext, F_AR, s) > iw:
+            s -= 0.5
+        self.asize = s
+        self.h1 = s * 1.3
+        self.h2 = self.trans.wrap(iw, availH)[1] if self.trans else 0
+        self.height = self.h1 + (self.GAP + self.h2 if self.trans else 0) + self.SA
         return availW, self.height
 
     def draw(self):
         c = self.canv
+        top = self.height
         x = self.BULLET_W
-        y_ar = self.SA + self.h2 + (self.GAP if self.trans else 0)
-        self.arabic.drawOn(c, x, y_ar)
-        if self.trans is not None:
-            self.trans.drawOn(c, x, self.SA)
-        # belgi — oyatning birinchi qatori bilan tenglashtirib
+        ar_base = top - self.asize        # oyat tepada
         c.setFillColor(ACCENT)
         c.setFont(F_BODY, 11)
-        c.drawString(2, y_ar + self.h1 - 14, "•")
+        c.drawString(2, ar_base, "•")
+        c.setFillColor(QURAN)
+        c.setFont(F_AR, self.asize)
+        c.drawString(x, ar_base, self.atext)   # arabcha — chapда
+        if self.trans is not None:
+            self.trans.drawOn(c, x, self.SA)   # tarjima — tagida
 
 
 class SectionHead(Flowable):
@@ -541,11 +464,11 @@ class Book(BaseDocTemplate):
         c.restoreState()
 
     def _footer(self, c, doc):
-        # boshqa betlarda faqat sahifa raqami (havolasiz)
+        # boshqa betlarda faqat sahifa raqami — o'ng pastki burchakда, kattaroq
         c.saveState()
-        c.setFont(F_HEAD_R, 8)
-        c.setFillColor(MUTED)
-        c.drawCentredString(A4[0] / 2, 0.85 * cm, str(doc.page))
+        c.setFont(F_HEAD, 11)
+        c.setFillColor(ACCENT)
+        c.drawRightString(A4[0] - 2.0 * cm, 1.0 * cm, str(doc.page))
         c.restoreState()
 
     def afterFlowable(self, flowable):
@@ -591,14 +514,13 @@ def render_fragment(html_str, styles, content_w):
         b = blocks[i]
         if b.kind == "quote":
             txt = shape_arabic("".join(r[0] for r in b.runs))
-            arabic = Paragraph(_esc(txt), styles["Verse"])
             trans = None
             # to'g'ridan-to'g'ri keyingi matn — shu oyatning tarjimasi
             if i + 1 < n and blocks[i + 1].kind in ("p", "li"):
                 trans = Paragraph(runs_to_markup(blocks[i + 1].runs),
                                   styles["VerseTrans"])
                 i += 1
-            out.append(EvidenceItem(arabic, trans))
+            out.append(EvidenceItem(txt, trans))
         elif b.kind == "h":
             out.append(Paragraph(runs_to_markup(b.runs), styles["Intro4"]))
         elif b.kind == "li":
@@ -639,18 +561,21 @@ def build_story(names, trans, about, styles, content_w):
         story.extend(render_fragment(a.get("body_val", ""), styles, content_w))
         story.append(PageBreak())
 
-    # ---- 99 (+1) исм ----
+    # ---- 99 (+1) исм — har biri yangi sahifadan ----
     for idx, n in enumerate(names, start=1):
+        if idx > 1:                       # 1-ism kirish PageBreak'idan keyin keladi
+            story.append(PageBreak())
         rec = trans.get(n["id"], {})
         cyr = (rec.get("name") or "").strip()
-        bg = os.path.join(UZ_ROOT, n.get("background_image", ""))
         svg = os.path.join(UZ_ROOT, n.get("image", ""))
         key = "name-%s" % n["id"]
         label = "%d. %s" % (idx, cyr)
 
         head = []
-        banner = Banner(content_w, bg, svg, cyr)
-        head.append(tagged(banner, 0, label, key))
+        # faqat SVG xattotlik (fon rasmsiz), tilla rangda, markazда
+        calli, _, _ = load_calligraphy(svg, ACCENT, content_w * 0.55, 3.0 * cm)
+        head.append(Spacer(1, 0.5 * cm))
+        head.append(tagged(calli, 0, label, key))
         head.append(Paragraph(_esc(cyr.upper()), styles["NameTitle"]))
         head.append(HRule(width=2.4 * cm, color=ACCENT, center=True, pad=8))
         # qisqa maъно — sarlavha bilan, banner bilan birga (yetim qolmasin)
