@@ -319,13 +319,13 @@ def build_styles():
         textColor=ACCENT, alignment=TA_CENTER, spaceBefore=8, spaceAfter=3,
     ))
     ss.add(ParagraphStyle(
-        "Verse", fontName=F_AR, fontSize=17, leading=29,
+        "Verse", fontName=F_AR, fontSize=15.5, leading=27,
         textColor=QURAN, alignment=TA_CENTER, spaceBefore=0, spaceAfter=0,
         wordWrap=None,
     ))
     ss.add(ParagraphStyle(
         "VerseTrans", fontName=F_BODY, fontSize=9.8, leading=15,
-        textColor=INK, alignment=TA_CENTER, spaceBefore=0, spaceAfter=0,
+        textColor=INK, alignment=TA_LEFT, spaceBefore=0, spaceAfter=0,
     ))
     ss.add(ParagraphStyle(
         "TocH", fontName=F_HEAD, fontSize=20, leading=26,
@@ -448,54 +448,41 @@ class HRule(Flowable):
         c.line(x0, self.height / 2, x0 + self.seg, self.height / 2)
 
 
-class CardBox(Flowable):
-    """Bir nechta flowableни bitta krem panel + tilla chap-chiziqli kartaга
-    vertikal joylaydi (oyat + tarjima bir butun bo'lib turishi uchun)."""
+class EvidenceItem(Flowable):
+    """Saytdagidek belgili (bullet) dalil: • + oyat (markazда) + tagida tarjima.
+    Quti yo'q — yengil ro'yxat ko'rinishi."""
 
-    PAD_X = 14
-    PAD_Y = 10
-    GAP_TOP = 4
-    GAP_BOTTOM = 9
-    BAR_W = 3
-    ITEM_GAP = 5
+    BULLET_W = 15
+    GAP = 3
+    SA = 9
 
-    def __init__(self, items):
+    def __init__(self, arabic, trans):
         super().__init__()
-        self.items = items
-        self._iw = 0
-        self._heights = []
+        self.arabic = arabic
+        self.trans = trans
 
     def wrap(self, availW, availH):
         self.width = availW
-        self._iw = availW - 2 * self.PAD_X - self.BAR_W
-        self._heights = []
-        for f in self.items:
-            _, h = f.wrap(self._iw, availH)
-            self._heights.append(h)
-        inner = sum(self._heights) + self.ITEM_GAP * (len(self.items) - 1)
-        self._panel_h = inner + 2 * self.PAD_Y
-        self.height = self._panel_h + self.GAP_TOP + self.GAP_BOTTOM
+        iw = availW - self.BULLET_W
+        _, self.h1 = self.arabic.wrap(iw, availH)
+        self.h2 = 0
+        if self.trans is not None:
+            _, self.h2 = self.trans.wrap(iw, availH)
+        body = self.h1 + (self.GAP + self.h2 if self.trans else 0)
+        self.height = body + self.SA
         return availW, self.height
 
     def draw(self):
         c = self.canv
-        w = self.width
-        ph = self._panel_h
-        y0 = self.GAP_BOTTOM
-        c.saveState()
-        c.setFillColor(CARD)
-        c.roundRect(0, y0, w, ph, 6, stroke=0, fill=1)
-        c.setFillColor(ACCENT)                       # tilla chap chizigʻi
-        c.roundRect(0, y0, self.BAR_W + 4, ph, 6, stroke=0, fill=1)
-        c.setFillColor(CARD)
-        c.rect(self.BAR_W, y0, 6, ph, stroke=0, fill=1)
-        c.restoreState()
-        x = self.BAR_W + self.PAD_X
-        y = y0 + ph - self.PAD_Y
-        for f, h in zip(self.items, self._heights):
-            y -= h
-            f.drawOn(c, x, y)
-            y -= self.ITEM_GAP
+        x = self.BULLET_W
+        y_ar = self.SA + self.h2 + (self.GAP if self.trans else 0)
+        self.arabic.drawOn(c, x, y_ar)
+        if self.trans is not None:
+            self.trans.drawOn(c, x, self.SA)
+        # belgi — oyatning birinchi qatori bilan tenglashtirib
+        c.setFillColor(ACCENT)
+        c.setFont(F_BODY, 11)
+        c.drawString(2, y_ar + self.h1 - 14, "•")
 
 
 class SectionHead(Flowable):
@@ -594,9 +581,8 @@ def load_data():
 def render_fragment(html_str, styles, content_w):
     """HTML fragmentni Platypus flowable roʻyxatiga aylantiradi.
 
-    Har bir dalil oyati o'zining tarjimasi bilan BITTA kartaga joylanadi
-    (oyat tepada, tarjima pastida — umumiy fon + chap tilla chiziq), shunda
-    arabcha matn va uning tarjimasi bir butun ko'rinadi.
+    Saytdagidek: har bir dalil oyati belgili (bullet) ro'yxat elementi —
+    • + oyat (markazда) + tagida tarjima. Quti yo'q.
     """
     blocks = FragmentParser().feed_close(html_str or "")
     out = []
@@ -605,13 +591,14 @@ def render_fragment(html_str, styles, content_w):
         b = blocks[i]
         if b.kind == "quote":
             txt = shape_arabic("".join(r[0] for r in b.runs))
-            items = [Paragraph(_esc(txt), styles["Verse"])]
+            arabic = Paragraph(_esc(txt), styles["Verse"])
+            trans = None
             # to'g'ridan-to'g'ri keyingi matn — shu oyatning tarjimasi
             if i + 1 < n and blocks[i + 1].kind in ("p", "li"):
-                items.append(Paragraph(runs_to_markup(blocks[i + 1].runs),
-                                       styles["VerseTrans"]))
+                trans = Paragraph(runs_to_markup(blocks[i + 1].runs),
+                                  styles["VerseTrans"])
                 i += 1
-            out.append(CardBox(items))
+            out.append(EvidenceItem(arabic, trans))
         elif b.kind == "h":
             out.append(Paragraph(runs_to_markup(b.runs), styles["Intro4"]))
         elif b.kind == "li":
