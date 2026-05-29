@@ -292,8 +292,8 @@ def runs_to_markup(runs):
 def build_styles():
     ss = StyleSheet1()
     ss.add(ParagraphStyle(
-        "Body", fontName=F_BODY, fontSize=10.5, leading=17,
-        textColor=INK, alignment=TA_LEFT, spaceAfter=7,
+        "Body", fontName=F_BODY, fontSize=12.5, leading=19.5,
+        textColor=INK, alignment=TA_LEFT, spaceAfter=8,
     ))
     ss.add(ParagraphStyle(
         "Bullet", parent=ss["Body"], leftIndent=14, bulletIndent=2,
@@ -303,36 +303,36 @@ def build_styles():
         "BulletCont", parent=ss["Body"], leftIndent=14, spaceAfter=8,
     ))
     ss.add(ParagraphStyle(
-        "Section", fontName=F_HEAD, fontSize=12, leading=16,
+        "Section", fontName=F_HEAD, fontSize=14, leading=18,
         textColor=ACCENT, spaceBefore=10, spaceAfter=5,
     ))
     ss.add(ParagraphStyle(
-        "Intro4", fontName=F_HEAD, fontSize=11.5, leading=15,
-        textColor=INK, spaceBefore=10, spaceAfter=4,
+        "Intro4", fontName=F_HEAD, fontSize=13, leading=18,
+        textColor=INK, spaceBefore=11, spaceAfter=4,
     ))
     ss.add(ParagraphStyle(
-        "IntroTitle", fontName=F_HEAD, fontSize=18, leading=23,
+        "IntroTitle", fontName=F_HEAD, fontSize=21, leading=26,
         textColor=ACCENT, spaceBefore=4, spaceAfter=12,
     ))
     ss.add(ParagraphStyle(
-        "NameTitle", fontName=F_HEAD, fontSize=18, leading=22,
+        "NameTitle", fontName=F_HEAD, fontSize=20, leading=24,
         textColor=ACCENT, alignment=TA_CENTER, spaceBefore=8, spaceAfter=3,
     ))
     ss.add(ParagraphStyle(
-        "Verse", fontName=F_AR, fontSize=15.5, leading=27,
+        "Verse", fontName=F_AR, fontSize=17, leading=29,
         textColor=QURAN, alignment=TA_CENTER, spaceBefore=0, spaceAfter=0,
         wordWrap=None,
     ))
     ss.add(ParagraphStyle(
-        "VerseTrans", fontName=F_BODY, fontSize=9.8, leading=15,
+        "VerseTrans", fontName=F_BODY, fontSize=11.5, leading=17.5,
         textColor=INK, alignment=TA_LEFT, spaceBefore=0, spaceAfter=0,
     ))
     ss.add(ParagraphStyle(
-        "TocH", fontName=F_HEAD, fontSize=20, leading=26,
+        "TocH", fontName=F_HEAD, fontSize=22, leading=28,
         textColor=ACCENT, spaceAfter=14,
     ))
     ss.add(ParagraphStyle(
-        "Toc0", fontName=F_BODY, fontSize=10.5, leading=18, textColor=INK,
+        "Toc0", fontName=F_BODY, fontSize=12, leading=21, textColor=INK,
     ))
     ss.add(ParagraphStyle(
         "TocIntro", parent=ss["Toc0"], fontName=F_BODY_I, textColor=MUTED,
@@ -373,8 +373,8 @@ class EvidenceItem(Flowable):
     BULLET_W = 14
     GAP = 4             # oyat va tarjima orasi
     SA = 9              # past bo'shliq
-    AR_MAX = 15.0
-    AR_MIN = 9.0
+    AR_MAX = 17.0
+    AR_MIN = 11.0
 
     def __init__(self, arabic_text, trans):
         super().__init__()
@@ -411,8 +411,8 @@ class EvidenceItem(Flowable):
 class SectionHead(Flowable):
     """Bo'lim sarlavhasi: chap tilla belgi + sarlavha + ostida nozik chiziq."""
 
-    SB = 13          # tepa bo'shliq
-    FS = 12.5        # shrift o'lchami
+    SB = 14          # tepa bo'shliq
+    FS = 14          # shrift o'lchami
     RULE_GAP = 6
     SA = 5           # past bo'shliq
     RULE = HexColor("#e2cfa6")
