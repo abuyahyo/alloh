@@ -275,6 +275,10 @@ def build_styles():
         textColor=ACCENT, spaceBefore=4, spaceAfter=12,
     ))
     ss.add(ParagraphStyle(
+        "NameTitle", fontName=F_HEAD, fontSize=16, leading=20,
+        textColor=ACCENT, alignment=TA_CENTER, spaceBefore=7, spaceAfter=9,
+    ))
+    ss.add(ParagraphStyle(
         "Quote", fontName=F_AR, fontSize=17, leading=30,
         textColor=QURAN, alignment=TA_CENTER, spaceBefore=4, spaceAfter=8,
         wordWrap=None,
@@ -363,13 +367,15 @@ class Banner(Flowable):
         c.restoreState()
 
         # arabcha xattotlik (markazда, teparoq)
+        size = 38
+        while size > 18 and pdfmetrics.stringWidth(self.arabic, F_AR, size) > w * 0.82:
+            size -= 1
+        y = h / 2 - size * 0.36                  # vizual markaz tuzatishи
+        c.setFont(F_AR, size)
+        c.setFillColor(HexColor("#000000"))      # nozik soya
+        c.drawCentredString(w / 2 + 0.8, y - 0.8, self.arabic)
         c.setFillColor(HexColor("#ffffff"))
-        c.setFont(F_AR, 34)
-        c.drawCentredString(w / 2, h * 0.46, self.arabic)
-        # Kirill ism (pastroq, urgʻu rangida)
-        c.setFillColor(HexColor("#f4e3c2"))
-        c.setFont(F_HEAD, 15)
-        c.drawCentredString(w / 2, h * 0.16, self.cyr.upper())
+        c.drawCentredString(w / 2, y, self.arabic)
 
 
 class HRule(Flowable):
@@ -571,7 +577,7 @@ def build_story(names, trans, about, styles, content_w):
         head = []
         banner = Banner(content_w, bg, arabic, cyr)
         head.append(tagged(banner, 0, label, key))
-        head.append(Spacer(1, 0.35 * cm))
+        head.append(Paragraph(_esc(cyr.upper()), styles["NameTitle"]))
         # qisqa maъно — banner bilan birga (yetim qolmasin)
         short = render_fragment(rec.get("short_meaning_val", ""), styles, content_w)
         head.extend(short[:1])
