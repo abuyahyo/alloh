@@ -597,8 +597,6 @@ def build_story(names, trans, about, styles, content_w):
             story.append(SectionHead("Далиллар"))
             story.extend(evidence)
 
-        story.append(Spacer(1, 0.5 * cm))
-
     # ---- Kolofon ----
     story.append(PageBreak())
     story.append(Spacer(1, 6 * cm))
