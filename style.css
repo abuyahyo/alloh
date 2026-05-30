@@ -1479,3 +1479,89 @@ main { max-width: var(--content-w); margin: 0 auto; padding: 0 1.25rem 4rem; }
     scroll-behavior: auto !important;
   }
 }
+
+/* PWA install banner — dark glass surface with the brand-gold action pill.
+   Slides up at the bottom; centred and capped at 480px on wide screens. */
+.install-banner {
+  position: fixed;
+  left: 16px;
+  right: 16px;
+  bottom: 16px;
+  bottom: calc(16px + env(safe-area-inset-bottom));
+  z-index: 60;
+  max-width: 480px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 18px;
+  color: var(--ink);
+  background: var(--glass-panel-strong);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid var(--glass-edge);
+  box-shadow: var(--glass-shadow-lg);
+  animation: install-slide-up 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.install-banner[hidden] { display: none; }
+.install-banner-icon {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 11px;
+  box-shadow: var(--shadow-sm);
+}
+.install-banner-text { flex: 1; min-width: 0; }
+.install-banner-text strong {
+  display: block;
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+.install-banner-text p {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.35;
+  color: var(--muted);
+}
+#install-banner-action {
+  flex: none;
+  border: none;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: var(--accent-ink);
+  background: var(--accent);
+  padding: 9px 16px;
+  border-radius: 999px;
+  box-shadow: 0 2px 8px var(--accent-ring);
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+#install-banner-action:hover { background: var(--accent-strong); }
+#install-banner-action:active { transform: scale(0.97); }
+#install-banner-close {
+  flex: none;
+  border: none;
+  cursor: pointer;
+  background: transparent;
+  color: var(--muted-2);
+  font-size: 1.05rem;
+  line-height: 1;
+  padding: 6px;
+  border-radius: 8px;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+#install-banner-close:hover { color: var(--ink); background: var(--glass-chip); }
+@keyframes install-slide-up {
+  from { transform: translateY(120%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+@media (max-width: 480px) {
+  .install-banner { gap: 10px; padding: 10px 12px; border-radius: 16px; }
+  .install-banner-icon { width: 40px; height: 40px; }
+  .install-banner-text strong { font-size: 0.9rem; }
+  .install-banner-text p { font-size: 0.75rem; }
+  #install-banner-action { padding: 8px 13px; font-size: 0.82rem; }
+}

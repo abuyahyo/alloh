@@ -33,7 +33,7 @@
       }, { passive: false });
     })();
   </script>
-  <link rel="stylesheet" href="style.css?v=2026052036">
+  <link rel="stylesheet" href="style.css?v=2026053012">
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to content</a>
@@ -73,9 +73,19 @@
     </div>
   </main>
 
+  <div class="install-banner" id="install-banner" hidden>
+    <img src="icons/icon-192-v2.png" alt="" class="install-banner-icon">
+    <div class="install-banner-text">
+      <strong>تثبيت التطبيق</strong>
+      <p>ثبّت هذا التطبيق على هاتفك — يعمل دون اتصال أيضًا.</p>
+    </div>
+    <button id="install-banner-action">تثبيت</button>
+    <button id="install-banner-close" aria-label="إغلاق">✕</button>
+  </div>
+
   <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
 
-  <script type="module" src="app.js?v=2026052036"></script>
+  <script type="module" src="app.js?v=2026053012"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function () {

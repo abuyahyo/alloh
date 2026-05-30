@@ -261,3 +261,52 @@ init().catch((err) => {
   $('#list').removeAttribute('aria-busy');
   $('#list').innerHTML = `<p class="empty">${escapeHtml(tFor(LANG, 'load_failed'))}</p>`;
 });
+
+/* PWA install banner — shows a prompt to users on Chrome/Edge/Android who
+   haven't installed yet. Safari/iOS doesn't fire beforeinstallprompt, so
+   those users simply never see it (expected). */
+(function initInstallBanner() {
+  const DISMISS_KEY = 'alloh_install_dismissed_at';
+  const DISMISS_TTL = 14 * 24 * 60 * 60 * 1000; // 14 kun
+  const banner = document.getElementById('install-banner');
+  const action = document.getElementById('install-banner-action');
+  const closeBtn = document.getElementById('install-banner-close');
+  if (!banner || !action || !closeBtn) return;
+  let deferredPrompt = null;
+
+  const isDismissed = () => {
+    const t = Number(localStorage.getItem(DISMISS_KEY) || 0);
+    return t && Date.now() - t < DISMISS_TTL;
+  };
+  const isStandalone = () =>
+    window.matchMedia('(display-mode: standalone)').matches ||
+    window.navigator.standalone === true;
+  const show = () => {
+    if (isStandalone() || isDismissed()) return;
+    banner.hidden = false;
+  };
+  const hide = () => { banner.hidden = true; };
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    show();
+  });
+  window.addEventListener('appinstalled', () => {
+    deferredPrompt = null;
+    hide();
+  });
+  action.addEventListener('click', async () => {
+    hide();
+    if (!deferredPrompt) return;
+    try {
+      deferredPrompt.prompt();
+      await deferredPrompt.userChoice;
+    } catch (e) { /* foydalanuvchi bekor qildi */ }
+    deferredPrompt = null;
+  });
+  closeBtn.addEventListener('click', () => {
+    localStorage.setItem(DISMISS_KEY, String(Date.now()));
+    hide();
+  });
+})();
